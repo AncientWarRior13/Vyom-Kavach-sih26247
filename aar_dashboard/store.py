@@ -156,3 +156,48 @@ def unit_trend(unit_id: str) -> list[dict]:
             (unit_id,),
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+# roadmap feature 5: adaptive curriculum — maps contact_type (as scoring_engine
+# names them) to the generator's type_weights key
+_TYPE_WEIGHT_KEY = {
+    "decoy": "decoy",
+    "bird": "bird",
+    "friendly_drone": "friendly",
+    "hostile_drone": "hostile",
+    "hostile_swarm_member": "hostile",
+}
+
+
+def weakness_profile(trainee_id: str, lookback: int = 10) -> dict:
+    """Aggregates this trainee's last `lookback` sessions' per-contact
+    scores by true contact type, and returns generator-ready type_weights:
+    a type the trainee scores poorly on gets a multiplier > 1 so the next
+    scenario spawns more of it (targeted practice instead of random
+    repetition) — the approach roadmap feature 5 asks for, built on data
+    this app already stores.
+    """
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT result_json FROM sessions WHERE trainee_id = ? ORDER BY created_at DESC LIMIT ?",
+            (trainee_id, lookback),
+        ).fetchall()
+
+    totals: dict[str, float] = {}
+    counts: dict[str, int] = {}
+    for row in rows:
+        result = json.loads(row["result_json"])
+        for c in result.get("per_contact", []):
+            key = _TYPE_WEIGHT_KEY.get(c.get("true_type"))
+            if key is None:
+                continue
+            totals[key] = totals.get(key, 0.0) + c["contact_score"]
+            counts[key] = counts.get(key, 0) + 1
+
+    weights = {}
+    for key, total in totals.items():
+        avg_score_0_1 = (total / counts[key]) / 100.0
+        # worse average -> higher weight, capped so one weak spot doesn't
+        # crowd out everything else; no history for a type -> default 1.0
+        weights[key] = round(1.0 + (1.0 - avg_score_0_1) * 1.5, 2)
+    return weights

@@ -106,15 +106,74 @@ but has no live reallocation to react with).
 
 ## Decision-tree scoring logic (`scoring_engine/scorer.py`)
 
-Per contact: detection (full credit within 20s of spawn, decaying linearly
-after), classification (full credit exact match, half credit for right
+Four axes per contact, weighted 20/25/35/20 into an overall 0–100 score:
+**detection** (full credit within 20s of spawn, decaying linearly after),
+**classification** (full credit exact match, half credit for right
 hostile/non-hostile bucket, zero otherwise — graded against the trainee's
 own final call, not the AI hint, so relying on a wrong hint is still scored
-honestly), and engagement (correct action per threat level — high→engage,
-low→monitor, none→ignore — with explicit `threat_not_engaged` and
-`wasted_or_fratricide_engagement` flags). Weighted 25/35/40 into an overall
-0–100 score. Every number is traceable back to a specific contact and rule,
-by design, so an AAR can explain exactly why a trainee lost points.
+honestly), **engagement/ROE** (graduated warn/soft-kill/hard-kill response
+checked against threat level, no-engage zones, and warn-before-escalation
+requirements — see the Tier-1 roadmap section below for the full doctrine),
+and **timeliness** (engagement latency scored against each hostile
+contact's real time-to-impact window, not a fixed clock). An `ai_trust`
+block is reported alongside the score (not folded into it) categorizing
+whether the trainee followed or overrode each AI hint they requested, and
+whether that hint was right. Every number is traceable back to a specific
+contact and rule, by design, so an AAR can explain exactly why a trainee
+lost points.
+
+## Tier-1 roadmap features (`DroneThreatTrainer_Roadmap_and_Training_Plan.docx`)
+
+A later review identified the main defense-credibility gap: the trainee's
+only action was engage/monitor/ignore, and scoring didn't consider rules of
+engagement, time pressure, or over-reliance on the AI hint. Five features
+(the roadmap's Tier 1, "highest impact for the effort") close that gap —
+all live in `scoring_engine/scorer.py` and `scenario_engine/generator.py`:
+
+1. **Rules-of-engagement (ROE) layer** — every scenario now generates 1-2
+   fixed no-engage zones (hospital/school/civilian-housing/marketplace) and
+   an ROE card (warn-before-hard-kill requirement, a time-critical
+   self-defense exception, max effective ranges). A `hard_kill` inside a
+   no-engage zone is a violation regardless of threat level; skipping the
+   required warn before a non-time-critical hard-kill is a procedural
+   violation (partial credit, not zero — the kill may still be materially
+   correct). Shown to the trainee as dashed red circles on the scope and a
+   plain-text ROE summary.
+2. **Time-to-impact scoring** — a new `timeliness_score` axis computes each
+   hostile contact's actual closing-speed ETA to the defended asset and
+   scores engagement latency against that real window instead of a fixed
+   clock; an engagement that lands after the threat would have reached the
+   asset scores 0 and raises a `threat_reached_asset` flag.
+3. **Graduated response ladder** — `warn` → `soft_kill` (jam/spoof) →
+   `hard_kill` (kinetic), replacing the old single `engage` action
+   (`engage` is kept as a scored legacy alias for `hard_kill`). Each tier
+   has its own effective range and correct-use doctrine per threat level
+   (decoys: warn/soft-kill/monitor correct, hard-kill is overkill;
+   friendlies/birds: monitor/ignore correct, any kill is fratricide).
+4. **AI trust calibration** — every `ai_hint_requested`/`ai_hint_label` is
+   logged and compared against the trainee's own final classification,
+   categorized into followed-correct / overrode-correct / followed-wrong /
+   overrode-wrong. Session results include an `ai_trust` block with an
+   `automation_bias_score` (fraction of hints that were wrong *and*
+   followed anyway) — reported, not folded into the score, since the
+   roadmap asks to measure it, not penalize it.
+5. **Adaptive curriculum** — `POST /api/scenario/adaptive` (an "Adaptive
+   scenario" button on the trainer page) pulls a trainee's last 10
+   sessions' per-contact-type scores from the AAR store and weights the
+   next scenario's contact counts toward whatever they're weakest on,
+   instead of pure random repetition. Verified: a trainee who missed every
+   contact across several sessions gets measurably upweighted spawn counts
+   (`{"hostile": 2.5, "decoy": 1.94, ...}`) on their next adaptive scenario.
+
+All five verified with an 18-case unit-test sweep of every scoring branch
+(ROE violations, time-critical exception, graduated-response correctness
+per threat tier, timeliness scoring, automation-bias categorization) plus
+a full HTTP integration pass and a real-browser click-through of the new
+5-button action ladder. Tier 2/3 of the roadmap (multi-sensor fusion,
+instructor console, AAR replay, certification thresholds, team roles,
+offline/audit mode, spoofed-signature scenarios) and the model
+training-performance section are not yet implemented — each is
+independently large; ask for them specifically when ready.
 
 ## Research-grade additions (`research/PROTOCOLS.md`)
 

@@ -18,6 +18,9 @@
   .blip { fill: #3fb950; }
   .blip.tagged { fill: #58a6ff; }
   #timer { font-variant-numeric: tabular-nums; font-size: 18px; }
+  .zone { fill: #f85149; fill-opacity: 0.12; stroke: #f85149; stroke-opacity: 0.6; stroke-dasharray: 10 6; }
+  .asset { fill: #d29922; }
+  #roeCard { font-size: 12px; color: #8b949e; padding: 8px 16px; border-bottom: 1px solid #1f2733; }
 </style>
 </head>
 <body>
@@ -41,6 +44,7 @@
     <input type="checkbox" id="participateResearch" /> Participate in research
   </label>
   <button onclick="startScenario()">New procedural scenario</button>
+  <button onclick="startAdaptive()" title="Weights the scenario toward whatever you've scored worst on in past sessions">Adaptive scenario</button>
   <label>Scripted drill
     <select id="scriptedDrill"><option value="">-- select --</option></select>
   </label>
@@ -49,6 +53,7 @@
   <button onclick="finishSession()">Finish &amp; score</button>
   <a href="/vr" style="color:#58a6ff">VR mode →</a>
 </header>
+<div id="roeCard">No scenario loaded — ROE card and no-engage zones will appear here.</div>
 <main>
   <svg id="scope" width="760" height="760" viewBox="-3000 -3000 6000 6000"></svg>
   <div id="sidebar">
@@ -73,24 +78,46 @@ function fmtTime(s) {
   return `${m}:${ss}`;
 }
 
-async function startScenario() {
-  const params = {
+function readScenarioParams() {
+  return {
     difficulty: parseInt(document.getElementById('difficulty').value),
     time_of_day: document.getElementById('timeOfDay').value,
     terrain: document.getElementById('terrain').value,
     sensor_degradation: parseFloat(document.getElementById('degradation').value),
   };
-  const res = await fetch('/api/scenario/new', {
-    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(params)
-  });
-  scenario = await res.json();
+}
+
+function onScenarioStarted(label) {
   log = {};
   elapsed = 0;
   simStart = Date.now();
   renderContactList();
-  document.getElementById('result').textContent = 'Session in progress...';
+  renderRoeCard();
+  document.getElementById('result').textContent = label;
   if (tickHandle) clearInterval(tickHandle);
   tickHandle = setInterval(tick, 200);
+}
+
+async function startScenario() {
+  const res = await fetch('/api/scenario/new', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(readScenarioParams())
+  });
+  scenario = await res.json();
+  onScenarioStarted('Session in progress...');
+}
+
+async function startAdaptive() {
+  const trainee_id = document.getElementById('traineeId').value || 'trainee-1';
+  const body = { trainee_id, ...readScenarioParams() };
+  const res = await fetch('/api/scenario/adaptive', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+  });
+  scenario = await res.json();
+  const weights = scenario.applied_type_weights || {};
+  const weightText = Object.keys(weights).length
+    ? `Weighted toward your weak spots: ${JSON.stringify(weights)}`
+    : 'No session history yet — same as a normal procedural scenario.';
+  onScenarioStarted(`Adaptive session in progress. ${weightText}`);
 }
 
 async function loadScriptedList() {
@@ -109,13 +136,18 @@ async function startScripted() {
   if (!name) return;
   const res = await fetch(`/api/scenario/scripted/${encodeURIComponent(name)}`, { method: 'POST' });
   scenario = await res.json();
-  log = {};
-  elapsed = 0;
-  simStart = Date.now();
-  renderContactList();
-  document.getElementById('result').textContent = `Scripted drill "${name}" in progress...`;
-  if (tickHandle) clearInterval(tickHandle);
-  tickHandle = setInterval(tick, 200);
+  onScenarioStarted(`Scripted drill "${name}" in progress...`);
+}
+
+function renderRoeCard() {
+  const el = document.getElementById('roeCard');
+  if (!scenario || !scenario.roe_card) { el.textContent = 'No ROE card for this scenario.'; return; }
+  const roe = scenario.roe_card;
+  const zones = (scenario.no_engage_zones || []).map(z => z.name).join(', ') || 'none';
+  el.innerHTML = `<strong>ROE:</strong> warn required before hard-kill unless target is within `
+    + `${roe.time_critical_override_s}s of impact (self-defense exception). `
+    + `Hard-kill max range ${roe.max_hard_kill_range_m}m, soft-kill max range ${roe.max_soft_kill_range_m}m. `
+    + `Hard-kill is <strong>prohibited</strong> inside no-engage zones: ${zones} (shown as red dashed circles on the scope).`;
 }
 
 function tick() {
@@ -145,6 +177,24 @@ function drawScope() {
   const svg = document.getElementById('scope');
   svg.innerHTML = '';
   if (!scenario) return;
+
+  for (const zone of (scenario.no_engage_zones || [])) {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', zone.center[0]);
+    circle.setAttribute('cy', zone.center[1]);
+    circle.setAttribute('r', zone.radius_m);
+    circle.setAttribute('class', 'zone');
+    svg.appendChild(circle);
+  }
+  if (scenario.defended_asset_position) {
+    const [ax, ay] = scenario.defended_asset_position;
+    const asset = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    asset.setAttribute('x', ax - 40); asset.setAttribute('y', ay - 40);
+    asset.setAttribute('width', 80); asset.setAttribute('height', 80);
+    asset.setAttribute('class', 'asset');
+    svg.appendChild(asset);
+  }
+
   for (const c of scenario.contacts) {
     if (elapsed < c.spawn_t || elapsed > c.despawn_t) continue;
     const p = posAt(c, elapsed);
@@ -174,15 +224,25 @@ function setClassification(contactId, value) {
 
 async function setEngagement(contactId, action) {
   if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
-  log[contactId].engagement_action = action;
+  const entry = log[contactId];
+
+  if (action === 'warn') {
+    entry.warn_at = elapsed;
+    renderContactList();
+    return;
+  }
+
+  // the graduated-response ladder's decisive step: monitor/ignore/soft_kill/hard_kill
+  entry.engagement_action = action;
+  entry.engagement_at = elapsed;
   renderContactList();
 
-  if (action !== 'engage' || !scenario) return;
+  if (action !== 'hard_kill' || !scenario) return;
   // live-reactive swarm: if this is an ares-driven swarm member, the real
   // recovery/relay logic reacts to the kill right now, not just at scoring time
   const res = await fetch('/api/contact/engage', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed }),
+    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed, action }),
   });
   const out = await res.json();
   if (out.reactive) {
@@ -209,7 +269,9 @@ function renderContactList() {
       <button onclick="requestAiHint('${c.contact_id}')">AI sensor hint</button>
       <div class="ai-hint" id="hint-${c.contact_id}" style="font-size:12px;color:#8b949e;margin-top:4px;"></div>
       <div>
-        <button onclick="setEngagement('${c.contact_id}', 'engage')" ${entry && entry.engagement_action === 'engage' ? 'style=background:#f85149' : ''}>Engage</button>
+        <button onclick="setEngagement('${c.contact_id}', 'warn')" ${entry && entry.warn_at !== undefined ? 'style=background:#58a6ff' : ''}>Warn</button>
+        <button onclick="setEngagement('${c.contact_id}', 'soft_kill')" ${entry && entry.engagement_action === 'soft_kill' ? 'style=background:#d29922' : ''}>Soft-kill (jam/spoof)</button>
+        <button onclick="setEngagement('${c.contact_id}', 'hard_kill')" ${entry && entry.engagement_action === 'hard_kill' ? 'style=background:#f85149' : ''}>Hard-kill (kinetic)</button>
         <button onclick="setEngagement('${c.contact_id}', 'monitor')" ${entry && entry.engagement_action === 'monitor' ? 'style=background:#d29922' : ''}>Monitor</button>
         <button onclick="setEngagement('${c.contact_id}', 'ignore')" ${entry && entry.engagement_action === 'ignore' ? 'style=background:#3fb950' : ''}>Ignore</button>
       </div>`;
@@ -226,6 +288,13 @@ async function requestAiHint(contactId) {
   const out = await res.json();
   const el = document.getElementById(`hint-${contactId}`);
   if (el) el.textContent = `sensor model: ${out.label} (p=${out.probabilities[out.label].toFixed(2)}, ${out.source})`;
+
+  // AI trust calibration (roadmap feature 4): record that a hint was asked
+  // for and what it said, so scoring can tell whether the trainee's final
+  // call followed or overrode it, and whether that was the right call.
+  if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
+  log[contactId].ai_hint_requested = true;
+  log[contactId].ai_hint_label = out.label;
 }
 
 async function finishSession() {

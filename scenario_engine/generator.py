@@ -57,6 +57,48 @@ def effective_degradation(params: "ScenarioParams") -> float:
     return max(0.0, min(1.0, params.sensor_degradation + env_penalty * 0.6))
 
 
+# the point every hostile contact is implicitly converging on; also the
+# sensor origin (range/azimuth in ml_bridge are already computed relative
+# to this point) — made explicit here so scoring can compute time-to-impact
+# and ROE zone checks against the same reference.
+DEFENDED_ASSET_POS = (0.0, 0.0, 0.0)
+
+NO_ENGAGE_ZONE_NAMES = ["hospital", "school", "civilian_housing", "marketplace"]
+
+
+def _generate_no_engage_zones(difficulty: int) -> list[dict]:
+    """1-2 no-engage zones (ROE feature 1): fixed areas where kinetic
+    (hard_kill) engagement is prohibited regardless of threat level,
+    matching real counter-UAS ROE constraints around protected sites."""
+    n_zones = 1 if difficulty < 4 else 2
+    names = random.sample(NO_ENGAGE_ZONE_NAMES, k=min(n_zones, len(NO_ENGAGE_ZONE_NAMES)))
+    zones = []
+    for name in names:
+        angle = random.uniform(0, 2 * math.pi)
+        dist = random.uniform(500, 2000)
+        zones.append({
+            "id": f"zone_{name}",
+            "name": name,
+            "center": [math.cos(angle) * dist, math.sin(angle) * dist],
+            "radius_m": random.uniform(150, 400),
+        })
+    return zones
+
+
+def _generate_roe_card(difficulty: int) -> dict:
+    """The ROE feature's rules, generated once per scenario so they're
+    fixed and inspectable (not learned/implicit) — the trainee can be shown
+    this card, and scoring_engine checks engagement decisions against it
+    exactly, same auditable-decision-tree philosophy as the rest of scoring."""
+    return {
+        "warn_before_hard_kill_required": True,
+        "time_critical_override_s": 15.0,  # inside this ETA, hard_kill w/o prior warn is self-defense, not penalized
+        "max_hard_kill_range_m": 800.0,
+        "max_soft_kill_range_m": 1500.0,
+        "no_engage_zones_block_hard_kill": True,
+    }
+
+
 @dataclass
 class Waypoint:
     t: float
@@ -103,6 +145,11 @@ class ScenarioParams:
     sensor_degradation: float = 0.0   # 0..1, adds noise/dropout to trainee's picture
     swarm_attack: bool = False
     seed: int | None = None
+    # adaptive-curriculum feature (research/PROTOCOLS.md-adjacent): optional
+    # per-contact-type count multipliers, e.g. {"decoy": 2.0} to spawn more
+    # decoys for a trainee whose AAR history shows they're weak on decoys.
+    # Keys: "hostile", "decoy", "bird", "friendly". None/missing = 1.0x.
+    type_weights: dict | None = field(default=None, compare=False)
 
 
 def _make_linear_path(t_offset: float, duration: float, speed: float, start=None, heading=None) -> list[Waypoint]:
@@ -238,25 +285,26 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
 
     difficulty = max(1, min(5, params.difficulty))
     window = (10, duration_s - 60)
+    weights = params.type_weights or {}
 
     contacts: list[Contact] = []
 
-    n_hostile = random.randint(1, difficulty)
-    for _ in range(n_hostile):
+    n_hostile = round(random.randint(1, difficulty) * weights.get("hostile", 1.0))
+    for _ in range(max(0, n_hostile)):
         contacts.append(_spawn_single_contact(ContactType.HOSTILE_DRONE, window))
 
     clutter = TERRAIN_EXTRA_CLUTTER.get(params.terrain, 0)
 
-    n_decoys = random.randint(0, difficulty) + clutter
-    for _ in range(n_decoys):
+    n_decoys = round((random.randint(0, difficulty) + clutter) * weights.get("decoy", 1.0))
+    for _ in range(max(0, n_decoys)):
         contacts.append(_spawn_single_contact(ContactType.DECOY, window))
 
-    n_birds = random.randint(0, difficulty + 1) + clutter
-    for _ in range(n_birds):
+    n_birds = round((random.randint(0, difficulty + 1) + clutter) * weights.get("bird", 1.0))
+    for _ in range(max(0, n_birds)):
         contacts.append(_spawn_single_contact(ContactType.BIRD, window))
 
-    n_friendly = random.randint(0, 2)
-    for _ in range(n_friendly):
+    n_friendly = round(random.randint(0, 2) * weights.get("friendly", 1.0))
+    for _ in range(max(0, n_friendly)):
         contacts.append(_spawn_single_contact(ContactType.FRIENDLY_DRONE, window))
 
     swarm_sim_meta = None
@@ -272,6 +320,9 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
         "scenario_id": str(uuid.uuid4()),
         "params": scenario_params,
         "duration_s": duration_s,
+        "defended_asset_position": list(DEFENDED_ASSET_POS),
+        "no_engage_zones": _generate_no_engage_zones(difficulty),
+        "roe_card": _generate_roe_card(difficulty),
         "contacts": [
             {
                 "contact_id": c.contact_id,
@@ -315,5 +366,10 @@ def sanitize_for_client(scenario: dict) -> dict:
         "scenario_id": scenario["scenario_id"],
         "params": {k: v for k, v in scenario["params"].items() if k != "seed"},
         "duration_s": scenario["duration_s"],
+        # ROE/zones/asset are information the trainee needs to operate with,
+        # not ground truth about contacts — safe (and necessary) to send as-is.
+        "defended_asset_position": scenario["defended_asset_position"],
+        "no_engage_zones": scenario["no_engage_zones"],
+        "roe_card": scenario["roe_card"],
         "contacts": out_contacts,
     }

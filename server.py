@@ -21,7 +21,7 @@ from scenario_engine.generator import ScenarioParams, sanitize_for_client
 from scoring_engine import score_session
 from aar_dashboard import (
     init_db, save_session, list_sessions, trainee_trend, unit_trend,
-    get_or_assign_arm, experiment_results,
+    get_or_assign_arm, experiment_results, weakness_profile,
 )
 from ml_bridge import classify_contact, generate_swarm_paths
 from research import next_difficulty
@@ -95,6 +95,42 @@ def new_scenario(req: NewScenarioRequest):
     return sanitize_for_client(scenario)
 
 
+class AdaptiveScenarioRequest(BaseModel):
+    trainee_id: str
+    difficulty: int = 3
+    time_of_day: str = "day"
+    terrain: str = "rural"
+    sensor_degradation: float = 0.0
+    swarm_attack: bool = False
+    duration_s: int = 300
+    seed: int | None = None
+
+
+@app.post("/api/scenario/adaptive")
+def adaptive_scenario(req: AdaptiveScenarioRequest):
+    """Roadmap feature 5 (adaptive curriculum): pulls this trainee's
+    weakness profile from their AAR history and weights the next
+    scenario's contact-type counts toward whatever they're weakest on,
+    instead of pure random repetition. Falls back to the normal (1.0x
+    every type) distribution for a trainee with no session history yet.
+    """
+    weights = weakness_profile(req.trainee_id)
+    params = ScenarioParams(
+        difficulty=req.difficulty,
+        time_of_day=req.time_of_day,
+        terrain=req.terrain,
+        sensor_degradation=req.sensor_degradation,
+        swarm_attack=req.swarm_attack,
+        seed=req.seed,
+        type_weights=weights,
+    )
+    scenario = generate_scenario(params, duration_s=req.duration_s)
+    _ACTIVE_SCENARIOS[scenario["scenario_id"]] = scenario
+    out = sanitize_for_client(scenario)
+    out["applied_type_weights"] = weights
+    return out
+
+
 @app.get("/api/scenario/scripted")
 def scripted_list():
     return list_scripted()
@@ -138,13 +174,17 @@ class EngageRequest(BaseModel):
     scenario_id: str
     contact_id: str
     t: float
+    action: str = "hard_kill"  # only a kinetic kill (hard_kill, or legacy "engage") has a live sim effect
 
 
 @app.post("/api/contact/engage")
 def engage_contact(req: EngageRequest):
-    """Called the instant a trainee engages a contact (not just logged for
-    scoring at the end). If the target is a live ares-driven swarm member,
-    this deterministically replays the swarm's simulation from t=0 up to
+    """Called the instant a trainee takes a kinetic (hard_kill) action on a
+    contact (not just logged for scoring at the end) — warn/soft_kill/
+    monitor/ignore never reach this far (see the graduated-response ladder
+    in scoring_engine/scorer.py; only a kinetic kill can plausibly destroy a
+    swarm member). If the target is a live ares-driven swarm member, this
+    deterministically replays the swarm's simulation from t=0 up to
     `req.t` (identical to what the trainee already saw — see
     ml_bridge.swarm_kinematics' replay-and-diverge design), injects a real
     UAV_FAILURE at that instant, and lets ares's actual recovery/relay logic
@@ -160,6 +200,9 @@ def engage_contact(req: EngageRequest):
     contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
     if contact is None:
         raise HTTPException(404, "unknown contact_id")
+
+    if req.action not in ("hard_kill", "engage"):
+        return {"reactive": False, "contacts": []}
 
     meta = scenario.get("swarm_sim_meta")
     if meta is None or req.contact_id not in meta["contact_to_uav"]:
