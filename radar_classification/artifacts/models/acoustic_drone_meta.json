@@ -1,0 +1,27 @@
+{
+  "feature_order": [
+    "spectral_centroid",
+    "spectral_bandwidth",
+    "spectral_flatness",
+    "spectral_rolloff",
+    "zero_crossing_rate",
+    "mfcc_0",
+    "mfcc_1",
+    "mfcc_2",
+    "mfcc_3",
+    "mfcc_4",
+    "mfcc_5",
+    "mfcc_6",
+    "mfcc_7",
+    "mod_peak_freq",
+    "mod_peak_strength",
+    "mod_band_energy",
+    "harmonic_ratio"
+  ],
+  "classes": [
+    "drone",
+    "not_drone"
+  ],
+  "sample_rate": 22050,
+  "clip_seconds": 2.0
+}

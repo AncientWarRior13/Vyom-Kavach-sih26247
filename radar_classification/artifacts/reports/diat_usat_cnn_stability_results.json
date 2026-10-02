@@ -1,0 +1,31 @@
+{
+  "n_repeats": 3,
+  "runs": [
+    {
+      "seed": 0,
+      "test_accuracy": 0.7248,
+      "test_macro_f1": 0.7666472220966221,
+      "train_seconds": 2361.7
+    },
+    {
+      "seed": 1,
+      "test_accuracy": 0.672,
+      "test_macro_f1": 0.6407330600434049,
+      "train_seconds": 5743.6
+    },
+    {
+      "seed": 2,
+      "test_accuracy": 0.7733333333333333,
+      "test_macro_f1": 0.766481103625749,
+      "train_seconds": 1792.6
+    }
+  ],
+  "test_accuracy_mean": 0.7233777777777778,
+  "test_accuracy_std": 0.04138138186953278,
+  "test_accuracy_min": 0.672,
+  "test_accuracy_max": 0.7733333333333333,
+  "test_macro_f1_mean": 0.7246204619219253,
+  "test_macro_f1_std": 0.05931738949236208,
+  "total_seconds": 9898.6,
+  "note": "Fixed-epoch training (no early stopping) across 3 seeds. Compare test_accuracy_std here against the ~14-point spread seen across early-stopped single runs to confirm removing the validation-based checkpoint lottery actually reduced run-to-run variance."
+}

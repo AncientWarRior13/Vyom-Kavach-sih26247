@@ -1,0 +1,68 @@
+{
+  "comparison_note": "NOT a fair fight in one specific sense, disclosed not hidden: the 11-feature model was never trained on SNR below -20dB (out of distribution here); the 31-feature model WAS trained on [-25,-10]dB. This tests graceful-degradation-under-novel-noise for the incumbent vs. purpose-built-for-this-regime for the challenger, not an intrinsic schema comparison.",
+  "snr_slice_tested": "<= -23 dB",
+  "model_11feature_frozen_ood": {
+    "accuracy": 0.9514376996805112,
+    "macro_f1": 0.869870250781204,
+    "precision_aircraft": 0.9915611814345991,
+    "recall_aircraft": 0.9572301425661914,
+    "f1_aircraft": 0.9740932642487047,
+    "precision_anomaly": 0.7307692307692307,
+    "recall_anomaly": 0.9134615384615384,
+    "f1_anomaly": 0.811965811965812,
+    "precision_bird": 0.9909808342728298,
+    "recall_bird": 0.956474428726877,
+    "f1_bird": 0.973421926910299,
+    "precision_drone": 0.6081081081081081,
+    "recall_drone": 0.8823529411764706,
+    "f1_drone": 0.72,
+    "pr_auc_drone": 0.8311851305679256,
+    "n": 1565
+  },
+  "model_31feature_trained_for_regime": {
+    "accuracy": 0.960995292535306,
+    "macro_f1": 0.8421425435220943,
+    "precision_aircraft": 0.998015873015873,
+    "recall_aircraft": 0.9940711462450593,
+    "f1_aircraft": 0.996039603960396,
+    "precision_anomaly": 0.8876404494382022,
+    "recall_anomaly": 0.7821782178217822,
+    "f1_anomaly": 0.8315789473684211,
+    "precision_bird": 0.9891041162227603,
+    "recall_bird": 0.9714625445897741,
+    "f1_bird": 0.9802039592081584,
+    "precision_drone": 0.4411764705882353,
+    "recall_drone": 0.7692307692307693,
+    "f1_drone": 0.5607476635514018,
+    "pr_auc_drone": 0.7026712448711089,
+    "confusion_matrix": [
+      [
+        503,
+        3,
+        0,
+        0
+      ],
+      [
+        1,
+        79,
+        2,
+        19
+      ],
+      [
+        0,
+        5,
+        817,
+        19
+      ],
+      [
+        0,
+        2,
+        7,
+        30
+      ]
+    ],
+    "n": 1487,
+    "threshold_used": 0.33
+  },
+  "higher_accuracy_at_this_slice": "31-feature"
+}

@@ -1,0 +1,405 @@
+{
+  "method": "z-score of comparison-batch feature mean vs. training mean/std (first-moment drift; NOT a full distributional test like KS -- documented limitation, not hidden)",
+  "thresholds": {
+    "green": "|z| < 1",
+    "yellow": "1 <= |z| < 2",
+    "red": "|z| >= 2"
+  },
+  "results": {
+    "radar_test (sanity check -- same simulator, held-out split)": {
+      "doppler_velocity": {
+        "train_mean": 0.07920546483112001,
+        "train_std": 21.92000677249874,
+        "batch_mean": -0.21104365156772303,
+        "drift_z": -0.013241287715430596,
+        "status": "green"
+      },
+      "doppler_freq_shift": {
+        "train_mean": 5.280364322074664,
+        "train_std": 1461.3337848332415,
+        "batch_mean": -14.069576771181534,
+        "drift_z": -0.013241287715430665,
+        "status": "green"
+      },
+      "rcs_estimate": {
+        "train_mean": -0.8260297536090229,
+        "train_std": 13.846527243327108,
+        "batch_mean": -0.7840909128017901,
+        "drift_z": 0.0030288346002022887,
+        "status": "green"
+      },
+      "micro_doppler_bandwidth": {
+        "train_mean": 46.53724925650882,
+        "train_std": 64.53245287168671,
+        "batch_mean": 46.19267819878999,
+        "drift_z": -0.00533950039686171,
+        "status": "green"
+      },
+      "micro_doppler_jitter": {
+        "train_mean": 0.2913420253047439,
+        "train_std": 0.22990431092489452,
+        "batch_mean": 0.28946539740025223,
+        "drift_z": -0.008162647742193609,
+        "status": "green"
+      },
+      "range_m": {
+        "train_mean": 2168.0342489677996,
+        "train_std": 1314.88594800356,
+        "batch_mean": 2168.996101733109,
+        "drift_z": 0.0007315104148535833,
+        "status": "green"
+      },
+      "azimuth_deg": {
+        "train_mean": -0.05238724489250662,
+        "train_std": 103.87499164244105,
+        "batch_mean": -1.338327187463977,
+        "drift_z": -0.012379687567128175,
+        "status": "green"
+      },
+      "altitude_m": {
+        "train_mean": 1145.5397897269308,
+        "train_std": 847.4786549930268,
+        "batch_mean": 1157.2060925704725,
+        "drift_z": 0.01376589578369692,
+        "status": "green"
+      },
+      "velocity_variance": {
+        "train_mean": 1.2659696584993996,
+        "train_std": 2.015740143471564,
+        "batch_mean": 1.2955013179695933,
+        "drift_z": 0.014650529020736528,
+        "status": "green"
+      },
+      "acceleration": {
+        "train_mean": -0.014890903227694149,
+        "train_std": 2.751525500184231,
+        "batch_mean": 0.02321602597189884,
+        "drift_z": 0.013849382532359416,
+        "status": "green"
+      },
+      "snr_db": {
+        "train_mean": -16.259659595333154,
+        "train_std": 2.6540242804124516,
+        "batch_mean": -16.246650556843843,
+        "drift_z": 0.004901627534202467,
+        "status": "green"
+      }
+    },
+    "real_saab77 (77GHz FMCW)": {
+      "doppler_velocity": {
+        "train_mean": 0.07920546483112001,
+        "train_std": 21.92000677249874,
+        "batch_mean": -0.05168409383625285,
+        "drift_z": -0.0059712371454004026,
+        "status": "green"
+      },
+      "doppler_freq_shift": {
+        "train_mean": 5.280364322074664,
+        "train_std": 1461.3337848332415,
+        "batch_mean": -3.4456062557501905,
+        "drift_z": -0.005971237145400433,
+        "status": "green"
+      },
+      "rcs_estimate": {
+        "train_mean": -0.8260297536090229,
+        "train_std": 13.846527243327108,
+        "batch_mean": -12.835917306798226,
+        "drift_z": -0.8673573772064028,
+        "status": "green"
+      },
+      "micro_doppler_bandwidth": {
+        "train_mean": 46.53724925650882,
+        "train_std": 64.53245287168671,
+        "batch_mean": 120.18713356953793,
+        "drift_z": 1.1412844396209618,
+        "status": "yellow"
+      },
+      "micro_doppler_jitter": {
+        "train_mean": 0.2913420253047439,
+        "train_std": 0.22990431092489452,
+        "batch_mean": 0.0853712469702106,
+        "drift_z": -0.8958978520494996,
+        "status": "green"
+      },
+      "range_m": {
+        "train_mean": 2168.0342489677996,
+        "train_std": 1314.88594800356,
+        "batch_mean": 57.80879619791086,
+        "drift_z": -1.604873377781489,
+        "status": "yellow"
+      },
+      "azimuth_deg": {
+        "train_mean": -0.05238724489250662,
+        "train_std": 103.87499164244105,
+        "batch_mean": 0.0,
+        "drift_z": 0.0005043297146327022,
+        "status": "green"
+      },
+      "altitude_m": {
+        "train_mean": 1145.5397897269308,
+        "train_std": 847.4786549930268,
+        "batch_mean": 0.0,
+        "drift_z": -1.351703412207304,
+        "status": "yellow"
+      },
+      "velocity_variance": {
+        "train_mean": 1.2659696584993996,
+        "train_std": 2.015740143471564,
+        "batch_mean": 0.5312336417434915,
+        "drift_z": -0.3644993721713182,
+        "status": "green"
+      },
+      "acceleration": {
+        "train_mean": -0.014890903227694149,
+        "train_std": 2.751525500184231,
+        "batch_mean": 0.1224978576460175,
+        "drift_z": 0.049931850845835395,
+        "status": "green"
+      },
+      "snr_db": {
+        "train_mean": -16.259659595333154,
+        "train_std": 2.6540242804124516,
+        "batch_mean": -14.965946651210565,
+        "drift_z": 0.48745331897323046,
+        "status": "green"
+      }
+    },
+    "real_raddar (8.75GHz FMCW)": {
+      "doppler_velocity": {
+        "train_mean": 0.07920546483112001,
+        "train_std": 21.92000677249874,
+        "batch_mean": 0.014340334042936248,
+        "drift_z": -0.002959174760363888,
+        "status": "green"
+      },
+      "doppler_freq_shift": {
+        "train_mean": 5.280364322074664,
+        "train_std": 1461.3337848332415,
+        "batch_mean": 0.9560222695290834,
+        "drift_z": -0.002959174760363902,
+        "status": "green"
+      },
+      "rcs_estimate": {
+        "train_mean": -0.8260297536090229,
+        "train_std": 13.846527243327108,
+        "batch_mean": -4.999991722511955,
+        "drift_z": -0.30144467963362,
+        "status": "green"
+      },
+      "micro_doppler_bandwidth": {
+        "train_mean": 46.53724925650882,
+        "train_std": 64.53245287168671,
+        "batch_mean": 30.477945235882657,
+        "drift_z": -0.24885624683378652,
+        "status": "green"
+      },
+      "micro_doppler_jitter": {
+        "train_mean": 0.2913420253047439,
+        "train_std": 0.22990431092489452,
+        "batch_mean": 0.035410023274542436,
+        "drift_z": -1.1132109746032979,
+        "status": "yellow"
+      },
+      "range_m": {
+        "train_mean": 2168.0342489677996,
+        "train_std": 1314.88594800356,
+        "batch_mean": 500.0,
+        "drift_z": -1.2685771351503434,
+        "status": "yellow"
+      },
+      "azimuth_deg": {
+        "train_mean": -0.05238724489250662,
+        "train_std": 103.87499164244105,
+        "batch_mean": 0.0,
+        "drift_z": 0.0005043297146327022,
+        "status": "green"
+      },
+      "altitude_m": {
+        "train_mean": 1145.5397897269308,
+        "train_std": 847.4786549930268,
+        "batch_mean": 0.0,
+        "drift_z": -1.351703412207304,
+        "status": "yellow"
+      },
+      "velocity_variance": {
+        "train_mean": 1.2659696584993996,
+        "train_std": 2.015740143471564,
+        "batch_mean": 0.6123941634608018,
+        "drift_z": -0.3242359870419566,
+        "status": "green"
+      },
+      "acceleration": {
+        "train_mean": -0.014890903227694149,
+        "train_std": 2.751525500184231,
+        "batch_mean": 0.007872961404559925,
+        "drift_z": 0.00827317959827372,
+        "status": "green"
+      },
+      "snr_db": {
+        "train_mean": -16.259659595333154,
+        "train_std": 2.6540242804124516,
+        "batch_mean": -14.45098109145334,
+        "drift_z": 0.6814852890489513,
+        "status": "green"
+      }
+    },
+    "real_tsms_cw (2.5GHz CW)": {
+      "doppler_velocity": {
+        "train_mean": 0.07920546483112001,
+        "train_std": 21.92000677249874,
+        "batch_mean": -0.4964595858383433,
+        "drift_z": -0.026262083613573683,
+        "status": "green"
+      },
+      "doppler_freq_shift": {
+        "train_mean": 5.280364322074664,
+        "train_std": 1461.3337848332415,
+        "batch_mean": -33.09730572255623,
+        "drift_z": -0.026262083613573826,
+        "status": "green"
+      },
+      "rcs_estimate": {
+        "train_mean": -0.8260297536090229,
+        "train_std": 13.846527243327108,
+        "batch_mean": 13.240800407044308,
+        "drift_z": 1.0159103371881488,
+        "status": "yellow"
+      },
+      "micro_doppler_bandwidth": {
+        "train_mean": 46.53724925650882,
+        "train_std": 64.53245287168671,
+        "batch_mean": 487.7026465436028,
+        "drift_z": 6.836333932080444,
+        "status": "red"
+      },
+      "micro_doppler_jitter": {
+        "train_mean": 0.2913420253047439,
+        "train_std": 0.22990431092489452,
+        "batch_mean": 0.21678669533659736,
+        "drift_z": -0.3242885253791626,
+        "status": "green"
+      },
+      "range_m": {
+        "train_mean": 2168.0342489677996,
+        "train_std": 1314.88594800356,
+        "batch_mean": 50.0,
+        "drift_z": -1.6108121409189058,
+        "status": "yellow"
+      },
+      "azimuth_deg": {
+        "train_mean": -0.05238724489250662,
+        "train_std": 103.87499164244105,
+        "batch_mean": 0.0,
+        "drift_z": 0.0005043297146327022,
+        "status": "green"
+      },
+      "altitude_m": {
+        "train_mean": 1145.5397897269308,
+        "train_std": 847.4786549930268,
+        "batch_mean": 1.5,
+        "drift_z": -1.3499334561250327,
+        "status": "yellow"
+      },
+      "velocity_variance": {
+        "train_mean": 1.2659696584993996,
+        "train_std": 2.015740143471564,
+        "batch_mean": 21.057122889387987,
+        "drift_z": 9.818305844127165,
+        "status": "red"
+      },
+      "acceleration": {
+        "train_mean": -0.014890903227694149,
+        "train_std": 2.751525500184231,
+        "batch_mean": 0.046716925915322866,
+        "drift_z": 0.022390426379436428,
+        "status": "green"
+      },
+      "snr_db": {
+        "train_mean": -16.259659595333154,
+        "train_std": 2.6540242804124516,
+        "batch_mean": -14.488919368095605,
+        "drift_z": 0.6671906660033893,
+        "status": "green"
+      }
+    },
+    "real_diat_usat (X-band, tabular bridge)": {
+      "doppler_velocity": {
+        "train_mean": 0.07920546483112001,
+        "train_std": 21.92000677249874,
+        "batch_mean": -0.034078407124907215,
+        "drift_z": -0.005168058255262737,
+        "status": "green"
+      },
+      "doppler_freq_shift": {
+        "train_mean": 5.280364322074664,
+        "train_std": 1461.3337848332415,
+        "batch_mean": -2.271893808327148,
+        "drift_z": -0.005168058255262763,
+        "status": "green"
+      },
+      "rcs_estimate": {
+        "train_mean": -0.8260297536090229,
+        "train_std": 13.846527243327108,
+        "batch_mean": -4.99725325868879,
+        "drift_z": -0.30124690702428336,
+        "status": "green"
+      },
+      "micro_doppler_bandwidth": {
+        "train_mean": 46.53724925650882,
+        "train_std": 64.53245287168671,
+        "batch_mean": 198.06470486255412,
+        "drift_z": 2.3480814514727237,
+        "status": "red"
+      },
+      "micro_doppler_jitter": {
+        "train_mean": 0.2913420253047439,
+        "train_std": 0.22990431092489452,
+        "batch_mean": 0.08951598718204451,
+        "drift_z": -0.8778697420277266,
+        "status": "green"
+      },
+      "range_m": {
+        "train_mean": 2168.0342489677996,
+        "train_std": 1314.88594800356,
+        "batch_mean": 50.0,
+        "drift_z": -1.6108121409189058,
+        "status": "yellow"
+      },
+      "azimuth_deg": {
+        "train_mean": -0.05238724489250662,
+        "train_std": 103.87499164244105,
+        "batch_mean": 0.0,
+        "drift_z": 0.0005043297146327022,
+        "status": "green"
+      },
+      "altitude_m": {
+        "train_mean": 1145.5397897269308,
+        "train_std": 847.4786549930268,
+        "batch_mean": 0.0,
+        "drift_z": -1.351703412207304,
+        "status": "yellow"
+      },
+      "velocity_variance": {
+        "train_mean": 1.2659696584993996,
+        "train_std": 2.015740143471564,
+        "batch_mean": 0.0002822657399221479,
+        "drift_z": -0.627902062107904,
+        "status": "green"
+      },
+      "acceleration": {
+        "train_mean": -0.014890903227694149,
+        "train_std": 2.751525500184231,
+        "batch_mean": -0.00014455771316405677,
+        "drift_z": 0.005359334490464557,
+        "status": "green"
+      },
+      "snr_db": {
+        "train_mean": -16.259659595333154,
+        "train_std": 2.6540242804124516,
+        "batch_mean": -14.504775108066656,
+        "drift_z": 0.6612164403385858,
+        "status": "green"
+      }
+    }
+  }
+}

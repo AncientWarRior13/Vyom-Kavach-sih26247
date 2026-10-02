@@ -1,0 +1,34 @@
+{
+  "baseline": {
+    "extraction_overall_agreement": 0.9541025641025641,
+    "extraction_drone_gate_agreement": 0.9915384615384616,
+    "n_surrogate_evaded": 99,
+    "n_transferred_to_real_target": 99,
+    "n_attacked": 100,
+    "transfer_rate": 0.99
+  },
+  "rounded_2dp": {
+    "extraction_overall_agreement": 0.9541025641025641,
+    "extraction_drone_gate_agreement": 0.9915384615384616,
+    "n_surrogate_evaded": 99,
+    "n_transferred_to_real_target": 99,
+    "n_attacked": 100,
+    "transfer_rate": 0.99
+  },
+  "rounded_1dp": {
+    "extraction_overall_agreement": 0.9541025641025641,
+    "extraction_drone_gate_agreement": 0.9915384615384616,
+    "n_surrogate_evaded": 99,
+    "n_transferred_to_real_target": 99,
+    "n_attacked": 100,
+    "transfer_rate": 0.99
+  },
+  "label_only": {
+    "extraction_overall_agreement": 0.9541025641025641,
+    "extraction_drone_gate_agreement": 0.9915384615384616,
+    "n_surrogate_evaded": 99,
+    "n_transferred_to_real_target": 99,
+    "n_attacked": 100,
+    "transfer_rate": 0.99
+  }
+}

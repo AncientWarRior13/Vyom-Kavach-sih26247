@@ -1,0 +1,19 @@
+# Connectivity health scoring coefficients (PROJECT_CONTEXT.md section 8).
+# ConnectivityHealth = coverage_weight * coverage + pdr_weight * avg_pdr
+
+coverage_weight: 0.6
+pdr_weight: 0.4
+
+network_state_thresholds:
+  healthy_min: 0.85
+  degraded_min: 0.6
+  critical_min: 0.3
+  # below critical_min and above 0 -> RECOVERING; 0 -> DISCONNECTED
+
+pdr_model:
+  edge_falloff_exponent: 2   # PDR ~ (1 - (d/range)^exponent), 0 at range
+  edge_pdr_scale: 0.98
+
+latency_model:
+  base_latency_ms: 15.0
+  max_extra_latency_ms: 60.0

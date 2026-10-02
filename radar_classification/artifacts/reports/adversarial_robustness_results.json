@@ -1,0 +1,2207 @@
+{
+  "n_attacked": 179,
+  "n_correctly_classified_drones_in_test": 179,
+  "attack_features": [
+    "doppler_velocity",
+    "rcs_estimate",
+    "micro_doppler_bandwidth",
+    "micro_doppler_jitter",
+    "velocity_variance",
+    "acceleration"
+  ],
+  "excluded_features": [
+    "range_m",
+    "azimuth_deg",
+    "altitude_m",
+    "snr_db"
+  ],
+  "physical_bounds": {
+    "doppler_velocity": [
+      -50,
+      50
+    ],
+    "rcs_estimate": [
+      -20,
+      20
+    ],
+    "micro_doppler_bandwidth": [
+      0,
+      500
+    ],
+    "micro_doppler_jitter": [
+      0,
+      1
+    ],
+    "velocity_variance": [
+      0,
+      200
+    ],
+    "acceleration": [
+      -10,
+      10
+    ]
+  },
+  "search_method": "black-box random search / basin-hopping, 8 restarts x 150 iters/restart",
+  "deployed_threshold": 0.54,
+  "success_rate": 1.0,
+  "median_min_perturbation_norm_std_units": 1.036296208833017,
+  "features_most_exploited_mean_abs_delta_over_std": {
+    "rcs_estimate": 0.6563843466018007,
+    "doppler_velocity": 0.3377694363680387,
+    "micro_doppler_jitter": 0.28896234472170035,
+    "micro_doppler_bandwidth": 0.2632351798956358,
+    "acceleration": 0.17922540869208567,
+    "velocity_variance": 0.12092562454289105
+  },
+  "per_sample_results": [
+    {
+      "success": true,
+      "min_perturbation_norm": 1.769945952173474,
+      "delta": {
+        "doppler_velocity": -17.89811253775104,
+        "rcs_estimate": 17.195581162361783,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.21872206027636384,
+        "velocity_variance": 0.0,
+        "acceleration": -0.37602626467251193
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.38567358659918505,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 3.7808761721777584,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.36521893329493765,
+        "acceleration": 0.5595625243998607
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7136433277586413,
+      "delta": {
+        "doppler_velocity": -6.568193412736622,
+        "rcs_estimate": 8.968236661674975,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.2629323144371343,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 17.487226698331938,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9183690472439566,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 8.97952754566493,
+        "micro_doppler_bandwidth": -14.776790234532285,
+        "micro_doppler_jitter": 0.139901247706101,
+        "velocity_variance": 0.0,
+        "acceleration": 0.029571492646427777
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7736827472618615,
+      "delta": {
+        "doppler_velocity": -15.234015056269868,
+        "rcs_estimate": -4.7075077416280156,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3419009570606768,
+      "delta": {
+        "doppler_velocity": 0.9911829137114518,
+        "rcs_estimate": 18.294499856760723,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.020078558332154117,
+        "velocity_variance": 0.0,
+        "acceleration": -0.5860647945269857
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.3913810415865746,
+      "delta": {
+        "doppler_velocity": -29.226667292225855,
+        "rcs_estimate": -9.184263124821669,
+        "micro_doppler_bandwidth": -117.1806730726813,
+        "micro_doppler_jitter": -0.0888621549927037,
+        "velocity_variance": 0.0,
+        "acceleration": 0.6411599673712194
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5493210471460521,
+      "delta": {
+        "doppler_velocity": -24.475383411730004,
+        "rcs_estimate": 12.57196636719095,
+        "micro_doppler_bandwidth": 21.8289925429954,
+        "micro_doppler_jitter": -0.03340890542570364,
+        "velocity_variance": 0.0,
+        "acceleration": 1.2110983262801942
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8368392466221876,
+      "delta": {
+        "doppler_velocity": -15.076199551279817,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -23.703515777034518,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.6125237657159546,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.809606381146581,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": -3.660976284646863,
+        "micro_doppler_bandwidth": -46.3444931200278,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.20006256543313805,
+        "acceleration": -0.6737331030245548
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1940005817214647,
+      "delta": {
+        "doppler_velocity": -2.332891854708832,
+        "rcs_estimate": 15.532119954661114,
+        "micro_doppler_bandwidth": 16.03697267815467,
+        "micro_doppler_jitter": -0.05127500395666466,
+        "velocity_variance": 0.0,
+        "acceleration": -0.580597003691068
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9653287158114431,
+      "delta": {
+        "doppler_velocity": -16.430526740128446,
+        "rcs_estimate": 7.546411154918202,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.06210766799322702,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8597729535087173,
+      "delta": {
+        "doppler_velocity": -3.6846164025476456,
+        "rcs_estimate": 15.095039026466914,
+        "micro_doppler_bandwidth": -47.25856236897659,
+        "micro_doppler_jitter": 0.2303385188255436,
+        "velocity_variance": -1.6888449807015544,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.6859823626258602,
+      "delta": {
+        "doppler_velocity": -1.0453348450864883,
+        "rcs_estimate": 8.500156655299634,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.024351137610119592,
+        "velocity_variance": -0.5709411617446832,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.85789802198041,
+      "delta": {
+        "doppler_velocity": -18.31482116067751,
+        "rcs_estimate": -1.6343794342136975,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": -0.42578873094272507
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0697132326681507,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 13.712469359774117,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.09297805002876713,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3482670444445113,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": -1.5541473455401051,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.02476918771487855,
+        "velocity_variance": -0.6280725897249836,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5160158447342327,
+      "delta": {
+        "doppler_velocity": 1.0007420814094612,
+        "rcs_estimate": 11.913580339236269,
+        "micro_doppler_bandwidth": -40.04185584264737,
+        "micro_doppler_jitter": 0.2205781022170452,
+        "velocity_variance": 0.0,
+        "acceleration": -1.3768730051602889
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4829904101468654,
+      "delta": {
+        "doppler_velocity": 9.741922361063567,
+        "rcs_estimate": -5.49538305695488,
+        "micro_doppler_bandwidth": -87.35259735896011,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": -0.30059929331766744
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8244909937828874,
+      "delta": {
+        "doppler_velocity": 5.44904730223783,
+        "rcs_estimate": 6.366471057393499,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.11961625686739742,
+        "velocity_variance": -0.7430552458851558,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3633716597351613,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 17.706811021933543,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.10868335443586243,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.39405999564154376,
+      "delta": {
+        "doppler_velocity": -0.29395029137878087,
+        "rcs_estimate": -3.677317076199745,
+        "micro_doppler_bandwidth": -16.42134127108803,
+        "micro_doppler_jitter": -0.017221158493034752,
+        "velocity_variance": -0.24027386364596637,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3656437203605649,
+      "delta": {
+        "doppler_velocity": -4.685424288746996,
+        "rcs_estimate": 4.107679655560908,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.27262592275401903,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.5495430166462538,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.91099048263283,
+      "delta": {
+        "doppler_velocity": -15.401522024828562,
+        "rcs_estimate": 22.220940504387297,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": -2.1005754907948315
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.13409733344745822,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 1.8567823808377495,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.298444143427139,
+      "delta": {
+        "doppler_velocity": 23.04778933716583,
+        "rcs_estimate": -2.413751067584064,
+        "micro_doppler_bandwidth": -27.24940420767465,
+        "micro_doppler_jitter": -0.1362915439014769,
+        "velocity_variance": -0.2577937952594589,
+        "acceleration": 0.17248751587523542
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4415161204174511,
+      "delta": {
+        "doppler_velocity": -17.295893726373535,
+        "rcs_estimate": -5.4621869816488235,
+        "micro_doppler_bandwidth": -18.242156334197183,
+        "micro_doppler_jitter": -0.22666521737742396,
+        "velocity_variance": -0.9872782046441946,
+        "acceleration": 0.24520296575743647
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.5467191927072582,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": -5.892710821539352,
+        "micro_doppler_bandwidth": -22.14782856007849,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9898931969061157,
+      "delta": {
+        "doppler_velocity": 13.787978224956898,
+        "rcs_estimate": -4.204949792424145,
+        "micro_doppler_bandwidth": -37.57854887807862,
+        "micro_doppler_jitter": -0.05696700833182194,
+        "velocity_variance": 0.0,
+        "acceleration": 0.8323670803290315
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.855554515868386,
+      "delta": {
+        "doppler_velocity": -9.268885173409146,
+        "rcs_estimate": 21.592560807245697,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.0016197113039593258,
+        "velocity_variance": -1.0925595750191681,
+        "acceleration": 2.019436577059686
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9975871254393426,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 13.105148921055964,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.020995644720487178,
+        "velocity_variance": 0.0,
+        "acceleration": 0.8302971371010749
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.6481114363699649,
+      "delta": {
+        "doppler_velocity": -10.433391710896132,
+        "rcs_estimate": -1.451007393508179,
+        "micro_doppler_bandwidth": -8.481258447137279,
+        "micro_doppler_jitter": 0.09345582306828785,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.6565894407906672,
+      "delta": {
+        "doppler_velocity": -15.521195768942114,
+        "rcs_estimate": 13.6068676377503,
+        "micro_doppler_bandwidth": -6.2158261931757,
+        "micro_doppler_jitter": -0.15619406641970418,
+        "velocity_variance": 1.1957417370261607,
+        "acceleration": 1.8549638719346677
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 4.412634918587235,
+      "delta": {
+        "doppler_velocity": -30.750642798566414,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -231.98890310379196,
+        "micro_doppler_jitter": -0.49201132679772724,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7521969872903674,
+      "delta": {
+        "doppler_velocity": 8.414189897076577,
+        "rcs_estimate": 8.942109378724847,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.008580530205900713,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.43513304075318576,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 6.025081503260751,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.22585874976625775,
+      "delta": {
+        "doppler_velocity": -4.950825324504469,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4995487611232219,
+      "delta": {
+        "doppler_velocity": -3.1008161355561548,
+        "rcs_estimate": 16.68822033186829,
+        "micro_doppler_bandwidth": -2.233746842945205,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": -0.770553312429294,
+        "acceleration": 2.181760385984983
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8241279925707471,
+      "delta": {
+        "doppler_velocity": -16.24902701679359,
+        "rcs_estimate": -4.336964004573204,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.04085255985988842,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0016641496494574,
+      "delta": {
+        "doppler_velocity": -8.019536935761552,
+        "rcs_estimate": 10.846165822306157,
+        "micro_doppler_bandwidth": 1.4380409368965061,
+        "micro_doppler_jitter": 0.11618825204467426,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7953913250046096,
+      "delta": {
+        "doppler_velocity": -7.437299460768862,
+        "rcs_estimate": -3.182231508542871,
+        "micro_doppler_bandwidth": -8.77783710569946,
+        "micro_doppler_jitter": -0.1295147924445484,
+        "velocity_variance": 0.0,
+        "acceleration": 0.9876919092478954
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4990825980471207,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": -12.12183537891491,
+        "micro_doppler_bandwidth": -54.23702127056327,
+        "micro_doppler_jitter": -0.20232552001614912,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3897991137585507,
+      "delta": {
+        "doppler_velocity": -6.680806735322433,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.32541894411489414,
+        "acceleration": 0.4997577655706092
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9547258682506928,
+      "delta": {
+        "doppler_velocity": -9.179911845720726,
+        "rcs_estimate": 6.404492394401949,
+        "micro_doppler_bandwidth": 5.367890567926097,
+        "micro_doppler_jitter": -0.1198450171903312,
+        "velocity_variance": 0.0,
+        "acceleration": 1.3578244049152512
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.122146215689137,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 12.17842435307132,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.16021552934150196,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9400705781904376,
+      "delta": {
+        "doppler_velocity": -5.586808984531777,
+        "rcs_estimate": 12.021618396091569,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.0384682306813244,
+        "velocity_variance": 0.0,
+        "acceleration": 0.5292417562078937
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5344537562751717,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 16.519408698119566,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.22185621600680638,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1769977047400295,
+      "delta": {
+        "doppler_velocity": -9.724085753471037,
+        "rcs_estimate": 13.038080671513061,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.11474806155910908,
+        "velocity_variance": 0.0,
+        "acceleration": -0.63212123918332
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8038010239929667,
+      "delta": {
+        "doppler_velocity": -7.405921050806112,
+        "rcs_estimate": 9.599355970732727,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.037794617105961804,
+        "velocity_variance": 0.0,
+        "acceleration": -0.42892184788439514
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1528203572001616,
+      "delta": {
+        "doppler_velocity": 4.194949012392741,
+        "rcs_estimate": 8.518163198498948,
+        "micro_doppler_bandwidth": 27.149224103611736,
+        "micro_doppler_jitter": 0.07848400105943078,
+        "velocity_variance": 0.0,
+        "acceleration": 2.167228857626035
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8985117728055299,
+      "delta": {
+        "doppler_velocity": -0.8962546337447276,
+        "rcs_estimate": 8.394360663138956,
+        "micro_doppler_bandwidth": -11.789805481948363,
+        "micro_doppler_jitter": 0.11557038381149984,
+        "velocity_variance": -0.7860015813182524,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.6469275838941352,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 8.957700414849926,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3898855237819168,
+      "delta": {
+        "doppler_velocity": -17.984911915206773,
+        "rcs_estimate": -4.582550440712955,
+        "micro_doppler_bandwidth": -48.41605646725753,
+        "micro_doppler_jitter": -0.16728558215449618,
+        "velocity_variance": -0.4801083169349214,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.4476618224398443,
+      "delta": {
+        "doppler_velocity": -8.514296756469534,
+        "rcs_estimate": 1.1745967488725604,
+        "micro_doppler_bandwidth": -13.277135619491261,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.2590691314368962,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 11.719383279164093,
+        "micro_doppler_bandwidth": 51.75781746766755,
+        "micro_doppler_jitter": 0.09439321652057309,
+        "velocity_variance": -0.48148274872975716,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.2545808741954203,
+      "delta": {
+        "doppler_velocity": -10.746013872326982,
+        "rcs_estimate": 16.419483247824104,
+        "micro_doppler_bandwidth": -65.56686827139119,
+        "micro_doppler_jitter": 0.19922212175728257,
+        "velocity_variance": -2.5919472824610486,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.185492806125629,
+      "delta": {
+        "doppler_velocity": -5.844365477032428,
+        "rcs_estimate": 15.65833560482282,
+        "micro_doppler_bandwidth": -11.87203512931751,
+        "micro_doppler_jitter": -0.009889214849128553,
+        "velocity_variance": 0.0,
+        "acceleration": 0.3870794428800079
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8148218008800991,
+      "delta": {
+        "doppler_velocity": -19.34602315403901,
+        "rcs_estimate": 18.224285088447687,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.1950171993274173,
+        "velocity_variance": 0.0,
+        "acceleration": 0.689653954095064
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0447894905323913,
+      "delta": {
+        "doppler_velocity": -2.5987254082451914,
+        "rcs_estimate": 10.644966738195643,
+        "micro_doppler_bandwidth": -17.43684495205348,
+        "micro_doppler_jitter": 0.11490006884316134,
+        "velocity_variance": 0.0,
+        "acceleration": -1.113332577203573
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3199787513478475,
+      "delta": {
+        "doppler_velocity": 0.7122012488370046,
+        "rcs_estimate": 4.407694384565984,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4506827155333788,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 20.086917742056677,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7770349761860318,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 9.548611087003273,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": -0.7218225073365354,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3623527887677762,
+      "delta": {
+        "doppler_velocity": -19.82814941060335,
+        "rcs_estimate": 12.656333784935612,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.08090770677536789,
+        "velocity_variance": 0.0,
+        "acceleration": 0.7706115301777842
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.110616177469787,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": -0.3043632330410233
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1206904919033134,
+      "delta": {
+        "doppler_velocity": -11.26682145215141,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.22892763822925433,
+        "velocity_variance": 0.0,
+        "acceleration": -0.04194443773620421
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3584963449919923,
+      "delta": {
+        "doppler_velocity": -7.858242310140516,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.177939407266259,
+      "delta": {
+        "doppler_velocity": -6.242204702159145,
+        "rcs_estimate": 9.438818762860434,
+        "micro_doppler_bandwidth": 24.96363145731297,
+        "micro_doppler_jitter": 0.18333708937683696,
+        "velocity_variance": 0.0,
+        "acceleration": 0.6522731609571046
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.9037904827160783,
+      "delta": {
+        "doppler_velocity": 9.402972376661147,
+        "rcs_estimate": 22.6324475113693,
+        "micro_doppler_bandwidth": -7.649404440722446,
+        "micro_doppler_jitter": 0.1943745773651949,
+        "velocity_variance": 0.0,
+        "acceleration": -0.5495703420714293
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7011250083468227,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 9.708146529052225,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.036296208833017,
+      "delta": {
+        "doppler_velocity": -17.62236241954265,
+        "rcs_estimate": -2.360605419352744,
+        "micro_doppler_bandwidth": 18.882055345818767,
+        "micro_doppler_jitter": -0.028025432981859513,
+        "velocity_variance": -0.29833387975413017,
+        "acceleration": -1.4459217992499496
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1122122848599412,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 15.400277702676265,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4066474070078197,
+      "delta": {
+        "doppler_velocity": 21.770964352119343,
+        "rcs_estimate": 11.888313946593067,
+        "micro_doppler_bandwidth": -32.59077199149014,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3289028825467222,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 17.650998814611327,
+        "micro_doppler_bandwidth": 16.525914512479105,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.5534642872299318,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.0022000103075808,
+      "delta": {
+        "doppler_velocity": -22.119378877155803,
+        "rcs_estimate": 23.09363423666061,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.07882976635655918,
+        "velocity_variance": 0.0,
+        "acceleration": -0.8314516113435733
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.43240509759599927,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -27.904161582090918,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3174557984009303,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 13.489682889872961,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.1882107527276802,
+        "velocity_variance": -0.6876703264992522,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.709306245634479,
+      "delta": {
+        "doppler_velocity": -6.296724950000056,
+        "rcs_estimate": -1.9711769059543385,
+        "micro_doppler_bandwidth": -40.183842588923255,
+        "micro_doppler_jitter": -0.02579241988853476,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7491269272043252,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 10.372806406244612,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.5762053160774995,
+      "delta": {
+        "doppler_velocity": 2.385653038394748,
+        "rcs_estimate": 6.7967724901848605,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.06470872751461192,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.4267787608713164,
+      "delta": {
+        "doppler_velocity": -9.354993328657876,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9903504637180635,
+      "delta": {
+        "doppler_velocity": 2.9148441363088438,
+        "rcs_estimate": 13.237244245784963,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.034039404044332214,
+        "velocity_variance": 0.33280342890220627,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.9436287913009078,
+      "delta": {
+        "doppler_velocity": -17.582965527547245,
+        "rcs_estimate": 21.922515526303755,
+        "micro_doppler_bandwidth": -41.827342940863744,
+        "micro_doppler_jitter": -0.056054500235066904,
+        "velocity_variance": 0.0,
+        "acceleration": -1.0586115956866027
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.42552228179566237,
+      "delta": {
+        "doppler_velocity": 2.993298855719983,
+        "rcs_estimate": 5.580370209221775,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0012131592486382,
+      "delta": {
+        "doppler_velocity": 11.371432399696328,
+        "rcs_estimate": 3.2224092029438256,
+        "micro_doppler_bandwidth": -19.304815023606285,
+        "micro_doppler_jitter": 0.17638190299883033,
+        "velocity_variance": 0.0,
+        "acceleration": -0.08977065996309114
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7038119632145485,
+      "delta": {
+        "doppler_velocity": 11.337391875104256,
+        "rcs_estimate": -0.9316725452235635,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": -0.6487287869286393,
+        "acceleration": -0.952104703154752
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.016980742291926,
+      "delta": {
+        "doppler_velocity": -5.015336349251964,
+        "rcs_estimate": 13.614876482569695,
+        "micro_doppler_bandwidth": 7.924483890717235,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.2874919357694965,
+      "delta": {
+        "doppler_velocity": 16.26124898624713,
+        "rcs_estimate": 13.382190499734985,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.08114546270622701,
+        "velocity_variance": -0.4446975942998754,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0257108126095609,
+      "delta": {
+        "doppler_velocity": 17.081057982884484,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -23.455642773858074,
+        "micro_doppler_jitter": -0.11196444879993181,
+        "velocity_variance": 0.0,
+        "acceleration": 0.756421777568621
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.4486187181549896,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 6.211811302799549,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.2785132013775258,
+      "delta": {
+        "doppler_velocity": 12.22920903816035,
+        "rcs_estimate": 14.282492833583955,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.023692184106994866,
+        "velocity_variance": -0.7847594461229854,
+        "acceleration": 0.8578084627492045
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.1308683058105466,
+      "delta": {
+        "doppler_velocity": 9.938113614617786,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -100.3698051457506,
+        "micro_doppler_jitter": -0.06568944213919369,
+        "velocity_variance": -2.585377833084749,
+        "acceleration": 1.1970858461016816
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3599892904210393,
+      "delta": {
+        "doppler_velocity": 16.179632243175224,
+        "rcs_estimate": -3.9655981788769803,
+        "micro_doppler_bandwidth": -40.606936455048405,
+        "micro_doppler_jitter": -0.18778237169289655,
+        "velocity_variance": 0.08950117286105609,
+        "acceleration": 1.0925384828463984
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.38515515685604507,
+      "delta": {
+        "doppler_velocity": -8.442603646747322,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9724973037451362,
+      "delta": {
+        "doppler_velocity": 1.4300912076414631,
+        "rcs_estimate": 7.564083104080223,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.1468434392305187,
+        "velocity_variance": 0.0,
+        "acceleration": 1.3341781156710455
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9095910077597494,
+      "delta": {
+        "doppler_velocity": -2.6545651372087,
+        "rcs_estimate": 7.543602244313443,
+        "micro_doppler_bandwidth": 13.401910718750806,
+        "micro_doppler_jitter": 0.1462770245646228,
+        "velocity_variance": 0.0,
+        "acceleration": -0.7171711562103602
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0909460720357638,
+      "delta": {
+        "doppler_velocity": -15.066481759711996,
+        "rcs_estimate": -6.745504844206132,
+        "micro_doppler_bandwidth": -29.993001943262787,
+        "micro_doppler_jitter": -0.1182133473249343,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5619218438475102,
+      "delta": {
+        "doppler_velocity": -4.387478943378455,
+        "rcs_estimate": 13.730697908405135,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.2517072357332292,
+        "velocity_variance": 0.0,
+        "acceleration": 1.2833253014337203
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.510441272446153,
+      "delta": {
+        "doppler_velocity": -11.101602223305829,
+        "rcs_estimate": 23.57408628961941,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.09441408649094277,
+        "velocity_variance": -2.5836077081860624,
+        "acceleration": 3.180090822602041
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.5234021705513637,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": -5.377035780932035,
+        "micro_doppler_bandwidth": -15.871071890336712,
+        "micro_doppler_jitter": -0.05755083263129411,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9728085242510479,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 11.804003496875037,
+        "micro_doppler_bandwidth": -30.24225098802792,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1374852551648424,
+      "delta": {
+        "doppler_velocity": -9.884027578659234,
+        "rcs_estimate": 10.027472523780604,
+        "micro_doppler_bandwidth": 40.179178282265134,
+        "micro_doppler_jitter": -0.057647820345446965,
+        "velocity_variance": 0.0,
+        "acceleration": 0.9354124624842954
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.6592870511000066,
+      "delta": {
+        "doppler_velocity": 1.3546645923073353,
+        "rcs_estimate": 8.04128162275758,
+        "micro_doppler_bandwidth": 9.098926919643686,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": -0.33575200286964674,
+        "acceleration": -0.58983330988665
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3587034672661814,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0824674734682019,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.17420891199988706,
+      "delta": {
+        "doppler_velocity": -3.8186605308671613,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.42944764580083933,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 5.946358527164012,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.652351914447311,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 22.484275522162758,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.06867005764107134,
+        "velocity_variance": 0.0,
+        "acceleration": 0.17954845497747982
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8516139407744723,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 16.260906401549605,
+        "micro_doppler_bandwidth": -15.477850195735709,
+        "micro_doppler_jitter": 0.09455876297022958,
+        "velocity_variance": 0.0,
+        "acceleration": 3.7147075954427144
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1099972500757331,
+      "delta": {
+        "doppler_velocity": -23.674223973139082,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": -0.7049123118102939
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4760385991586946,
+      "delta": {
+        "doppler_velocity": -13.1037525204787,
+        "rcs_estimate": 18.602579092874432,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.02942329745882294,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.215492284699796,
+      "delta": {
+        "doppler_velocity": 0.6054199082813554,
+        "rcs_estimate": 28.50942741115252,
+        "micro_doppler_bandwidth": 14.889349377139723,
+        "micro_doppler_jitter": 0.04303274354135091,
+        "velocity_variance": 0.0,
+        "acceleration": 2.095612327115286
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.28409010114752375,
+      "delta": {
+        "doppler_velocity": 5.584492344458789,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.028899445824559538,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.903704964508462,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 12.513175410996377,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.6311357956858824,
+      "delta": {
+        "doppler_velocity": 0.8950114863720033,
+        "rcs_estimate": 3.588417504183372,
+        "micro_doppler_bandwidth": 27.458291757928457,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": -0.35986616546628936,
+        "acceleration": -0.9394924641695968
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.15120540737924446,
+      "delta": {
+        "doppler_velocity": 2.5759608605097695,
+        "rcs_estimate": -0.11854307819225472,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.021785990634100572,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1133297078644817,
+      "delta": {
+        "doppler_velocity": -7.338018389977128,
+        "rcs_estimate": 13.205872960991464,
+        "micro_doppler_bandwidth": 28.615219204642123,
+        "micro_doppler_jitter": -0.03348053983793539,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3453376829234498,
+      "delta": {
+        "doppler_velocity": 7.521706999310507,
+        "rcs_estimate": 16.45850499274658,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.06451271582884475,
+        "velocity_variance": 0.0,
+        "acceleration": 1.232321500054934
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.42885282438319633,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -21.622822387459202,
+        "micro_doppler_jitter": -0.061536899084048635,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3503521212265004,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 4.851160191320179,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7140347044588221,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 7.564087975581297,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 1.2651727364676228
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.254678055820076,
+      "delta": {
+        "doppler_velocity": -23.196199457754076,
+        "rcs_estimate": 26.38911805155048,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.12929660894245054,
+        "velocity_variance": -0.20487733147054332,
+        "acceleration": -0.19340310465454869
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5276517257060085,
+      "delta": {
+        "doppler_velocity": -9.090584790669482,
+        "rcs_estimate": 13.62974544530392,
+        "micro_doppler_bandwidth": -14.745547249339694,
+        "micro_doppler_jitter": 0.14598158491211266,
+        "velocity_variance": 0.0,
+        "acceleration": 2.3627947046426105
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8829973680475189,
+      "delta": {
+        "doppler_velocity": -18.66043886088069,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -11.000947164241074,
+        "micro_doppler_jitter": -0.028920961716602668,
+        "velocity_variance": -0.20250368829492763,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.423367468333123,
+      "delta": {
+        "doppler_velocity": -22.62260283423934,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -62.62220426966745,
+        "micro_doppler_jitter": 0.01826413421364729,
+        "velocity_variance": 0.0,
+        "acceleration": -0.31199817800693386
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8193928047999814,
+      "delta": {
+        "doppler_velocity": 15.009798161670702,
+        "rcs_estimate": 15.303338414303086,
+        "micro_doppler_bandwidth": -61.404490702176545,
+        "micro_doppler_jitter": 0.18526350287912446,
+        "velocity_variance": -0.5109330495981445,
+        "acceleration": -0.0776291089825219
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9958172450340119,
+      "delta": {
+        "doppler_velocity": 7.092263546876907,
+        "rcs_estimate": -2.4618149980313846,
+        "micro_doppler_bandwidth": -58.47934576064828,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": -0.37253708766581106,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7440253393113541,
+      "delta": {
+        "doppler_velocity": -10.78927232345117,
+        "rcs_estimate": 5.77805003009824,
+        "micro_doppler_bandwidth": -10.006582947611598,
+        "micro_doppler_jitter": 0.07362063179641688,
+        "velocity_variance": 0.18772968628739833,
+        "acceleration": 0.12019488140730694
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.2702749690321524,
+      "delta": {
+        "doppler_velocity": -14.431324722669537,
+        "rcs_estimate": 11.301964992755952,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.06610695405968828,
+        "velocity_variance": -1.2828770156593714,
+        "acceleration": -0.44537862667486783
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.04930802427428139,
+      "delta": {
+        "doppler_velocity": -1.0808322260307803,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.26838865728126626,
+      "delta": {
+        "doppler_velocity": 5.8830811852672005,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.5069735709854879,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -32.716248076811716,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8559132377235585,
+      "delta": {
+        "doppler_velocity": -17.670036318640975,
+        "rcs_estimate": 18.661374528902495,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.10960970589746494,
+        "velocity_variance": 0.0,
+        "acceleration": 2.38434560424047
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.2862385807390726,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 16.057656956088465,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.1279087490486043,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4890285549220987,
+      "delta": {
+        "doppler_velocity": -17.492392621272323,
+        "rcs_estimate": 16.45998516829419,
+        "micro_doppler_bandwidth": 16.23370988619327,
+        "micro_doppler_jitter": -0.05815324902484902,
+        "velocity_variance": 0.22518043332329085,
+        "acceleration": -0.4565297328672465
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4797932035478096,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 18.912165742730892,
+        "micro_doppler_bandwidth": -30.15046410976344,
+        "micro_doppler_jitter": 0.07484266052627617,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.7114299272065556,
+      "delta": {
+        "doppler_velocity": -20.432525576878085,
+        "rcs_estimate": 14.203160785751168,
+        "micro_doppler_bandwidth": 36.94823020902396,
+        "micro_doppler_jitter": -0.09910132727929316,
+        "velocity_variance": -1.4172044879807522,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8372804939531584,
+      "delta": {
+        "doppler_velocity": -11.795815475163835,
+        "rcs_estimate": 17.00256143993116,
+        "micro_doppler_bandwidth": 21.754947956279743,
+        "micro_doppler_jitter": 0.21036633363621712,
+        "velocity_variance": -1.5965132067400547,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.5509547487747543,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 7.445583564984883,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0259277548905612,
+        "velocity_variance": 0.08280738420469508,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7856578705212297,
+      "delta": {
+        "doppler_velocity": -8.41340273788318,
+        "rcs_estimate": 6.683747262065503,
+        "micro_doppler_bandwidth": 4.047291600798394,
+        "micro_doppler_jitter": 0.08570416679375906,
+        "velocity_variance": -0.6181362528804709,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1379441835113338,
+      "delta": {
+        "doppler_velocity": 10.494789726846161,
+        "rcs_estimate": -2.8290402031069686,
+        "micro_doppler_bandwidth": -27.229397522475754,
+        "micro_doppler_jitter": -0.21145006691433985,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 6.007779656016667,
+      "delta": {
+        "doppler_velocity": 22.6295299952345,
+        "rcs_estimate": -6.201120286282239,
+        "micro_doppler_bandwidth": -317.0867859997244,
+        "micro_doppler_jitter": -0.27713414931758484,
+        "velocity_variance": 0.0,
+        "acceleration": -8.359618444207786
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.245009040995339,
+      "delta": {
+        "doppler_velocity": 9.578325168387451,
+        "rcs_estimate": 15.04842038731438,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.03170099400550692,
+        "velocity_variance": -0.7514991070412319,
+        "acceleration": -0.38879541978040627
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.089297988605503,
+      "delta": {
+        "doppler_velocity": -11.382928809720859,
+        "rcs_estimate": 13.144731597216825,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0288094086359483,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.6994492024725879,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 9.684942437360107,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7241693184028823,
+      "delta": {
+        "doppler_velocity": 7.5776033997495835,
+        "rcs_estimate": 7.46023221974213,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.6335928794830934,
+        "acceleration": -0.34623936327971516
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7329862383208914,
+      "delta": {
+        "doppler_velocity": -15.03357290147158,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": -0.5213528144205786,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3739216413956303,
+      "delta": {
+        "doppler_velocity": 15.646777281275675,
+        "rcs_estimate": 15.806215102127132,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.016903510660572968,
+        "velocity_variance": 0.0,
+        "acceleration": -0.7260979841856451
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0500760561475504,
+      "delta": {
+        "doppler_velocity": -4.7460119610127816,
+        "rcs_estimate": 11.106645899987601,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.07411025393306915,
+        "velocity_variance": -0.8560130996125441,
+        "acceleration": 0.9848975415194194
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.6681942295107186,
+      "delta": {
+        "doppler_velocity": -15.735738503413133,
+        "rcs_estimate": -6.930447487834343,
+        "micro_doppler_bandwidth": -72.7595373044013,
+        "micro_doppler_jitter": -0.05136245021621522,
+        "velocity_variance": 0.0,
+        "acceleration": 2.295298011565848
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.21595477754297207,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 2.9902237105754077,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.34580477464215464,
+      "delta": {
+        "doppler_velocity": -6.148988001852908,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -8.420522778407296,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.42504994167400895
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9063983177959252,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 9.634615084899849,
+        "micro_doppler_bandwidth": 16.484022235190295,
+        "micro_doppler_jitter": 0.04736979272216203,
+        "velocity_variance": 0.0,
+        "acceleration": 1.3187202770702238
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.83444365239989,
+      "delta": {
+        "doppler_velocity": -13.916185684631007,
+        "rcs_estimate": -13.086671179867981,
+        "micro_doppler_bandwidth": -58.369972647596924,
+        "micro_doppler_jitter": -0.2571174547685168,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.6261692884507795,
+      "delta": {
+        "doppler_velocity": -16.981081021904945,
+        "rcs_estimate": 16.743929201447827,
+        "micro_doppler_bandwidth": 14.06554876033253,
+        "micro_doppler_jitter": 0.0046708001801576806,
+        "velocity_variance": -1.4595510591088003,
+        "acceleration": 0.27232488452449843
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.1536063656896567,
+      "delta": {
+        "doppler_velocity": -5.4187521957577705,
+        "rcs_estimate": 29.586974713615767,
+        "micro_doppler_bandwidth": 3.9169758460070625,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.23668070154359855
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4559571660319048,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 20.1599505645781,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.11088146102666989,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 1.5353231708856976,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.2717926221198294,
+      "delta": {
+        "doppler_velocity": -5.957696117581851,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3649280651146996,
+      "delta": {
+        "doppler_velocity": -8.6531394675931,
+        "rcs_estimate": 8.853504639723944,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": -2.269713417434561,
+        "acceleration": 0.4804765696340323
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.1114193139185224,
+      "delta": {
+        "doppler_velocity": -6.89166595604515,
+        "rcs_estimate": 26.454295643795998,
+        "micro_doppler_bandwidth": -13.136511243519704,
+        "micro_doppler_jitter": 0.09616983575805604,
+        "velocity_variance": -0.49608016298231694,
+        "acceleration": 1.8087187991469673
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.742831842716978,
+      "delta": {
+        "doppler_velocity": -28.373624635355856,
+        "rcs_estimate": 13.362070628007594,
+        "micro_doppler_bandwidth": 23.128406606901056,
+        "micro_doppler_jitter": 0.0891360955846277,
+        "velocity_variance": 0.0,
+        "acceleration": -1.07249542226085
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.488434947725015,
+      "delta": {
+        "doppler_velocity": 9.522299761295077,
+        "rcs_estimate": 16.77900287631526,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.11422107815744655,
+        "velocity_variance": -1.0687210065142105,
+        "acceleration": 0.4795479387635485
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7683732517595836,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 10.639301163532913,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1111552932652982,
+      "delta": {
+        "doppler_velocity": 1.5399314643185127,
+        "rcs_estimate": 0.2504990370756621,
+        "micro_doppler_bandwidth": 1.649671262960144,
+        "micro_doppler_jitter": 0.18696413652265131,
+        "velocity_variance": -1.2951571390275896,
+        "acceleration": 1.081805278320915
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.40539031030071226,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.09320097994531443,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.277989778390369,
+      "delta": {
+        "doppler_velocity": -9.386301580532233,
+        "rcs_estimate": -5.909585953318613,
+        "micro_doppler_bandwidth": -133.9996959483503,
+        "micro_doppler_jitter": -0.16358766160643237,
+        "velocity_variance": 0.15216907840792082,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.49617814736574367,
+      "delta": {
+        "doppler_velocity": -6.851080932946717,
+        "rcs_estimate": 3.0766234339678444,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.6163442711628593,
+        "acceleration": 0.2066873694735736
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.770732678363319,
+      "delta": {
+        "doppler_velocity": 12.231732920938104,
+        "rcs_estimate": -2.898034540465133,
+        "micro_doppler_bandwidth": -92.96033560317338,
+        "micro_doppler_jitter": -0.1930657369472833,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1081088027087511,
+      "delta": {
+        "doppler_velocity": 7.29021745186217,
+        "rcs_estimate": 12.372930143908457,
+        "micro_doppler_bandwidth": -0.9461277709662619,
+        "micro_doppler_jitter": 0.04275403858934418,
+        "velocity_variance": -0.7721511605875212,
+        "acceleration": 1.019482404168191
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.269836175468595,
+      "delta": {
+        "doppler_velocity": 1.3009857956807949,
+        "rcs_estimate": 17.028028382760134,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.8553208797601194
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0822922755839601,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -49.70024123367973,
+        "micro_doppler_jitter": 0.07576402380676268,
+        "velocity_variance": 0.0,
+        "acceleration": 1.8855708112158884
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.20266094018919809,
+      "delta": {
+        "doppler_velocity": 4.4423291814681845,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.5038476914922599,
+      "delta": {
+        "doppler_velocity": -0.22355030900084735,
+        "rcs_estimate": 6.546352492077491,
+        "micro_doppler_bandwidth": -11.221625862740659,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.0
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4345584257969046,
+      "delta": {
+        "doppler_velocity": -8.514967981334266,
+        "rcs_estimate": 13.615820793598068,
+        "micro_doppler_bandwidth": -15.928709048932838,
+        "micro_doppler_jitter": -0.20131065003045362,
+        "velocity_variance": 0.37981433671636794,
+        "acceleration": -0.7632735615650066
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.20972163991312726,
+      "delta": {
+        "doppler_velocity": 2.962131276345006,
+        "rcs_estimate": 0.6640366921156257,
+        "micro_doppler_bandwidth": -8.33304843938915,
+        "micro_doppler_jitter": 0.0,
+        "velocity_variance": 0.0,
+        "acceleration": 0.226023042179251
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.0041495177958586,
+      "delta": {
+        "doppler_velocity": 0.13431004131494095,
+        "rcs_estimate": 27.32721623867343,
+        "micro_doppler_bandwidth": 0.0,
+        "micro_doppler_jitter": -0.05915526604930353,
+        "velocity_variance": 0.0,
+        "acceleration": -0.6473875829045195
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.027570126626066,
+      "delta": {
+        "doppler_velocity": 0.0,
+        "rcs_estimate": 10.807332269502929,
+        "micro_doppler_bandwidth": -32.87804286084096,
+        "micro_doppler_jitter": 0.010702283296106271,
+        "velocity_variance": 0.0,
+        "acceleration": -1.1833773477924427
+      }
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8647504347750459,
+      "delta": {
+        "doppler_velocity": -10.037709978447491,
+        "rcs_estimate": 0.0,
+        "micro_doppler_bandwidth": -27.17700457051084,
+        "micro_doppler_jitter": -0.11277293023060807,
+        "velocity_variance": -0.6648138851439536,
+        "acceleration": -0.293208526530422
+      }
+    }
+  ],
+  "caveat": "Perturbations are clipped to physically valid SENSOR READING bounds, but this does NOT verify a real operator could ACHIEVE a given perturbation (e.g. how much RCS reduction a given amount of RAM coating buys is a separate, harder question, not modeled here) -- same limitation the physically-motivated tests in robustness.py sidestep by testing named real countermeasures at fixed severities instead of a free-form search."
+}

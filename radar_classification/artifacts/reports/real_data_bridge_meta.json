@@ -1,0 +1,9 @@
+{
+  "source": "Zenodo 5896641, SAAB SIRS 1600 77GHz FMCW (CC-BY-4.0)",
+  "rcs_calibration_offset_db": 136.39664766815787,
+  "n_segments": 75868,
+  "not_measurable_constant_zero": [
+    "azimuth_deg",
+    "altitude_m"
+  ]
+}

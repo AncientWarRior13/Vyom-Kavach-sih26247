@@ -1,0 +1,16 @@
+{
+  "original": {
+    "n_attacked": 100,
+    "n_surrogate_evaded": 100,
+    "n_transferred": 100,
+    "transfer_rate": 1.0,
+    "overall_success": 1.0
+  },
+  "iteratively_hardened": {
+    "n_attacked": 100,
+    "n_surrogate_evaded": 95,
+    "n_transferred": 74,
+    "transfer_rate": 0.7789473684210526,
+    "overall_success": 0.74
+  }
+}

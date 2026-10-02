@@ -1,0 +1,29 @@
+{
+  "attenuation_levels": [
+    1.0,
+    0.7,
+    0.5,
+    0.3
+  ],
+  "n_drone_samples_per_level": 1000,
+  "results": {
+    "x1.0": 0.985,
+    "x0.7": 0.931,
+    "x0.5": 0.631,
+    "x0.3": 0.168
+  },
+  "comparison_vs_11_feature_model": {
+    "11_feature_model_reported": {
+      "unperturbed": 0.918,
+      "x0.7": 0.764,
+      "x0.5": 0.518,
+      "x0.3": 0.123
+    },
+    "42_feature_model_measured": {
+      "x1.0": 0.985,
+      "x0.7": 0.931,
+      "x0.5": 0.631,
+      "x0.3": 0.168
+    }
+  }
+}

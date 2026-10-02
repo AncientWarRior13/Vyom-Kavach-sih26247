@@ -1,0 +1,16 @@
+{
+  "cpu": "Intel64 Family 6 Model 142 Stepping 9, GenuineIntel",
+  "platform": "Windows 11 (AMD64)",
+  "onnxruntime_version": "1.27.0",
+  "gpu_dependency": "none - CPUExecutionProvider only",
+  "model_file": "radarsense.onnx",
+  "model_size_kib": 2734.5,
+  "parity_label_agreement": 1.0,
+  "parity_max_proba_deviation": 5.843419494944158e-07,
+  "fp32": {
+    "single_sample_latency_ms_median": 0.1069,
+    "single_sample_latency_ms_p95": 0.1686,
+    "batched_throughput_samples_per_sec": 38249,
+    "batch_size_used": 7800
+  }
+}

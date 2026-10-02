@@ -1,0 +1,90 @@
+{
+  "auxiliary_targets": [
+    "doppler_velocity",
+    "micro_doppler_bandwidth",
+    "micro_doppler_jitter"
+  ],
+  "lambda_aux": 1.0,
+  "split_sizes": {
+    "train": 11886,
+    "val": 2543,
+    "test": 3056
+  },
+  "cnn_test_metrics": {
+    "accuracy": 0.9450261780104712,
+    "recall_drone": 0.9554093567251462,
+    "precision_drone": 0.9243281471004243,
+    "f1_drone": 0.9396117900790798,
+    "pr_auc_drone": 0.9837074963843405,
+    "roc_auc": 0.9890504611152684
+  },
+  "auxiliary_test_mse_zscored": 0.9443790912628174,
+  "circuit": {
+    "feature_map": "ZZFeatureMap",
+    "qubits": 8,
+    "reps": 2,
+    "circuit_depth": 67,
+    "backend": "Qiskit exact statevector simulation (noiseless)"
+  },
+  "summary_mean_std": [
+    {
+      "n_train": 200,
+      "kernel": "quantum_zz",
+      "accuracy_mean": 0.868,
+      "accuracy_std": 0.0408656334834051,
+      "recall_drone_mean": 0.7791044776119402,
+      "recall_drone_std": 0.11877165183482247
+    },
+    {
+      "n_train": 200,
+      "kernel": "rbf",
+      "accuracy_mean": 0.9473333333333332,
+      "accuracy_std": 0.006831300510639769,
+      "recall_drone_mean": 0.9432835820895523,
+      "recall_drone_std": 0.01355664337655591
+    },
+    {
+      "n_train": 400,
+      "kernel": "quantum_zz",
+      "accuracy_mean": 0.9153333333333332,
+      "accuracy_std": 0.015202339001321848,
+      "recall_drone_mean": 0.9149253731343283,
+      "recall_drone_std": 0.03678733595183954
+    },
+    {
+      "n_train": 400,
+      "kernel": "rbf",
+      "accuracy_mean": 0.9473333333333332,
+      "accuracy_std": 0.0064117946872238,
+      "recall_drone_mean": 0.946268656716418,
+      "recall_drone_std": 0.022011762990675567
+    },
+    {
+      "n_train": 800,
+      "kernel": "quantum_zz",
+      "accuracy_mean": 0.9339999999999999,
+      "accuracy_std": 0.009249624617007714,
+      "recall_drone_mean": 0.9462686567164178,
+      "recall_drone_std": 0.017816919979572122
+    },
+    {
+      "n_train": 800,
+      "kernel": "rbf",
+      "accuracy_mean": 0.9453333333333334,
+      "accuracy_std": 0.008692269873603506,
+      "recall_drone_mean": 0.946268656716418,
+      "recall_drone_std": 0.017017543658196087
+    }
+  ],
+  "comparison_vs_pure_classification_baseline": {
+    "baseline_no_physics_loss": {
+      "accuracy": 0.9538612565445026,
+      "recall_drone": 0.9780701754385965
+    },
+    "physics_informed": {
+      "accuracy": 0.9450261780104712,
+      "recall_drone": 0.9554093567251462
+    }
+  },
+  "total_seconds": 114.9
+}

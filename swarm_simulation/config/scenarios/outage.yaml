@@ -1,0 +1,73 @@
+scenario:
+  name: comms_outage_region
+  seed: 11
+  duration_seconds: 500
+  dt_seconds: 1.0
+  geofence:
+    min: [-50, -50, 0]
+    max: [500, 400, 120]
+
+gcs:
+  position: [0, 180, 0]
+
+swarm:
+  count: 8
+  battery_percent: 100
+  max_speed_mps: 11.0
+  comm_range_m: 110.0   # tighter range -> more multi-hop dependency
+  battery_drain_rate_pct_per_s: 0.035
+  battery_drain_rate_relay_bonus: 0.006
+  battery_reserve_pct: 22.0
+  home_position: [0, 180, 0]
+
+pois:
+  - id: poi_01
+    priority: 0.6
+    position: [140, 60, 40]
+    required_data: [imagery]
+    deadline: 450
+    risk: 0.15
+  - id: poi_02
+    priority: 0.75
+    position: [220, 260, 40]
+    required_data: [imagery]
+    deadline: 450
+    risk: 0.2
+  - id: poi_03
+    priority: 0.5
+    position: [320, 120, 40]
+    required_data: [imagery]
+    deadline: 450
+    risk: 0.1
+  - id: poi_04
+    priority: 0.8
+    position: [280, 320, 40]
+    required_data: [imagery, thermal_proxy]
+    deadline: 450
+    risk: 0.3
+
+# Stress test: two independent links degrade heavily and overlap in time,
+# simulating a partial-outage region (section 8's "graceful degradation"
+# and section 28 Phase 8's "partial outage regions").
+events:
+  - time: 100
+    type: LINK_DEGRADATION
+    link: [uav_01, uav_03]
+    packet_loss: 0.7
+    duration: 120
+
+  - time: 150
+    type: LINK_DEGRADATION
+    link: [uav_02, uav_04]
+    packet_loss: 0.65
+    duration: 120
+
+  - time: 250
+    type: UAV_FAILURE
+    uav_id: uav_03
+
+  - time: 320
+    type: NEW_PRIORITY_POI
+    poi_id: poi_12
+    priority: 0.95
+    position: [200, 40, 40]

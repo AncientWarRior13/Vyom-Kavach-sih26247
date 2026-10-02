@@ -1,0 +1,7 @@
+# Deterministic safety supervisor thresholds (PROJECT_CONTEXT.md section 13).
+# These are hard constraints - never overridden by the planner.
+
+collision_distance_m: 3.0
+min_safe_separation_m: 8.0
+poi_arrival_radius_m: 5.0
+charge_rate_pct_per_s: 0.4

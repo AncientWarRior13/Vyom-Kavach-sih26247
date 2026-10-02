@@ -1,0 +1,47 @@
+{
+  "n_pooled_predictions": 4500,
+  "raw_calibration": {
+    "quantum": {
+      "brier": 0.05188336506729031,
+      "ece": 0.03182458614850665,
+      "high_confidence_check": {
+        "n_predictions_p_geq_0.8": 1640,
+        "actual_drone_fraction_when_p_geq_0.8": 0.9469512195121951,
+        "n_predictions_p_leq_0.2": 2343,
+        "actual_not_drone_fraction_when_p_leq_0.2": 0.9748186086214256
+      }
+    },
+    "classical_rbf": {
+      "brier": 0.0405281724589022,
+      "ece": 0.025252671832737193,
+      "high_confidence_check": {
+        "n_predictions_p_geq_0.8": 1881,
+        "actual_drone_fraction_when_p_geq_0.8": 0.9665071770334929,
+        "n_predictions_p_leq_0.2": 2468,
+        "actual_not_drone_fraction_when_p_leq_0.2": 0.9647487844408428
+      }
+    }
+  },
+  "stacking_raw_vs_calibrated": {
+    "raw": {
+      "accuracy": 0.9466666666666667,
+      "recall_drone": 0.9378757515030061,
+      "precision_drone": 0.9416498993963782,
+      "pr_auc": 0.9511680974666814,
+      "meta_coef": {
+        "quantum": 3.362978081103034,
+        "classical": 4.060454378651387
+      }
+    },
+    "calibrated": {
+      "accuracy": 0.9475555555555556,
+      "recall_drone": 0.9599198396793587,
+      "precision_drone": 0.9247104247104247,
+      "pr_auc": 0.9550970317500883,
+      "meta_coef": {
+        "quantum": 2.5866398709902216,
+        "classical": 4.963877042448283
+      }
+    }
+  }
+}

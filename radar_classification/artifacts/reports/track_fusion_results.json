@@ -1,0 +1,49 @@
+{
+  "k_frames": 5,
+  "n_test_tracks": 1500,
+  "classical": {
+    "single_frame": {
+      "recall_drone": 0.8810810810810811,
+      "precision_drone": 0.7836538461538461,
+      "f1_drone": 0.8295165394402035,
+      "pr_auc_drone": 0.8872227665178075
+    },
+    "track_fused_mean_proba": {
+      "recall_drone": 0.918918918918919,
+      "precision_drone": 0.8717948717948718,
+      "f1_drone": 0.8947368421052632,
+      "pr_auc_drone": 0.944067889235132
+    },
+    "track_fused_majority_vote": {
+      "recall_drone": 0.918918918918919,
+      "precision_drone": 0.85,
+      "f1_drone": 0.8831168831168831,
+      "pr_auc_drone": 0.7830810810810811
+    }
+  },
+  "quantum": {
+    "single_frame": {
+      "recall_drone": 0.6972972972972973,
+      "precision_drone": 0.2438563327032136,
+      "f1_drone": 0.36134453781512604,
+      "pr_auc_drone": 0.30643689954908687
+    },
+    "track_fused_mean_proba": {
+      "recall_drone": 0.7837837837837838,
+      "precision_drone": 0.4603174603174603,
+      "f1_drone": 0.58,
+      "pr_auc_drone": 0.5224722711856762
+    },
+    "track_fused_majority_vote": {
+      "recall_drone": 0.8108108108108109,
+      "precision_drone": 0.44776119402985076,
+      "f1_drone": 0.5769230769230769,
+      "pr_auc_drone": 0.36771628344762675
+    }
+  },
+  "track_fusion_gain_drone_recall": {
+    "classical": 0.037837837837837895,
+    "quantum": 0.08648648648648649
+  },
+  "honest_finding": "Track-level fusion (mean probability or majority vote across 5 correlated-target, independently-noised frames) compared for both backends under the identical fusion rule. Reported as measured -- whichever backend gains more from fusion, or neither, is the real result, not assumed in advance."
+}

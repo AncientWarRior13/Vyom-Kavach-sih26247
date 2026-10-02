@@ -1,0 +1,255 @@
+{
+  "task": "drone vs. anomaly binary classification, 11-feature schema",
+  "sensors": {
+    "SAAB_77GHz_FMCW": {
+      "n": 68076,
+      "n_drone": 58768,
+      "n_anomaly": 9308
+    },
+    "RADDAR_8.75GHz_FMCW": {
+      "n": 17485,
+      "n_drone": 5065,
+      "n_anomaly": 12420
+    },
+    "TSMS_2.5GHz_CW": {
+      "n": 2250,
+      "n_drone": 1800,
+      "n_anomaly": 450
+    },
+    "DIAT_uSAT_Xband_CW": {
+      "n": 3249,
+      "n_drone": 2434,
+      "n_anomaly": 815
+    }
+  },
+  "in_distribution_reference": {
+    "SAAB_77GHz_FMCW": {
+      "accuracy": 0.9917009400705052,
+      "recall_drone": 0.9924281095797175,
+      "precision_drone": 0.9979467875780649,
+      "f1_drone": 0.9951797978074478,
+      "pr_auc_drone": 0.99987586728684,
+      "roc_auc": 0.9992704908190406,
+      "n": 13616,
+      "oracle_threshold": 0.22,
+      "oracle_threshold_accuracy": 0.9939042303172738
+    },
+    "RADDAR_8.75GHz_FMCW": {
+      "accuracy": 0.8890477552187589,
+      "recall_drone": 0.9081934846989141,
+      "precision_drone": 0.757201646090535,
+      "f1_drone": 0.8258527827648114,
+      "pr_auc_drone": 0.9065828469316554,
+      "roc_auc": 0.9622726615194103,
+      "n": 3497,
+      "oracle_threshold": 0.64,
+      "oracle_threshold_accuracy": 0.899342293394338
+    },
+    "TSMS_2.5GHz_CW": {
+      "accuracy": 0.8511111111111112,
+      "recall_drone": 0.8944444444444445,
+      "precision_drone": 0.9173789173789174,
+      "f1_drone": 0.9057665260196905,
+      "pr_auc_drone": 0.9729400011792553,
+      "roc_auc": 0.8993827160493827,
+      "n": 450,
+      "oracle_threshold": 0.15,
+      "oracle_threshold_accuracy": 0.86
+    },
+    "DIAT_uSAT_Xband_CW": {
+      "accuracy": 0.9015384615384615,
+      "recall_drone": 0.9301848049281314,
+      "precision_drone": 0.937888198757764,
+      "f1_drone": 0.934020618556701,
+      "pr_auc_drone": 0.9842845667146674,
+      "roc_auc": 0.9578488555195828,
+      "n": 650,
+      "oracle_threshold": 0.16,
+      "oracle_threshold_accuracy": 0.9184615384615384
+    }
+  },
+  "cross_sensor_transfer_matrix": {
+    "SAAB_77GHz_FMCW": {
+      "RADDAR_8.75GHz_FMCW": {
+        "accuracy": 0.7540749213611667,
+        "recall_drone": 0.9060217176702863,
+        "precision_drone": 0.5454653512421253,
+        "f1_drone": 0.680961566998071,
+        "pr_auc_drone": 0.6695107515965816,
+        "roc_auc": 0.8782122821993632,
+        "n": 17485,
+        "oracle_threshold": 0.98,
+        "oracle_threshold_accuracy": 0.8272233342865313
+      },
+      "TSMS_2.5GHz_CW": {
+        "accuracy": 0.7333333333333333,
+        "recall_drone": 0.9127777777777778,
+        "precision_drone": 0.7876318312559923,
+        "f1_drone": 0.8455995882655687,
+        "pr_auc_drone": 0.7503979652717635,
+        "roc_auc": 0.40078271604938276,
+        "n": 2250,
+        "oracle_threshold": 0.02,
+        "oracle_threshold_accuracy": 0.7751111111111111
+      },
+      "DIAT_uSAT_Xband_CW": {
+        "accuracy": 0.7229916897506925,
+        "recall_drone": 0.9638455217748562,
+        "precision_drone": 0.7428752374920836,
+        "f1_drone": 0.8390557939914163,
+        "pr_auc_drone": 0.8257932504936232,
+        "roc_auc": 0.5747289170292029,
+        "n": 3249,
+        "oracle_threshold": 0.02,
+        "oracle_threshold_accuracy": 0.7491535857186826
+      }
+    },
+    "RADDAR_8.75GHz_FMCW": {
+      "SAAB_77GHz_FMCW": {
+        "accuracy": 0.29612491920794404,
+        "recall_drone": 0.18683637353661856,
+        "precision_drone": 0.9883877936807993,
+        "f1_drone": 0.31426649684445523,
+        "pr_auc_drone": 0.9721246635608495,
+        "roc_auc": 0.8687613103439178,
+        "n": 68076,
+        "oracle_threshold": 0.02,
+        "oracle_threshold_accuracy": 0.7368529290792644
+      },
+      "TSMS_2.5GHz_CW": {
+        "accuracy": 0.19822222222222222,
+        "recall_drone": 0.0,
+        "precision_drone": 0.0,
+        "f1_drone": 0.0,
+        "pr_auc_drone": 0.7841453205998639,
+        "roc_auc": 0.5222685185185185,
+        "n": 2250,
+        "oracle_threshold": 0.02,
+        "oracle_threshold_accuracy": 0.2288888888888889
+      },
+      "DIAT_uSAT_Xband_CW": {
+        "accuracy": 0.2979378270236996,
+        "recall_drone": 0.20624486442070666,
+        "precision_drone": 0.5898942420681551,
+        "f1_drone": 0.3056316590563166,
+        "pr_auc_drone": 0.6486162715698573,
+        "roc_auc": 0.3051391080349446,
+        "n": 3249,
+        "oracle_threshold": 0.02,
+        "oracle_threshold_accuracy": 0.6565096952908587
+      }
+    },
+    "TSMS_2.5GHz_CW": {
+      "SAAB_77GHz_FMCW": {
+        "accuracy": 0.6549444738233738,
+        "recall_drone": 0.7553090117070514,
+        "precision_drone": 0.8297132603087966,
+        "f1_drone": 0.7907647907647908,
+        "pr_auc_drone": 0.7353928435894111,
+        "roc_auc": 0.19423368378916003,
+        "n": 68076,
+        "oracle_threshold": 0.02,
+        "oracle_threshold_accuracy": 0.8403108290733886
+      },
+      "RADDAR_8.75GHz_FMCW": {
+        "accuracy": 0.17992565055762083,
+        "recall_drone": 0.1615004935834156,
+        "precision_drone": 0.07497708524289642,
+        "f1_drone": 0.10241001564945226,
+        "pr_auc_drone": 0.17044952363292123,
+        "roc_auc": 0.11908357217683799,
+        "n": 17485,
+        "oracle_threshold": 0.98,
+        "oracle_threshold_accuracy": 0.4258507291964541
+      },
+      "DIAT_uSAT_Xband_CW": {
+        "accuracy": 0.7491535857186826,
+        "recall_drone": 1.0,
+        "precision_drone": 0.7491535857186826,
+        "f1_drone": 0.8565898293155024,
+        "pr_auc_drone": 0.7265625455191331,
+        "roc_auc": 0.39770707411869677,
+        "n": 3249,
+        "oracle_threshold": 0.02,
+        "oracle_threshold_accuracy": 0.7491535857186826
+      }
+    },
+    "DIAT_uSAT_Xband_CW": {
+      "SAAB_77GHz_FMCW": {
+        "accuracy": 0.7285533815147776,
+        "recall_drone": 0.8437755240947454,
+        "precision_drone": 0.8420990065381676,
+        "f1_drone": 0.8429364317101986,
+        "pr_auc_drone": 0.7184003918986566,
+        "roc_auc": 0.10579641844557042,
+        "n": 68076,
+        "oracle_threshold": 0.02,
+        "oracle_threshold_accuracy": 0.8420882543040131
+      },
+      "RADDAR_8.75GHz_FMCW": {
+        "accuracy": 0.2895052902487847,
+        "recall_drone": 0.9994076999012833,
+        "precision_drone": 0.2895549708271365,
+        "f1_drone": 0.4490176076639908,
+        "pr_auc_drone": 0.33242609107509113,
+        "roc_auc": 0.45715502811279457,
+        "n": 17485,
+        "oracle_threshold": 0.92,
+        "oracle_threshold_accuracy": 0.29042036030883617
+      },
+      "TSMS_2.5GHz_CW": {
+        "accuracy": 0.31333333333333335,
+        "recall_drone": 0.18944444444444444,
+        "precision_drone": 0.7985948477751756,
+        "f1_drone": 0.3062415806017063,
+        "pr_auc_drone": 0.8013862782377448,
+        "roc_auc": 0.4893567901234568,
+        "n": 2250,
+        "oracle_threshold": 0.02,
+        "oracle_threshold_accuracy": 0.6262222222222222
+      }
+    }
+  },
+  "degradation_summary": {
+    "SAAB_77GHz_FMCW": {
+      "in_distribution_accuracy": 0.9917009400705052,
+      "mean_cross_sensor_accuracy_at_0.5": 0.7367999814817309,
+      "mean_cross_sensor_accuracy_oracle_threshold": 0.7838293437054417,
+      "mean_cross_sensor_pr_auc": 0.7485673224539894,
+      "accuracy_gap_at_0.5": 0.2549009585887744,
+      "accuracy_gap_oracle_threshold": 0.20787159636506358,
+      "in_distribution_drone_recall": 0.9924281095797175,
+      "mean_cross_sensor_drone_recall": 0.9275483390743068
+    },
+    "RADDAR_8.75GHz_FMCW": {
+      "in_distribution_accuracy": 0.8890477552187589,
+      "mean_cross_sensor_accuracy_at_0.5": 0.2640949894846219,
+      "mean_cross_sensor_accuracy_oracle_threshold": 0.5407505044196707,
+      "mean_cross_sensor_pr_auc": 0.8016287519101902,
+      "accuracy_gap_at_0.5": 0.6249527657341369,
+      "accuracy_gap_oracle_threshold": 0.34829725079908824,
+      "in_distribution_drone_recall": 0.9081934846989141,
+      "mean_cross_sensor_drone_recall": 0.1310270793191084
+    },
+    "TSMS_2.5GHz_CW": {
+      "in_distribution_accuracy": 0.8511111111111112,
+      "mean_cross_sensor_accuracy_at_0.5": 0.5280079033665591,
+      "mean_cross_sensor_accuracy_oracle_threshold": 0.6717717146628418,
+      "mean_cross_sensor_pr_auc": 0.5441349709138218,
+      "accuracy_gap_at_0.5": 0.32310320774455203,
+      "accuracy_gap_oracle_threshold": 0.17933939644826935,
+      "in_distribution_drone_recall": 0.8944444444444445,
+      "mean_cross_sensor_drone_recall": 0.638936501763489
+    },
+    "DIAT_uSAT_Xband_CW": {
+      "in_distribution_accuracy": 0.9015384615384615,
+      "mean_cross_sensor_accuracy_at_0.5": 0.4437973350322985,
+      "mean_cross_sensor_accuracy_oracle_threshold": 0.5862436122783572,
+      "mean_cross_sensor_pr_auc": 0.6174042537371641,
+      "accuracy_gap_at_0.5": 0.457741126506163,
+      "accuracy_gap_oracle_threshold": 0.3152948492601043,
+      "in_distribution_drone_recall": 0.9301848049281314,
+      "mean_cross_sensor_drone_recall": 0.6775425561468243
+    }
+  }
+}

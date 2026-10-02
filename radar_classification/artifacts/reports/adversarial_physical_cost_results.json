@@ -1,0 +1,41 @@
+{
+  "physical_cost_weights": {
+    "rcs_estimate": 5.0,
+    "micro_doppler_bandwidth": 2.0,
+    "micro_doppler_jitter": 2.0,
+    "doppler_velocity": 1.0,
+    "velocity_variance": 1.0,
+    "acceleration": 1.0
+  },
+  "seeds": [
+    42,
+    7,
+    123
+  ],
+  "unconstrained_evasion_rate": {
+    "mean": 1.0,
+    "std": 0.0
+  },
+  "achievable_evasion_rate_by_budget": {
+    "1.0": {
+      "mean": 0.11388888888888889,
+      "std": 0.00392837100659193
+    },
+    "2.0": {
+      "mean": 0.21944444444444444,
+      "std": 0.021872244094477248
+    },
+    "4.0": {
+      "mean": 0.4694444444444444,
+      "std": 0.03986861137335368
+    },
+    "8.0": {
+      "mean": 0.8444444444444444,
+      "std": 0.019641855032959635
+    },
+    "inf": {
+      "mean": 1.0,
+      "std": 0.0
+    }
+  }
+}

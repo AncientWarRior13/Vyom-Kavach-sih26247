@@ -1,0 +1,38 @@
+{
+  "class_counts": {
+    "aircraft": 26000,
+    "bird": 20800,
+    "anomaly": 3900,
+    "drone": 1300
+  },
+  "imbalance_ratio_majority_to_drone": 20.0,
+  "imbalance_in_spec_band_15_25": true,
+  "cohens_d_drone_vs_bird__micro_doppler_bandwidth": 2.55,
+  "cohens_d_drone_vs_bird__micro_doppler_jitter": 1.298,
+  "cohens_d_drone_vs_bird__rcs_estimate": 0.465,
+  "snr_min": -20.0,
+  "snr_max": -10.0,
+  "snr_in_band": true,
+  "duplicate_rows_full": 0,
+  "train_test_overlap": 0,
+  "train_val_overlap": 0,
+  "train_class_frac": {
+    "aircraft": 0.5,
+    "bird": 0.4,
+    "anomaly": 0.075,
+    "drone": 0.025
+  },
+  "val_class_frac": {
+    "aircraft": 0.5,
+    "bird": 0.4,
+    "anomaly": 0.075,
+    "drone": 0.025
+  },
+  "test_class_frac": {
+    "aircraft": 0.5,
+    "bird": 0.4,
+    "anomaly": 0.075,
+    "drone": 0.025
+  },
+  "schema_columns_ok": true
+}

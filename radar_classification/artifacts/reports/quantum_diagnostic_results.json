@@ -1,0 +1,48 @@
+{
+  "simulated": {
+    "quantum_ZZ": {
+      "offdiag_mean": 0.06577402117604551,
+      "offdiag_std": 0.0626325239844755,
+      "concentration_ratio": 0.9522380099674955,
+      "effective_rank": 67.29145486240915,
+      "alignment": 0.14009380739714253
+    },
+    "quantum_Z": {
+      "offdiag_mean": 0.18959351729769286,
+      "offdiag_std": 0.1957161518006136,
+      "concentration_ratio": 1.0322934747869768,
+      "effective_rank": 12.434381110269825,
+      "alignment": 0.18246542571561322
+    },
+    "classical_rbf": {
+      "offdiag_mean": 0.572904871045225,
+      "offdiag_std": 0.36275928276497177,
+      "concentration_ratio": 0.6331928745342135,
+      "effective_rank": 2.157890581241947,
+      "alignment": 0.5435571912376663
+    }
+  },
+  "real_saab": {
+    "quantum_ZZ": {
+      "offdiag_mean": 0.06507713773408348,
+      "offdiag_std": 0.06327494818991423,
+      "concentration_ratio": 0.9723068564594809,
+      "effective_rank": 67.33782469000171,
+      "alignment": 0.13557820449958916
+    },
+    "quantum_Z": {
+      "offdiag_mean": 0.2435877500030749,
+      "offdiag_std": 0.22158894697239465,
+      "concentration_ratio": 0.9096883815376967,
+      "effective_rank": 8.742755936983825,
+      "alignment": 0.1500579597116491
+    },
+    "classical_rbf": {
+      "offdiag_mean": 0.6370797493718049,
+      "offdiag_std": 0.3383423318199804,
+      "concentration_ratio": 0.531083167566574,
+      "effective_rank": 1.9100597448572987,
+      "alignment": 0.1425799629945218
+    }
+  }
+}

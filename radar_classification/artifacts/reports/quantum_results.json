@@ -1,0 +1,134 @@
+{
+  "circuit": {
+    "feature_map": "ZZFeatureMap",
+    "qubits": 4,
+    "reps": 2,
+    "circuit_depth": 31,
+    "backend": "Qiskit exact statevector simulation (noiseless); fidelity kernel K_ij = |<psi_i|psi_j>|^2 computed as a Gram matrix",
+    "features": [
+      "doppler_velocity",
+      "rcs_estimate",
+      "micro_doppler_bandwidth",
+      "micro_doppler_jitter"
+    ],
+    "drone_fraction_in_subsamples": 0.3
+  },
+  "results": [
+    {
+      "kernel": "quantum_zz",
+      "recall_drone": 0.4,
+      "precision_drone": 0.8780487804878049,
+      "f1_drone": 0.549618320610687,
+      "pr_auc": 0.7183391963395503,
+      "roc_auc": 0.8166137566137566,
+      "n_train": 100,
+      "kernel_seconds": 2.5
+    },
+    {
+      "kernel": "rbf",
+      "n_train": 100,
+      "recall_drone": 0.9111111111111111,
+      "precision_drone": 0.9761904761904762,
+      "f1_drone": 0.9425287356321839,
+      "pr_auc": 0.9751207584256273,
+      "roc_auc": 0.9761375661375661
+    },
+    {
+      "kernel": "linear",
+      "n_train": 100,
+      "recall_drone": 0.9111111111111111,
+      "precision_drone": 0.9647058823529412,
+      "f1_drone": 0.9371428571428572,
+      "pr_auc": 0.9815263660706189,
+      "roc_auc": 0.9876719576719577
+    },
+    {
+      "kernel": "quantum_zz",
+      "recall_drone": 0.4777777777777778,
+      "precision_drone": 0.9148936170212766,
+      "f1_drone": 0.6277372262773723,
+      "pr_auc": 0.793313636177678,
+      "roc_auc": 0.8561375661375663,
+      "n_train": 200,
+      "kernel_seconds": 3.5
+    },
+    {
+      "kernel": "rbf",
+      "n_train": 200,
+      "recall_drone": 0.9222222222222223,
+      "precision_drone": 0.9431818181818182,
+      "f1_drone": 0.9325842696629213,
+      "pr_auc": 0.9750426626295754,
+      "roc_auc": 0.9765608465608466
+    },
+    {
+      "kernel": "linear",
+      "n_train": 200,
+      "recall_drone": 0.8777777777777778,
+      "precision_drone": 0.9518072289156626,
+      "f1_drone": 0.9132947976878613,
+      "pr_auc": 0.9813309261519264,
+      "roc_auc": 0.9885714285714287
+    },
+    {
+      "kernel": "quantum_zz",
+      "recall_drone": 0.6555555555555556,
+      "precision_drone": 0.8309859154929577,
+      "f1_drone": 0.7329192546583851,
+      "pr_auc": 0.8489314421635032,
+      "roc_auc": 0.8958730158730158,
+      "n_train": 400,
+      "kernel_seconds": 5.4
+    },
+    {
+      "kernel": "rbf",
+      "n_train": 400,
+      "recall_drone": 0.9444444444444444,
+      "precision_drone": 0.9340659340659341,
+      "f1_drone": 0.9392265193370166,
+      "pr_auc": 0.9756797054489883,
+      "roc_auc": 0.9771428571428571
+    },
+    {
+      "kernel": "linear",
+      "n_train": 400,
+      "recall_drone": 0.9222222222222223,
+      "precision_drone": 0.9540229885057471,
+      "f1_drone": 0.9378531073446328,
+      "pr_auc": 0.981416475379717,
+      "roc_auc": 0.9884126984126984
+    },
+    {
+      "kernel": "quantum_zz",
+      "recall_drone": 0.7111111111111111,
+      "precision_drone": 0.8421052631578947,
+      "f1_drone": 0.7710843373493976,
+      "pr_auc": 0.8818670520046514,
+      "roc_auc": 0.9344973544973546,
+      "n_train": 800,
+      "kernel_seconds": 7.9
+    },
+    {
+      "kernel": "rbf",
+      "n_train": 800,
+      "recall_drone": 0.9333333333333333,
+      "precision_drone": 0.9438202247191011,
+      "f1_drone": 0.9385474860335196,
+      "pr_auc": 0.9761896819449992,
+      "roc_auc": 0.9764021164021163
+    },
+    {
+      "kernel": "linear",
+      "n_train": 800,
+      "recall_drone": 0.9333333333333333,
+      "precision_drone": 0.9545454545454546,
+      "f1_drone": 0.9438202247191011,
+      "pr_auc": 0.9818035034177968,
+      "roc_auc": 0.9882539682539682
+    }
+  ],
+  "kernel_target_alignment_largest_n": {
+    "quantum_zz": 0.1583775305687742,
+    "rbf": 0.2851728927403711
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "sdk": "PennyLane 0.45 (default.qubit); same circuit runs on Qiskit via pennylane-qiskit",
+  "circuit": {
+    "embedding": "AngleEmbedding(RY)",
+    "ansatz": "StronglyEntanglingLayers",
+    "n_layers": 3,
+    "qubits": 4,
+    "optimizer": "Adam (gradient descent)",
+    "epochs": 40,
+    "n_train": 300,
+    "n_test": 300
+  },
+  "pennylane_vqc": {
+    "roc_auc": {
+      "mean": 0.9794003527336862,
+      "std": 0.004313674839884412
+    },
+    "pr_auc": {
+      "mean": 0.9239339700077348,
+      "std": 0.022155833862622158
+    },
+    "accuracy": {
+      "mean": 0.9477777777777777,
+      "std": 0.004157397096415497
+    },
+    "recall_drone": {
+      "mean": 0.8851851851851853,
+      "std": 0.05158662324883008
+    },
+    "precision_drone": {
+      "mean": 0.9403596065181432,
+      "std": 0.03283266085375717
+    }
+  },
+  "classical_baseline_same_features": {
+    "roc_auc": {
+      "mean": 0.978694885361552,
+      "std": 0.003251661284371511
+    },
+    "pr_auc": {
+      "mean": 0.9394487966645869,
+      "std": 0.009593596356387237
+    }
+  },
+  "qiskit_vqc_reference": {
+    "cobyla_pr_auc": 0.483,
+    "spsa_roc_auc": 0.629
+  }
+}

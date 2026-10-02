@@ -1,0 +1,161 @@
+{
+  "shap": {
+    "feature_set_importance_split": {
+      "physics_11feature_share": 0.3883089986411347,
+      "waveform_stat_31feature_share": 0.5763908951883405,
+      "snr_db_shared_share": 0.035300106170524696,
+      "physics_feature_count": 10,
+      "waveform_stat_feature_count": 30
+    },
+    "drone_class_top10_features": [
+      [
+        "range_m",
+        "physics"
+      ],
+      [
+        "micro_doppler_bandwidth",
+        "physics"
+      ],
+      [
+        "altitude_m",
+        "physics"
+      ],
+      [
+        "energy_spectral_bandwidth",
+        "waveform_stat"
+      ],
+      [
+        "energy_zcr",
+        "waveform_stat"
+      ],
+      [
+        "amplitude_zcr",
+        "waveform_stat"
+      ],
+      [
+        "amplitude_mean",
+        "waveform_stat"
+      ],
+      [
+        "velocity_energy",
+        "waveform_stat"
+      ],
+      [
+        "velocity_zcr",
+        "waveform_stat"
+      ],
+      [
+        "velocity_max",
+        "waveform_stat"
+      ]
+    ],
+    "physically_plausible_matches": [
+      "micro_doppler_bandwidth",
+      "energy_spectral_bandwidth",
+      "velocity_energy"
+    ],
+    "waterfall_instance": {
+      "test_row": 17,
+      "p_drone": 0.997728064158182
+    }
+  },
+  "lime": {
+    "n_aggregate_samples": 20,
+    "num_samples_per_call": 1000,
+    "single_instance": {
+      "test_row": 17,
+      "weights": [
+        [
+          "range_m <= 1130.34",
+          0.055141922372783835
+        ],
+        [
+          "micro_doppler_bandwidth > 59.45",
+          0.0483745140201479
+        ],
+        [
+          "velocity_dominant_freq > 0.00",
+          0.028269171571245352
+        ],
+        [
+          "velocity_variance > 1.92",
+          0.023783784314831847
+        ],
+        [
+          "energy_range <= 0.08",
+          0.019276980391445642
+        ],
+        [
+          "amplitude_mean <= 0.17",
+          0.016862220899721198
+        ],
+        [
+          "0.02 < energy_std <= 0.83",
+          0.015505441820086435
+        ],
+        [
+          "altitude_m <= 469.93",
+          0.014760416283768996
+        ],
+        [
+          "0.06 < amplitude_std <= 0.28",
+          0.014709300044660728
+        ],
+        [
+          "0.76 < doppler_velocity <= 13.61",
+          0.01433692285137863
+        ],
+        [
+          "acceleration <= -1.15",
+          0.014159542682157276
+        ],
+        [
+          "2.63 < azimuth_deg <= 93.00",
+          0.013725895880672872
+        ],
+        [
+          "-22.37 < snr_db <= -20.10",
+          0.01270357374653976
+        ],
+        [
+          "energy_spectral_bandwidth > 6.54",
+          0.012119412737427736
+        ],
+        [
+          "energy_mean <= 0.03",
+          0.011729066221866369
+        ]
+      ]
+    },
+    "aggregate_top10": [
+      "micro_doppler_bandwidth",
+      "range_m",
+      "energy_spectral_bandwidth",
+      "velocity_dominant_freq",
+      "amplitude_zcr",
+      "amplitude_mean",
+      "velocity_variance",
+      "velocity_zcr",
+      "energy_zcr",
+      "amplitude_spectral_bandwidth"
+    ],
+    "feature_set_importance_split": {
+      "physics_11feature_share": 0.42701124063152335,
+      "waveform_stat_31feature_share": 0.5516047365265199,
+      "snr_db_shared_share": 0.021384022841956778
+    }
+  },
+  "shap_lime_agreement": {
+    "top10_overlap_count": 7,
+    "top10_overlap_features": [
+      "amplitude_mean",
+      "amplitude_zcr",
+      "energy_spectral_bandwidth",
+      "energy_zcr",
+      "micro_doppler_bandwidth",
+      "range_m",
+      "velocity_zcr"
+    ]
+  },
+  "note": "Answers whether the combined model genuinely uses both feature sets, via TWO independent methods: SHAP (exact tree attribution) says physics=38.8% / waveform-stat=57.6% of importance despite 10/30 feature counts; LIME (locally-weighted linear surrogate, aggregated over 20 drone detections) says physics=42.7% / waveform-stat=55.2%. 7/10 top features agree between the two methods."
+}

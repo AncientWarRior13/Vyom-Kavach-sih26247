@@ -1,0 +1,101 @@
+{
+  "backend": "ibm_fez",
+  "job_id": "d9f6pskjeosc73fji2j0",
+  "shots_per_circuit": 2048,
+  "elapsed_seconds": 172.0158851146698,
+  "n_pairs": 15,
+  "mean_absolute_deviation_real_vs_noiseless": 0.019690675951650704,
+  "pearson_correlation_real_vs_noiseless": 0.9198444882054675,
+  "per_pair": [
+    {
+      "i": 0,
+      "j": 1,
+      "real_hardware_fidelity": 0.0341796875,
+      "noiseless_simulated_fidelity": 0.015143374286067192
+    },
+    {
+      "i": 0,
+      "j": 2,
+      "real_hardware_fidelity": 0.12841796875,
+      "noiseless_simulated_fidelity": 0.09857747491771907
+    },
+    {
+      "i": 0,
+      "j": 3,
+      "real_hardware_fidelity": 0.04541015625,
+      "noiseless_simulated_fidelity": 0.02479025856425925
+    },
+    {
+      "i": 0,
+      "j": 4,
+      "real_hardware_fidelity": 0.06005859375,
+      "noiseless_simulated_fidelity": 0.06561493081597816
+    },
+    {
+      "i": 0,
+      "j": 5,
+      "real_hardware_fidelity": 0.01953125,
+      "noiseless_simulated_fidelity": 0.007025656723362287
+    },
+    {
+      "i": 1,
+      "j": 2,
+      "real_hardware_fidelity": 0.02587890625,
+      "noiseless_simulated_fidelity": 0.010627210972439332
+    },
+    {
+      "i": 1,
+      "j": 3,
+      "real_hardware_fidelity": 0.04248046875,
+      "noiseless_simulated_fidelity": 0.01049042662269665
+    },
+    {
+      "i": 1,
+      "j": 4,
+      "real_hardware_fidelity": 0.14013671875,
+      "noiseless_simulated_fidelity": 0.19185212437795865
+    },
+    {
+      "i": 1,
+      "j": 5,
+      "real_hardware_fidelity": 0.033203125,
+      "noiseless_simulated_fidelity": 0.012965440476517582
+    },
+    {
+      "i": 2,
+      "j": 3,
+      "real_hardware_fidelity": 0.0751953125,
+      "noiseless_simulated_fidelity": 0.08219679189627883
+    },
+    {
+      "i": 2,
+      "j": 4,
+      "real_hardware_fidelity": 0.07470703125,
+      "noiseless_simulated_fidelity": 0.11726412985808375
+    },
+    {
+      "i": 2,
+      "j": 5,
+      "real_hardware_fidelity": 0.0390625,
+      "noiseless_simulated_fidelity": 0.02180562020551722
+    },
+    {
+      "i": 3,
+      "j": 4,
+      "real_hardware_fidelity": 0.04541015625,
+      "noiseless_simulated_fidelity": 0.03359110637873927
+    },
+    {
+      "i": 3,
+      "j": 5,
+      "real_hardware_fidelity": 0.05029296875,
+      "noiseless_simulated_fidelity": 0.040778757379084304
+    },
+    {
+      "i": 4,
+      "j": 5,
+      "real_hardware_fidelity": 0.072265625,
+      "noiseless_simulated_fidelity": 0.0718076673971366
+    }
+  ]
+}

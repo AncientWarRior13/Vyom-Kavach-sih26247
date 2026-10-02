@@ -1,0 +1,92 @@
+{
+  "dataset": "Zenodo 5896641 SAAB SIRS 77GHz FMCW (real measurements)",
+  "experiment_a_zero_shot": {
+    "metrics": {
+      "accuracy": 0.39038856962092056,
+      "macro_f1": 0.41598278709572356,
+      "precision_aircraft": 0.0,
+      "recall_aircraft": 0.0,
+      "f1_aircraft": 0.0,
+      "precision_anomaly": 0.510518382593879,
+      "recall_anomaly": 0.8369144821658788,
+      "f1_anomaly": 0.634184068058778,
+      "precision_bird": 0.10223469440296586,
+      "recall_bird": 0.5096252566735113,
+      "f1_bird": 0.17030492773512887,
+      "precision_drone": 0.8203702852942528,
+      "recall_drone": 0.30385583991287773,
+      "f1_drone": 0.4434593654932638,
+      "pr_auc_drone": 0.8120990367897296
+    },
+    "confusion_matrix_rows_true_cols_pred": [
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        7790,
+        1415,
+        103
+      ],
+      [
+        0,
+        14,
+        3971,
+        3807
+      ],
+      [
+        0,
+        7455,
+        33456,
+        17857
+      ]
+    ],
+    "labels": [
+      "aircraft",
+      "anomaly",
+      "bird",
+      "drone"
+    ],
+    "note": "Zero-shot sim-to-real transfer, frozen model + frozen threshold; aircraft column = misfires on a class absent from the real data."
+  },
+  "experiment_b_retrained": {
+    "threshold_f2_val": 0.06999999999999999,
+    "accuracy": 0.9548888888888889,
+    "recall_anomaly": 0.941,
+    "precision_anomaly": 0.9936642027455121,
+    "recall_bird": 0.761,
+    "precision_bird": 0.9536340852130326,
+    "recall_drone": 0.9918333333333333,
+    "precision_drone": 0.9434051997463538,
+    "confusion_matrix_rows_true_cols_pred": [
+      [
+        1882,
+        0,
+        118
+      ],
+      [
+        0,
+        761,
+        239
+      ],
+      [
+        12,
+        37,
+        5951
+      ]
+    ],
+    "labels": [
+      "anomaly",
+      "bird",
+      "drone"
+    ],
+    "split_sizes": {
+      "train": 57868,
+      "val": 9000,
+      "test": 9000
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "reject_threshold": -0.5871557938719001,
+  "n_estimators": 200,
+  "contamination": 0.05,
+  "false_reject_rate_on_real_holdout": 0.011,
+  "feature_order": [
+    "doppler_velocity",
+    "doppler_freq_shift",
+    "rcs_estimate",
+    "micro_doppler_bandwidth",
+    "micro_doppler_jitter",
+    "range_m",
+    "azimuth_deg",
+    "altitude_m",
+    "velocity_variance",
+    "acceleration",
+    "snr_db"
+  ]
+}

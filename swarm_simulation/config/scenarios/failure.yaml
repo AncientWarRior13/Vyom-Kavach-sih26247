@@ -1,0 +1,75 @@
+scenario:
+  name: multi_failure_stress
+  seed: 7
+  duration_seconds: 600
+  dt_seconds: 1.0
+  geofence:
+    min: [-50, -50, 0]
+    max: [550, 450, 120]
+
+gcs:
+  position: [0, 200, 0]
+
+swarm:
+  count: 10
+  battery_percent: 100
+  max_speed_mps: 12.0
+  comm_range_m: 130.0
+  battery_drain_rate_pct_per_s: 0.03
+  battery_drain_rate_relay_bonus: 0.005
+  battery_reserve_pct: 20.0
+  home_position: [0, 200, 0]
+
+pois:
+  - id: poi_01
+    priority: 0.5
+    position: [120, 80, 40]
+    required_data: [imagery]
+    deadline: 500
+    risk: 0.1
+  - id: poi_02
+    priority: 0.6
+    position: [180, 320, 40]
+    required_data: [imagery]
+    deadline: 500
+    risk: 0.15
+  - id: poi_03
+    priority: 0.7
+    position: [260, 130, 40]
+    required_data: [imagery, thermal_proxy]
+    deadline: 500
+    risk: 0.2
+  - id: poi_04
+    priority: 0.55
+    position: [300, 300, 40]
+    required_data: [imagery]
+    deadline: 500
+    risk: 0.1
+  - id: poi_05
+    priority: 0.65
+    position: [380, 180, 40]
+    required_data: [imagery]
+    deadline: 500
+    risk: 0.25
+
+# Stress test: two relay-critical UAVs fail in close succession, forcing
+# the recovery engine to repair the graph twice under compounding pressure
+# (PROJECT_CONTEXT.md section 9's "multiple UAV failures" robustness case).
+events:
+  - time: 90
+    type: UAV_FAILURE
+    uav_id: uav_02
+
+  - time: 140
+    type: UAV_FAILURE
+    uav_id: uav_05
+
+  - time: 200
+    type: LINK_DEGRADATION
+    link: [uav_01, uav_07]
+    packet_loss: 0.6
+    duration: 90
+
+  - time: 350
+    type: UAV_FAILURE
+    uav_id: uav_08

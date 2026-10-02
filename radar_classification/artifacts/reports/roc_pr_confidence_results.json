@@ -1,0 +1,49 @@
+{
+  "n_test": 7800,
+  "roc_auc_per_class": {
+    "aircraft": {
+      "auc": 0.9996627218934911
+    },
+    "anomaly": {
+      "auc": 0.9937973476435015
+    },
+    "bird": {
+      "auc": 0.9996759944115714
+    },
+    "drone": {
+      "auc": 0.99799996628399
+    }
+  },
+  "average_precision_per_class": {
+    "aircraft": {
+      "average_precision": 0.9996584981852359
+    },
+    "anomaly": {
+      "average_precision": 0.9529198195846257
+    },
+    "bird": {
+      "average_precision": 0.9994854492031036
+    },
+    "drone": {
+      "average_precision": 0.9378577495537685
+    }
+  },
+  "confidence_separation_per_class": {
+    "aircraft": {
+      "mean_p_when_true_class": 0.965809903528675,
+      "mean_p_when_other_class": 0.00695608337568517
+    },
+    "anomaly": {
+      "mean_p_when_true_class": 0.884510762012316,
+      "mean_p_when_other_class": 0.026495976403590422
+    },
+    "bird": {
+      "mean_p_when_true_class": 0.9694046126601675,
+      "mean_p_when_other_class": 0.004591388473316687
+    },
+    "drone": {
+      "mean_p_when_true_class": 0.8748252565274881,
+      "mean_p_when_other_class": 0.010648832474185483
+    }
+  }
+}

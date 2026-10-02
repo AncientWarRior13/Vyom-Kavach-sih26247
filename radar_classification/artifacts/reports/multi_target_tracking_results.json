@@ -1,0 +1,11 @@
+{
+  "n_targets": 3,
+  "n_frames": 80,
+  "n_scenes": 10,
+  "association": "greedy global-nearest-neighbour, Mahalanobis gate",
+  "tracker": "bank of constant-velocity Kalman filters, spawn/coast/kill",
+  "track_completeness_mean": 0.7995833333333334,
+  "track_completeness_std": 0.2037534082877852,
+  "cardinality_error_mean": 0.25,
+  "extra_tracks_per_scene_mean": 0.2
+}

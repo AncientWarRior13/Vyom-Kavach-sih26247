@@ -1,0 +1,25 @@
+{
+  "variants": [
+    {
+      "variant": "all_11_features",
+      "n_features": 11,
+      "mean_in_distribution_accuracy": 0.9083495669847091,
+      "mean_cross_sensor_accuracy": 0.49317505234130254,
+      "mean_cross_sensor_pr_auc": 0.6779338247537915
+    },
+    {
+      "variant": "drop_snr_db",
+      "n_features": 10,
+      "mean_in_distribution_accuracy": 0.8960843662865039,
+      "mean_cross_sensor_accuracy": 0.5376188930824765,
+      "mean_cross_sensor_pr_auc": 0.6935564339612824
+    },
+    {
+      "variant": "drop_snr_and_rcs",
+      "n_features": 9,
+      "mean_in_distribution_accuracy": 0.8474870336092456,
+      "mean_cross_sensor_accuracy": 0.6001396108965448,
+      "mean_cross_sensor_pr_auc": 0.6873184901411543
+    }
+  ]
+}

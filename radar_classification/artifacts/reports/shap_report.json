@@ -1,0 +1,25 @@
+{
+  "drone_class_feature_ranking": [
+    "micro_doppler_bandwidth",
+    "range_m",
+    "altitude_m",
+    "rcs_estimate",
+    "micro_doppler_jitter",
+    "snr_db",
+    "acceleration",
+    "velocity_variance",
+    "doppler_freq_shift",
+    "doppler_velocity",
+    "azimuth_deg"
+  ],
+  "physics_sanity_top3": [
+    "micro_doppler_bandwidth",
+    "range_m",
+    "altitude_m"
+  ],
+  "physics_sane": true,
+  "waterfall_instance": {
+    "test_row": 17,
+    "p_drone": 0.7513817833045693
+  }
+}

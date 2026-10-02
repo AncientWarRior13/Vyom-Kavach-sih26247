@@ -1,0 +1,48 @@
+{
+  "dataset": "Kaggle iroldan/real-doppler-raddar-database (UPM RAD-DAR 8.75 GHz FMCW, real measurements)",
+  "n_samples": 17485,
+  "assumptions": [
+    "doppler span 20 km/h total",
+    "0.1 s frame interval",
+    "rcs/power proxy uncalibrated",
+    "range/azimuth/altitude unavailable"
+  ],
+  "experiment_a_zero_shot": {
+    "accuracy": 0.5999428081212468,
+    "macro_f1": 0.3042199871870501,
+    "precision_aircraft": 0.0,
+    "recall_aircraft": 0.0,
+    "f1_aircraft": 0.0,
+    "precision_anomaly": 0.9107972984825893,
+    "recall_anomaly": 0.8360708534621578,
+    "f1_anomaly": 0.8718357751563747,
+    "precision_bird": 0.0,
+    "recall_bird": 0.0,
+    "f1_bird": 0.0,
+    "precision_drone": 0.828125,
+    "recall_drone": 0.020927936821322803,
+    "f1_drone": 0.04082418640477566,
+    "pr_auc_drone": 0.656404387578978
+  },
+  "experiment_b_session_aware_retrain": {
+    "recall_drone": 0.9846491228070176,
+    "precision_drone": 0.657393850658858,
+    "accuracy": 0.7634162303664922,
+    "threshold": 0.13,
+    "split_sessions": {
+      "train": 56,
+      "val": 12,
+      "test": 12
+    },
+    "confusion_matrix": [
+      [
+        986,
+        702
+      ],
+      [
+        21,
+        1347
+      ]
+    ]
+  }
+}

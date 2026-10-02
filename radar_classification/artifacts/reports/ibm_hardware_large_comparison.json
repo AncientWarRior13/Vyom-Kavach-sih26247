@@ -1,0 +1,17 @@
+{
+  "backend": "ibm_fez",
+  "n_points": 8,
+  "n_pairs": 28,
+  "shots_per_circuit": 4096,
+  "raw": {
+    "job_id": "d9fd96kjeosc73fjq0lg",
+    "mae_vs_noiseless": 0.025571884847759765,
+    "correlation": 0.9807005799323212
+  },
+  "mitigated": {
+    "job_id": "d9fdbrsjeosc73fjq5g0",
+    "mae_vs_noiseless": 0.02054439126165049,
+    "correlation": 0.9962507932241734
+  },
+  "mitigation_improves_mae": true
+}

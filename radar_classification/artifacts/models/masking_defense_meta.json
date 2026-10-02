@@ -1,0 +1,26 @@
+{
+  "chosen_operating_point": "k2_medium",
+  "chosen_k": 2,
+  "chosen_att_range": [
+    0.2,
+    0.9
+  ],
+  "primary_threshold": 0.725,
+  "precision_floor_used": 0.6248917748917748,
+  "stacking_beats_primary": false,
+  "non_md_features": [
+    "doppler_velocity",
+    "doppler_freq_shift",
+    "rcs_estimate",
+    "range_m",
+    "azimuth_deg",
+    "altitude_m",
+    "velocity_variance",
+    "acceleration",
+    "snr_db"
+  ],
+  "suspicion_cutoff": 166.77417919562328,
+  "escalation_rescue_threshold": 0.9,
+  "fallback_threshold": 0.34500000000000003,
+  "recommended_deployment": "escalation_routing for precision-preserving near-zero-cost recovery; curriculum-dropout k2/k3 primary for higher masking recall at a precision cost. probability-blend stacking and md<cutoff replace-routing both tested and rejected."
+}

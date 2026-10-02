@@ -1,0 +1,9 @@
+# Internal benchmark score weights (PROJECT_CONTEXT.md section 19).
+# NOT a reproduction of the organizers' hidden scoring - see docs/metrics.md.
+
+mission_weight: 0.25
+communication_weight: 0.25
+autonomy_weight: 0.20
+recovery_weight: 0.15
+safety_weight: 0.10
+innovation_weight: 0.05

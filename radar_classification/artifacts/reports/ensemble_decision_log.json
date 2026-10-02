@@ -1,0 +1,1403 @@
+{
+  "setup": {
+    "n_train": 800,
+    "seed": 42,
+    "meta_model": {
+      "coef_quantum": 3.034290601515543,
+      "coef_classical": 2.7450024065872802,
+      "bias": -2.4322335058330733
+    }
+  },
+  "n_disagreement_cases_in_eval_pool": 6,
+  "n_total_eval_pool": 150,
+  "log_entries": [
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.9584,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.20770358736907785
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.15550634485956233
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.13542246818417475
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.10645014720373469
+          ],
+          [
+            "cnn_embed_dim_3 <= 0.00",
+            0.05755734200301951
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.1279,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.09962473905668112
+          ],
+          [
+            "cnn_embed_dim_1 <= 0.01",
+            -0.09363878094675157
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.0899195690227052
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.08456820760596785
+          ],
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.08452744145578435
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.6426,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 0.3882,
+          "classical_vote_x_weight": 2.6307,
+          "bias": -2.4322,
+          "dominant_model": "classical"
+        }
+      },
+      "models_agreed_on_hard_label": false
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.2969,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.19582358163896102
+          ],
+          [
+            "cnn_embed_dim_6 <= 0.01",
+            0.06712713915890262
+          ],
+          [
+            "cnn_embed_dim_1 <= 0.01",
+            0.0382063914506728
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            0.0346210727743545
+          ],
+          [
+            "cnn_embed_dim_3 <= 0.00",
+            0.019638863144916942
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.711,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.09195197673486825
+          ],
+          [
+            "0.00 < cnn_embed_dim_0 <= 0.34",
+            0.0400956428963857
+          ],
+          [
+            "cnn_embed_dim_3 <= 0.00",
+            -0.033973112988362274
+          ],
+          [
+            "0.00 < cnn_embed_dim_7 <= 0.22",
+            0.03279158166877192
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            -0.02035316845935759
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.6319,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 2.1575,
+          "classical_vote_x_weight": 0.8151,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": false
+    },
+    {
+      "true_label": "not_drone",
+      "classical": {
+        "p_drone": 0.0609,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.16547577630277932
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.08768033056417171
+          ],
+          [
+            "0.00 < cnn_embed_dim_2 <= 0.37",
+            -0.07301937556619872
+          ],
+          [
+            "cnn_embed_dim_3 <= 0.00",
+            0.06300174387583365
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            0.05481971167673787
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.8026,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.08721062997222348
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.06774922771974329
+          ],
+          [
+            "cnn_embed_dim_6 <= 0.01",
+            -0.05600456493551334
+          ],
+          [
+            "cnn_embed_dim_3 <= 0.00",
+            -0.04694338015474413
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            -0.04184227405933973
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.5424,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 2.4353,
+          "classical_vote_x_weight": 0.1671,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": false
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.4034,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.11974344304365335
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.0974847668992895
+          ],
+          [
+            "0.00 < cnn_embed_dim_3 <= 0.34",
+            0.04013633099424003
+          ],
+          [
+            "0.00 < cnn_embed_dim_4 <= 0.38",
+            0.034589258120620255
+          ],
+          [
+            "0.01 < cnn_embed_dim_1 <= 0.38",
+            0.02574443888734696
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.919,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.09672075104990129
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.0920292544150462
+          ],
+          [
+            "0.00 < cnn_embed_dim_0 <= 0.34",
+            0.05564292571989083
+          ],
+          [
+            "0.01 < cnn_embed_dim_1 <= 0.38",
+            0.011579002570438382
+          ],
+          [
+            "0.00 < cnn_embed_dim_4 <= 0.38",
+            0.011271677296909983
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.8121,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 2.7886,
+          "classical_vote_x_weight": 1.1072,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": false
+    },
+    {
+      "true_label": "not_drone",
+      "classical": {
+        "p_drone": 0.4112,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.17014336324261248
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.11538838454206031
+          ],
+          [
+            "0.01 < cnn_embed_dim_6 <= 0.39",
+            0.04279243151239729
+          ],
+          [
+            "0.01 < cnn_embed_dim_1 <= 0.38",
+            0.0325550454077706
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            0.029448108056042165
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.5929,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.09131438921818914
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.09127731325952737
+          ],
+          [
+            "0.00 < cnn_embed_dim_5 <= 0.18",
+            -0.055464671545647826
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            -0.03709798522090133
+          ],
+          [
+            "0.01 < cnn_embed_dim_1 <= 0.38",
+            0.018150137892980294
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.6214,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 1.799,
+          "classical_vote_x_weight": 1.1287,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": false
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.2891,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.08762407250357063
+          ],
+          [
+            "0.00 < cnn_embed_dim_2 <= 0.37",
+            -0.03379650392159769
+          ],
+          [
+            "0.00 < cnn_embed_dim_4 <= 0.38",
+            0.023719995619390113
+          ],
+          [
+            "0.00 < cnn_embed_dim_3 <= 0.34",
+            0.02364422572839049
+          ],
+          [
+            "0.01 < cnn_embed_dim_6 <= 0.39",
+            0.021818259767144913
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.5857,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "0.00 < cnn_embed_dim_7 <= 0.22",
+            -0.11820462289143324
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.09110696585869328
+          ],
+          [
+            "0.00 < cnn_embed_dim_0 <= 0.34",
+            0.05953211122114528
+          ],
+          [
+            "0.01 < cnn_embed_dim_6 <= 0.39",
+            -0.027935559299187847
+          ],
+          [
+            "0.00 < cnn_embed_dim_3 <= 0.34",
+            0.010959869053872784
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.5346,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 1.7773,
+          "classical_vote_x_weight": 0.7936,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": false
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.9659,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.2097558355263722
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.16288107245946343
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.13313067707791865
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.11924522341704095
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            0.059693217305850345
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.859,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.09656102203078193
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.09321406247729098
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.08463197364403577
+          ],
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.07301178033181126
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            -0.05828312821113463
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.944,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 2.6063,
+          "classical_vote_x_weight": 2.6513,
+          "bias": -2.4322,
+          "dominant_model": "classical"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "not_drone",
+      "classical": {
+        "p_drone": 0.0113,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.18665250332107267
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.14586543341254427
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.13908748564554643
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.09523691015956535
+          ],
+          [
+            "0.00 < cnn_embed_dim_4 <= 0.38",
+            0.03410188752680818
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.0186,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.11486626462259689
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.1106344883273232
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.10899155114997248
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.10113376461477883
+          ],
+          [
+            "0.00 < cnn_embed_dim_4 <= 0.38",
+            -0.01742413934980778
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.0875,
+        "decision": "not_drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 0.0566,
+          "classical_vote_x_weight": 0.0311,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "not_drone",
+      "classical": {
+        "p_drone": 0.0092,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.1788073430660941
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.1316270446222819
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.12136647583860707
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.11200906194581976
+          ],
+          [
+            "0.01 < cnn_embed_dim_6 <= 0.39",
+            0.030561073932487352
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.0176,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.09078308610091172
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.08994717982396713
+          ],
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.07678306024830762
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.07511043234899366
+          ],
+          [
+            "0.01 < cnn_embed_dim_1 <= 0.38",
+            -0.014711743271358053
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.0868,
+        "decision": "not_drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 0.0534,
+          "classical_vote_x_weight": 0.0252,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.9406,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.2174646324690127
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.16965937340049753
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.14279407046812703
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.09052832956982952
+          ],
+          [
+            "cnn_embed_dim_6 <= 0.01",
+            0.0600596412407686
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.9302,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.10036643357448648
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.09987824660017408
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.08717151250155462
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.08552229822720903
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            -0.0584962203208706
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.9513,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 2.8225,
+          "classical_vote_x_weight": 2.5819,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "not_drone",
+      "classical": {
+        "p_drone": 0.017,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.18257301236675835
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.14867176673165414
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.1291457659719497
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.10567737603523426
+          ],
+          [
+            "cnn_embed_dim_6 > 0.84",
+            -0.046981558623354576
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.0136,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.10204802925392888
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.09880228597425912
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.09312746340779328
+          ],
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.09074694349967923
+          ],
+          [
+            "cnn_embed_dim_1 > 0.82",
+            0.02449797517386028
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.0875,
+        "decision": "not_drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 0.0414,
+          "classical_vote_x_weight": 0.0467,
+          "bias": -2.4322,
+          "dominant_model": "classical"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.9407,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.20558661761872776
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.15088086824815933
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.14121803508739375
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.10927934637151852
+          ],
+          [
+            "0.01 < cnn_embed_dim_6 <= 0.39",
+            0.0348112942115228
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.6866,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.09272019935596275
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.09144335950756398
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.07841429053274816
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.06461248442649913
+          ],
+          [
+            "0.01 < cnn_embed_dim_6 <= 0.39",
+            -0.02297103553976206
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.9032,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 2.0835,
+          "classical_vote_x_weight": 2.5823,
+          "bias": -2.4322,
+          "dominant_model": "classical"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.8784,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.2369174604158399
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.13969723032734296
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.13214241175234784
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.11969384093547723
+          ],
+          [
+            "cnn_embed_dim_3 <= 0.00",
+            0.05149567672984888
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.8798,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.09574648945815067
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.09336705476408395
+          ],
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.08850835893920707
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.08266019360230759
+          ],
+          [
+            "cnn_embed_dim_6 <= 0.01",
+            -0.030232920373963888
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.9339,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 2.6697,
+          "classical_vote_x_weight": 2.4113,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.9549,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.22450342397084797
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.14554474310768842
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.140551128877281
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.11862488908968362
+          ],
+          [
+            "cnn_embed_dim_6 <= 0.01",
+            0.04151263032985689
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.9691,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.10005373658552763
+          ],
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.09433688808455705
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.0843049380996392
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.0797503946659617
+          ],
+          [
+            "cnn_embed_dim_6 <= 0.01",
+            -0.03510147614367934
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.9581,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 2.9404,
+          "classical_vote_x_weight": 2.6212,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.9498,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.2158186340977798
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.16137661858699834
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.15038802502166812
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.10006095983647807
+          ],
+          [
+            "cnn_embed_dim_4 <= 0.00",
+            0.05396439695798683
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.9899,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.10321862671559714
+          ],
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.09597144808277988
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.08678678014486566
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.08040277038026195
+          ],
+          [
+            "cnn_embed_dim_1 <= 0.01",
+            -0.02560401281063976
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.96,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 3.0038,
+          "classical_vote_x_weight": 2.6072,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "not_drone",
+      "classical": {
+        "p_drone": 0.009,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.20316113348270698
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.15470193494466525
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.1231556829473859
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.10800472644308401
+          ],
+          [
+            "0.39 < cnn_embed_dim_6 <= 0.84",
+            -0.028130225505893378
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.0125,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.11339419202276858
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.10313079814533599
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.09714086091419037
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.0942251754027159
+          ],
+          [
+            "0.39 < cnn_embed_dim_6 <= 0.84",
+            0.01610813046546908
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.0855,
+        "decision": "not_drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 0.0379,
+          "classical_vote_x_weight": 0.0247,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "not_drone",
+      "classical": {
+        "p_drone": 0.0104,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.1867067733313738
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.12972473150448183
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.10226428490816858
+          ],
+          [
+            "0.00 < cnn_embed_dim_0 <= 0.34",
+            -0.0681693650516492
+          ],
+          [
+            "0.00 < cnn_embed_dim_4 <= 0.38",
+            0.01653449415461655
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.0157,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.11290466808737479
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.10859939562939361
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.09952304395962315
+          ],
+          [
+            "0.00 < cnn_embed_dim_3 <= 0.34",
+            -0.0245767438663818
+          ],
+          [
+            "0.00 < cnn_embed_dim_4 <= 0.38",
+            -0.021073167049988552
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.0866,
+        "decision": "not_drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 0.0477,
+          "classical_vote_x_weight": 0.0285,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "not_drone",
+      "classical": {
+        "p_drone": 0.0147,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.15456951253109188
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.1484848299971683
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.12303078839366267
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.10822483077311858
+          ],
+          [
+            "0.39 < cnn_embed_dim_6 <= 0.84",
+            -0.032244175877605745
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.0141,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.09794412908511863
+          ],
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.09519324293734499
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.08780898888499508
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.08631623697797616
+          ],
+          [
+            "0.38 < cnn_embed_dim_4 <= 0.84",
+            0.024195540069578813
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.0871,
+        "decision": "not_drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 0.0427,
+          "classical_vote_x_weight": 0.0404,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "not_drone",
+      "classical": {
+        "p_drone": 0.0087,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.19839448224034267
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.15188519873285194
+          ],
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.1231045182708016
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.1138606500578338
+          ],
+          [
+            "0.01 < cnn_embed_dim_1 <= 0.38",
+            0.03579508758238565
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.0182,
+        "decision": "not_drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 <= 0.00",
+            -0.09838806109877353
+          ],
+          [
+            "cnn_embed_dim_7 <= 0.00",
+            -0.08923354701122535
+          ],
+          [
+            "cnn_embed_dim_2 <= 0.00",
+            -0.08589546121557025
+          ],
+          [
+            "cnn_embed_dim_0 <= 0.00",
+            -0.07207219675170795
+          ],
+          [
+            "0.01 < cnn_embed_dim_6 <= 0.39",
+            -0.022070976277810433
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.0868,
+        "decision": "not_drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 0.0552,
+          "classical_vote_x_weight": 0.024,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    },
+    {
+      "true_label": "drone",
+      "classical": {
+        "p_drone": 0.9529,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.20952527667980683
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.18056431262178754
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.14455196763004535
+          ],
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.1154402414872393
+          ],
+          [
+            "cnn_embed_dim_6 <= 0.01",
+            0.049990110850695414
+          ]
+        ]
+      },
+      "quantum": {
+        "p_drone": 0.9797,
+        "decision": "drone",
+        "top_lime_features": [
+          [
+            "cnn_embed_dim_5 > 0.18",
+            0.11790389628782096
+          ],
+          [
+            "cnn_embed_dim_7 > 0.22",
+            0.10043447528382737
+          ],
+          [
+            "cnn_embed_dim_2 > 0.37",
+            0.10030013223953714
+          ],
+          [
+            "cnn_embed_dim_0 > 0.34",
+            0.09505934338809521
+          ],
+          [
+            "cnn_embed_dim_1 <= 0.01",
+            -0.04176017687787522
+          ]
+        ]
+      },
+      "ensemble": {
+        "p_drone": 0.9592,
+        "decision": "drone",
+        "exact_contribution_breakdown": {
+          "quantum_vote_x_weight": 2.9728,
+          "classical_vote_x_weight": 2.6158,
+          "bias": -2.4322,
+          "dominant_model": "quantum"
+        }
+      },
+      "models_agreed_on_hard_label": true
+    }
+  ],
+  "aggregate_classical_embedding_reliance": [
+    [
+      "cnn_embed_dim_2",
+      3.3207796896136625
+    ],
+    [
+      "cnn_embed_dim_7",
+      2.4222100991279967
+    ],
+    [
+      "cnn_embed_dim_0",
+      2.363627369565847
+    ],
+    [
+      "cnn_embed_dim_5",
+      1.906633856413826
+    ],
+    [
+      "cnn_embed_dim_6",
+      0.45602854101062956
+    ],
+    [
+      "cnn_embed_dim_4",
+      0.3414921421924068
+    ],
+    [
+      "cnn_embed_dim_3",
+      0.25547418247624953
+    ],
+    [
+      "cnn_embed_dim_1",
+      0.132300963328176
+    ]
+  ],
+  "aggregate_quantum_embedding_reliance": [
+    [
+      "cnn_embed_dim_7",
+      1.8156499844404719
+    ],
+    [
+      "cnn_embed_dim_5",
+      1.7958177604493368
+    ],
+    [
+      "cnn_embed_dim_2",
+      1.5114784914326367
+    ],
+    [
+      "cnn_embed_dim_0",
+      1.447883522419125
+    ],
+    [
+      "cnn_embed_dim_4",
+      0.29003730003788897
+    ],
+    [
+      "cnn_embed_dim_1",
+      0.22994182954390358
+    ],
+    [
+      "cnn_embed_dim_6",
+      0.21042466303538598
+    ],
+    [
+      "cnn_embed_dim_3",
+      0.11645310606336097
+    ]
+  ]
+}

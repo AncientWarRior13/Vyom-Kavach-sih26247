@@ -1,0 +1,192 @@
+{
+  "n_per_bin": 40,
+  "classical_onnx": {
+    "-20.0": {
+      "mean_ms": 0.07421042500936892,
+      "median_ms": 0.06254199979593977,
+      "std_ms": 0.03671126493469538,
+      "min_ms": 0.027709000278264284,
+      "max_ms": 0.18745800480246544,
+      "n": 40
+    },
+    "-19.0": {
+      "mean_ms": 0.06368337453750428,
+      "median_ms": 0.05760399653809145,
+      "std_ms": 0.02364477733713887,
+      "min_ms": 0.02950000634882599,
+      "max_ms": 0.1365830103168264,
+      "n": 40
+    },
+    "-18.0": {
+      "mean_ms": 0.05823019964736886,
+      "median_ms": 0.05504149157786742,
+      "std_ms": 0.019044988283928515,
+      "min_ms": 0.0340000115102157,
+      "max_ms": 0.10520800424274057,
+      "n": 40
+    },
+    "-17.0": {
+      "mean_ms": 0.06258227731450461,
+      "median_ms": 0.050354006816633046,
+      "std_ms": 0.051222634407358185,
+      "min_ms": 0.0305419962387532,
+      "max_ms": 0.34995800524484366,
+      "n": 40
+    },
+    "-16.0": {
+      "mean_ms": 0.06915519988979213,
+      "median_ms": 0.06308349838946015,
+      "std_ms": 0.02440650414685112,
+      "min_ms": 0.0296669895760715,
+      "max_ms": 0.13595800555776805,
+      "n": 40
+    },
+    "-15.0": {
+      "mean_ms": 0.06615837446588557,
+      "median_ms": 0.0622709994786419,
+      "std_ms": 0.028794933599908583,
+      "min_ms": 0.0272089964710176,
+      "max_ms": 0.14816700422670692,
+      "n": 40
+    },
+    "-14.0": {
+      "mean_ms": 0.05297714960761368,
+      "median_ms": 0.04512500163400546,
+      "std_ms": 0.02777080080642023,
+      "min_ms": 0.025417000870220363,
+      "max_ms": 0.10949998977594078,
+      "n": 40
+    },
+    "-13.0": {
+      "mean_ms": 0.06792500098526943,
+      "median_ms": 0.05364599928725511,
+      "std_ms": 0.03059403016912466,
+      "min_ms": 0.03154200385324657,
+      "max_ms": 0.1534589973744005,
+      "n": 40
+    },
+    "-12.0": {
+      "mean_ms": 0.07737179912510328,
+      "median_ms": 0.05939550464972854,
+      "std_ms": 0.05485771956307181,
+      "min_ms": 0.03404199378564954,
+      "max_ms": 0.3119589964626357,
+      "n": 40
+    },
+    "-11.0": {
+      "mean_ms": 0.07344170153373852,
+      "median_ms": 0.06660450890194625,
+      "std_ms": 0.034198702573537736,
+      "min_ms": 0.033042000723071396,
+      "max_ms": 0.17699999443721026,
+      "n": 40
+    },
+    "-10.0": {
+      "mean_ms": 0.06886974879307672,
+      "median_ms": 0.05149999924469739,
+      "std_ms": 0.04349589419830976,
+      "min_ms": 0.030875002266839147,
+      "max_ms": 0.2051659976132214,
+      "n": 40
+    }
+  },
+  "quantum_qsvc": {
+    "-20.0": {
+      "mean_ms": 11.011483374750242,
+      "median_ms": 7.044874997518491,
+      "std_ms": 9.453281877775003,
+      "min_ms": 3.086750002694316,
+      "max_ms": 44.06366701005027,
+      "n": 40
+    },
+    "-19.0": {
+      "mean_ms": 12.184952149254968,
+      "median_ms": 9.278437493776437,
+      "std_ms": 8.175093872453097,
+      "min_ms": 3.7880830059293658,
+      "max_ms": 41.02354199858382,
+      "n": 40
+    },
+    "-18.0": {
+      "mean_ms": 14.508651150754304,
+      "median_ms": 10.39012499677483,
+      "std_ms": 14.04963011124048,
+      "min_ms": 4.3139589979546145,
+      "max_ms": 79.72774999507237,
+      "n": 40
+    },
+    "-17.0": {
+      "mean_ms": 21.055257224361412,
+      "median_ms": 16.69574999687029,
+      "std_ms": 13.057608692291774,
+      "min_ms": 5.284291008138098,
+      "max_ms": 56.300833995919675,
+      "n": 40
+    },
+    "-16.0": {
+      "mean_ms": 16.547650949723902,
+      "median_ms": 11.390771003789268,
+      "std_ms": 17.18053954978538,
+      "min_ms": 4.673208008171059,
+      "max_ms": 112.64595900138374,
+      "n": 40
+    },
+    "-15.0": {
+      "mean_ms": 17.450331298823585,
+      "median_ms": 10.137604498595465,
+      "std_ms": 33.12067752672605,
+      "min_ms": 4.861166002228856,
+      "max_ms": 219.20820898958482,
+      "n": 40
+    },
+    "-14.0": {
+      "mean_ms": 14.647999900626019,
+      "median_ms": 11.976374997175299,
+      "std_ms": 10.398707176009879,
+      "min_ms": 4.269083990948275,
+      "max_ms": 53.600792001816444,
+      "n": 40
+    },
+    "-13.0": {
+      "mean_ms": 10.698241625868832,
+      "median_ms": 7.469333497283515,
+      "std_ms": 16.485200324961106,
+      "min_ms": 3.8364170031854883,
+      "max_ms": 109.83479200513102,
+      "n": 40
+    },
+    "-12.0": {
+      "mean_ms": 10.361578149240813,
+      "median_ms": 8.421354003075976,
+      "std_ms": 5.225571420554467,
+      "min_ms": 4.2030409967992455,
+      "max_ms": 23.807624995242804,
+      "n": 40
+    },
+    "-11.0": {
+      "mean_ms": 8.326787573241745,
+      "median_ms": 7.609104002767708,
+      "std_ms": 3.1737788504632767,
+      "min_ms": 3.028417006134987,
+      "max_ms": 16.53908299340401,
+      "n": 40
+    },
+    "-10.0": {
+      "mean_ms": 17.875671775254887,
+      "median_ms": 13.29295799951069,
+      "std_ms": 13.213008202185845,
+      "min_ms": 5.47562500287313,
+      "max_ms": 60.954749991651624,
+      "n": 40
+    }
+  },
+  "pearson_correlation_snr_vs_latency": {
+    "classical": 0.050690587953700905,
+    "quantum": -0.029884283779636152,
+    "n_samples": {
+      "classical": 440,
+      "quantum": 440
+    }
+  },
+  "finding": "Pearson correlation between SNR and per-sample latency across all 440 timed classical calls: r=0.051; across all 440 quantum calls: r=-0.030. Both are close to zero -- no meaningful linear relationship between noise level and inference speed for either backend, which is the statistically honest way to state 'latency doesn't depend on SNR' (an earlier pass of this script compared binned per-SNR MEDIANS with n=40/bin and saw 50-93% bin-to-bin swings that looked like a real effect but were sampling noise from small per-bin samples, not a genuine trend -- the full-sample correlation is the correct test, not binned summary stats). Individual-call outliers exist (max/median ratio up to 6.9x classical, 21.6x quantum) -- consistent with OS scheduling/GC pauses on single calls, not an SNR effect, since neither model's computation graph reads snr_db as an input at all."
+}

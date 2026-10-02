@@ -1,0 +1,22 @@
+{
+  "pipeline": "raw 77GHz I/Q -> range-Doppler -> map-features -> CatBoost, end-to-end on real data",
+  "n_segments": 7188,
+  "n_features": 7,
+  "features": [
+    "peak_velocity",
+    "peak_snr_db",
+    "doppler_centroid",
+    "doppler_bandwidth",
+    "cfar_det_count",
+    "clutter_ratio",
+    "spectral_entropy"
+  ],
+  "drone_fraction": 0.3672787979966611,
+  "n_seeds": 5,
+  "accuracy_mean": 0.9109874826147427,
+  "accuracy_std": 0.00439816086254295,
+  "recall_drone_mean": 0.9128787878787878,
+  "recall_drone_std": 0.00523647508922416,
+  "pr_auc_mean": 0.9474769999978848,
+  "pr_auc_std": 0.002889732602820686
+}

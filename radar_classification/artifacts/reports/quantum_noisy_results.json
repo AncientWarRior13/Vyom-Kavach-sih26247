@@ -1,0 +1,58 @@
+{
+  "circuit": {
+    "feature_map": "ZZFeatureMap (identical to quantum.py's noiseless QSVC)",
+    "qubits": 4,
+    "reps": 2,
+    "n_train": 100,
+    "n_test": 100,
+    "shots_per_circuit": 1024,
+    "noise_model": {
+      "type": "representative NISQ-era rates, NOT a specific device snapshot (qiskit-ibm-runtime's calibrated fake backends aren't installed in this environment; the qiskit-core fake_provider backends available here are old pulse-simulation scaffolding, not representative of current hardware -- a documented, literature-typical NoiseModel was used instead for transparency)",
+      "single_qubit_depolarizing_error": 0.001,
+      "two_qubit_cx_depolarizing_error": 0.01,
+      "readout_error_symmetric": 0.02
+    },
+    "backend": "Qiskit Aer shot-based noisy simulation via ComputeUncompute + FidelityQuantumKernel (not exact statevector)"
+  },
+  "noisy_result": {
+    "kernel": "quantum_zz_noisy",
+    "recall_drone": 0.23333333333333334,
+    "precision_drone": 1.0,
+    "f1_drone": 0.3783783783783784,
+    "pr_auc": 0.7198583331875106,
+    "roc_auc": 0.8204761904761905,
+    "n_train": 100,
+    "kernel_seconds": 951.4
+  },
+  "noiseless_comparison_at_same_n_train": [
+    {
+      "kernel": "quantum_zz",
+      "recall_drone": 0.4,
+      "precision_drone": 0.8780487804878049,
+      "f1_drone": 0.549618320610687,
+      "pr_auc": 0.7183391963395503,
+      "roc_auc": 0.8166137566137566,
+      "n_train": 100,
+      "kernel_seconds": 1.7
+    },
+    {
+      "kernel": "rbf",
+      "n_train": 100,
+      "recall_drone": 0.9111111111111111,
+      "precision_drone": 0.9761904761904762,
+      "f1_drone": 0.9425287356321839,
+      "pr_auc": 0.9751207584256273,
+      "roc_auc": 0.9761375661375661
+    },
+    {
+      "kernel": "linear",
+      "n_train": 100,
+      "recall_drone": 0.9111111111111111,
+      "precision_drone": 0.9647058823529412,
+      "f1_drone": 0.9371428571428572,
+      "pr_auc": 0.9815263660706189,
+      "roc_auc": 0.9876719576719577
+    }
+  ],
+  "honest_finding": "compares the SAME quantum kernel task under realistic shot-based hardware noise vs. quantum.py's exact noiseless statevector result at the identical n_train -- answers 'what happens under real hardware noise' with actual evidence instead of leaving it as future work. Reported regardless of direction: noise should be expected to degrade performance further below the already-losing noiseless quantum kernel, and that would be the honest, unsurprising, still-worth-reporting result."
+}

@@ -1,0 +1,277 @@
+{
+  "purpose": "Fresh quantum-kernel test at fixed SNR levels, requested for direct comparison against an independently-run teammate result at the same nominal SNR levels -- same dataset (feat31_train_features.parquet), same quantum feature-selection methodology (top real SHAP features, excluding snr_db), same circuit family used throughout this project.",
+  "n_seeds": 5,
+  "n_train_per_seed": 400,
+  "train_class_counts_example": {
+    "drone": 100,
+    "anomaly": 100,
+    "aircraft": 100,
+    "bird": 100
+  },
+  "n_test_per_level": 320,
+  "circuit": {
+    "feature_map": "ZZFeatureMap",
+    "qubits": 4,
+    "reps": 2,
+    "circuit_depth": 31,
+    "backend": "Qiskit exact statevector simulation (noiseless)",
+    "quantum_features": [
+      "energy_spectral_bandwidth",
+      "amplitude_mean",
+      "amplitude_spectral_bandwidth",
+      "amplitude_min"
+    ]
+  },
+  "summary_mean_std": [
+    {
+      "snr_db": -10.0,
+      "n_test": 320,
+      "accuracy_mean": 0.7688,
+      "accuracy_std": 0.0212,
+      "macro_f1_mean": 0.7592,
+      "macro_f1_std": 0.0226,
+      "drone_recall_mean": 0.7325,
+      "drone_recall_std": 0.0497,
+      "drone_precision_mean": 0.7266,
+      "drone_f1_mean": 0.7278
+    },
+    {
+      "snr_db": -15.0,
+      "n_test": 320,
+      "accuracy_mean": 0.7819,
+      "accuracy_std": 0.0095,
+      "macro_f1_mean": 0.7712,
+      "macro_f1_std": 0.0081,
+      "drone_recall_mean": 0.74,
+      "drone_recall_std": 0.0163,
+      "drone_precision_mean": 0.7525,
+      "drone_f1_mean": 0.7454
+    },
+    {
+      "snr_db": -20.0,
+      "n_test": 320,
+      "accuracy_mean": 0.7931,
+      "accuracy_std": 0.0173,
+      "macro_f1_mean": 0.7856,
+      "macro_f1_std": 0.017,
+      "drone_recall_mean": 0.7125,
+      "drone_recall_std": 0.0364,
+      "drone_precision_mean": 0.7535,
+      "drone_f1_mean": 0.7316
+    },
+    {
+      "snr_db": -25.0,
+      "n_test": 320,
+      "accuracy_mean": 0.7694,
+      "accuracy_std": 0.0173,
+      "macro_f1_mean": 0.7595,
+      "macro_f1_std": 0.0195,
+      "drone_recall_mean": 0.745,
+      "drone_recall_std": 0.0481,
+      "drone_precision_mean": 0.6867,
+      "drone_f1_mean": 0.7136
+    }
+  ],
+  "per_seed_results": [
+    {
+      "snr_db": -10.0,
+      "seed": 42,
+      "n_test": 320,
+      "accuracy": 0.734375,
+      "macro_f1": 0.730924355587715,
+      "drone_recall": 0.675,
+      "drone_precision": 0.7105263157894737,
+      "drone_f1": 0.6923076923076923
+    },
+    {
+      "snr_db": -15.0,
+      "seed": 42,
+      "n_test": 320,
+      "accuracy": 0.790625,
+      "macro_f1": 0.7786489761103371,
+      "drone_recall": 0.75,
+      "drone_precision": 0.7692307692307693,
+      "drone_f1": 0.759493670886076
+    },
+    {
+      "snr_db": -20.0,
+      "seed": 42,
+      "n_test": 320,
+      "accuracy": 0.8,
+      "macro_f1": 0.7886484726235016,
+      "drone_recall": 0.7375,
+      "drone_precision": 0.8194444444444444,
+      "drone_f1": 0.7763157894736842
+    },
+    {
+      "snr_db": -25.0,
+      "seed": 42,
+      "n_test": 320,
+      "accuracy": 0.765625,
+      "macro_f1": 0.7565122778616912,
+      "drone_recall": 0.7125,
+      "drone_precision": 0.6951219512195121,
+      "drone_f1": 0.7037037037037037
+    },
+    {
+      "snr_db": -10.0,
+      "seed": 43,
+      "n_test": 320,
+      "accuracy": 0.765625,
+      "macro_f1": 0.7459482647982469,
+      "drone_recall": 0.7,
+      "drone_precision": 0.7466666666666667,
+      "drone_f1": 0.7225806451612903
+    },
+    {
+      "snr_db": -15.0,
+      "seed": 43,
+      "n_test": 320,
+      "accuracy": 0.790625,
+      "macro_f1": 0.78003571376753,
+      "drone_recall": 0.75,
+      "drone_precision": 0.7058823529411765,
+      "drone_f1": 0.7272727272727273
+    },
+    {
+      "snr_db": -20.0,
+      "seed": 43,
+      "n_test": 320,
+      "accuracy": 0.765625,
+      "macro_f1": 0.7585740753811846,
+      "drone_recall": 0.6875,
+      "drone_precision": 0.6626506024096386,
+      "drone_f1": 0.6748466257668712
+    },
+    {
+      "snr_db": -25.0,
+      "seed": 43,
+      "n_test": 320,
+      "accuracy": 0.778125,
+      "macro_f1": 0.7727427753189273,
+      "drone_recall": 0.7875,
+      "drone_precision": 0.6631578947368421,
+      "drone_f1": 0.72
+    },
+    {
+      "snr_db": -10.0,
+      "seed": 44,
+      "n_test": 320,
+      "accuracy": 0.784375,
+      "macro_f1": 0.7825128732184619,
+      "drone_recall": 0.7625,
+      "drone_precision": 0.6777777777777778,
+      "drone_f1": 0.7176470588235294
+    },
+    {
+      "snr_db": -15.0,
+      "seed": 44,
+      "n_test": 320,
+      "accuracy": 0.771875,
+      "macro_f1": 0.7638782071241749,
+      "drone_recall": 0.7125,
+      "drone_precision": 0.76,
+      "drone_f1": 0.7354838709677419
+    },
+    {
+      "snr_db": -20.0,
+      "seed": 44,
+      "n_test": 320,
+      "accuracy": 0.8125,
+      "macro_f1": 0.8045330497962078,
+      "drone_recall": 0.725,
+      "drone_precision": 0.8285714285714286,
+      "drone_f1": 0.7733333333333333
+    },
+    {
+      "snr_db": -25.0,
+      "seed": 44,
+      "n_test": 320,
+      "accuracy": 0.78125,
+      "macro_f1": 0.7733123788378021,
+      "drone_recall": 0.7375,
+      "drone_precision": 0.7468354430379747,
+      "drone_f1": 0.7421383647798742
+    },
+    {
+      "snr_db": -10.0,
+      "seed": 45,
+      "n_test": 320,
+      "accuracy": 0.7875,
+      "macro_f1": 0.7818055914499812,
+      "drone_recall": 0.8,
+      "drone_precision": 0.7032967032967034,
+      "drone_f1": 0.7485380116959064
+    },
+    {
+      "snr_db": -15.0,
+      "seed": 45,
+      "n_test": 320,
+      "accuracy": 0.771875,
+      "macro_f1": 0.7625085743739436,
+      "drone_recall": 0.7375,
+      "drone_precision": 0.6941176470588235,
+      "drone_f1": 0.7151515151515152
+    },
+    {
+      "snr_db": -20.0,
+      "seed": 45,
+      "n_test": 320,
+      "accuracy": 0.790625,
+      "macro_f1": 0.7837773943358025,
+      "drone_recall": 0.6625,
+      "drone_precision": 0.7162162162162162,
+      "drone_f1": 0.6883116883116883
+    },
+    {
+      "snr_db": -25.0,
+      "seed": 45,
+      "n_test": 320,
+      "accuracy": 0.78125,
+      "macro_f1": 0.7682010822477394,
+      "drone_recall": 0.8,
+      "drone_precision": 0.6736842105263158,
+      "drone_f1": 0.7314285714285714
+    },
+    {
+      "snr_db": -10.0,
+      "seed": 46,
+      "n_test": 320,
+      "accuracy": 0.771875,
+      "macro_f1": 0.7548235198282637,
+      "drone_recall": 0.725,
+      "drone_precision": 0.7945205479452054,
+      "drone_f1": 0.7581699346405228
+    },
+    {
+      "snr_db": -15.0,
+      "seed": 46,
+      "n_test": 320,
+      "accuracy": 0.784375,
+      "macro_f1": 0.7707998422026088,
+      "drone_recall": 0.75,
+      "drone_precision": 0.8333333333333334,
+      "drone_f1": 0.7894736842105263
+    },
+    {
+      "snr_db": -20.0,
+      "seed": 46,
+      "n_test": 320,
+      "accuracy": 0.796875,
+      "macro_f1": 0.7925243857862037,
+      "drone_recall": 0.75,
+      "drone_precision": 0.7407407407407407,
+      "drone_f1": 0.7453416149068323
+    },
+    {
+      "snr_db": -25.0,
+      "seed": 46,
+      "n_test": 320,
+      "accuracy": 0.740625,
+      "macro_f1": 0.7268607502651113,
+      "drone_recall": 0.6875,
+      "drone_precision": 0.6547619047619048,
+      "drone_f1": 0.6707317073170732
+    }
+  ]
+}

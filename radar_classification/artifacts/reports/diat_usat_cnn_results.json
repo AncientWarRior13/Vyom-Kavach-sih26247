@@ -1,0 +1,283 @@
+{
+  "note": "paper-inspired side validation (small CNN + SE-attention on raw spectrogram images) -- NOT part of the deployed ONNX/tabular pipeline. Inspired by Paul & Bandyopadhyay, IEEE Access 2026, which uses a binarized VGG-style CNN + Gated Channel Transformation; this is a non-binarized, scoped-down variant with SE attention, trained directly on DIAT-uSAT spectrogram pixels using the same variant-holdout split as diat_usat_bridge.py.",
+  "classes": [
+    "aircraft",
+    "anomaly",
+    "bird",
+    "drone"
+  ],
+  "split_sizes": {
+    "train": 2491,
+    "val": 483,
+    "test": 1875
+  },
+  "test_accuracy": 0.6448,
+  "test_macro_f1": 0.5971638359366076,
+  "classification_report": {
+    "aircraft": {
+      "precision": 0.7768595041322314,
+      "recall": 0.235,
+      "f1-score": 0.36084452975047987,
+      "support": 400.0
+    },
+    "anomaly": {
+      "precision": 0.7425742574257426,
+      "recall": 0.1875,
+      "f1-score": 0.2994011976047904,
+      "support": 400.0
+    },
+    "bird": {
+      "precision": 1.0,
+      "recall": 0.975,
+      "f1-score": 0.9873417721518988,
+      "support": 120.0
+    },
+    "drone": {
+      "precision": 0.6009114583333334,
+      "recall": 0.9664921465968587,
+      "f1-score": 0.7410678442392613,
+      "support": 955.0
+    },
+    "accuracy": 0.6448,
+    "macro avg": {
+      "precision": 0.7800863049728268,
+      "recall": 0.5909980366492147,
+      "f1-score": 0.5971638359366076,
+      "support": 1875.0
+    },
+    "weighted avg": {
+      "precision": 0.694210105243479,
+      "recall": 0.6448,
+      "f1-score": 0.5814928505860429,
+      "support": 1875.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      94,
+      18,
+      0,
+      288
+    ],
+    [
+      1,
+      75,
+      0,
+      324
+    ],
+    [
+      2,
+      0,
+      117,
+      1
+    ],
+    [
+      24,
+      8,
+      0,
+      923
+    ]
+  ],
+  "quantum_kernel_ablation": {
+    "circuit": {
+      "feature_map": "ZZFeatureMap",
+      "qubits": 8,
+      "reps": 2,
+      "circuit_depth": 67,
+      "backend": "Qiskit exact statevector simulation (noiseless); fidelity kernel K_ij = |<psi_i|psi_j>|^2 computed as a Gram matrix over the frozen CNN bottleneck embeddings"
+    },
+    "kernel_ablation_results": [
+      {
+        "accuracy": 0.5875,
+        "macro_f1": 0.5151040510543841,
+        "precision_aircraft": 0.7619047619047619,
+        "recall_aircraft": 0.18823529411764706,
+        "f1_aircraft": 0.3018867924528302,
+        "precision_anomaly": 0.3333333333333333,
+        "recall_anomaly": 0.058823529411764705,
+        "f1_anomaly": 0.1,
+        "precision_bird": 1.0,
+        "recall_bird": 0.9230769230769231,
+        "f1_bird": 0.96,
+        "precision_drone": 0.5588235294117647,
+        "recall_drone": 0.9313725490196079,
+        "f1_drone": 0.6985294117647058,
+        "pr_auc_drone": 0.7623377635432205,
+        "kernel": "quantum_zz",
+        "n_train": 200,
+        "kernel_seconds": 3.8
+      },
+      {
+        "accuracy": 0.6825,
+        "macro_f1": 0.7263319070391812,
+        "precision_aircraft": 0.65,
+        "recall_aircraft": 0.4588235294117647,
+        "f1_aircraft": 0.5379310344827586,
+        "precision_anomaly": 0.5981308411214953,
+        "recall_anomaly": 0.7529411764705882,
+        "f1_anomaly": 0.6666666666666666,
+        "precision_bird": 1.0,
+        "recall_bird": 1.0,
+        "f1_bird": 1.0,
+        "precision_drone": 0.6956521739130435,
+        "recall_drone": 0.7058823529411765,
+        "f1_drone": 0.7007299270072993,
+        "pr_auc_drone": 0.7757472061095848,
+        "kernel": "rbf",
+        "n_train": 200
+      },
+      {
+        "accuracy": 0.685,
+        "macro_f1": 0.7278742195025363,
+        "precision_aircraft": 0.6785714285714286,
+        "recall_aircraft": 0.4470588235294118,
+        "f1_aircraft": 0.5390070921985816,
+        "precision_anomaly": 0.5892857142857143,
+        "recall_anomaly": 0.7764705882352941,
+        "f1_anomaly": 0.6700507614213198,
+        "precision_bird": 1.0,
+        "recall_bird": 1.0,
+        "f1_bird": 1.0,
+        "precision_drone": 0.6990291262135923,
+        "recall_drone": 0.7058823529411765,
+        "f1_drone": 0.7024390243902439,
+        "pr_auc_drone": 0.7980816956269392,
+        "kernel": "linear",
+        "n_train": 200
+      },
+      {
+        "accuracy": 0.5725,
+        "macro_f1": 0.61029427223428,
+        "precision_aircraft": 0.7073170731707317,
+        "recall_aircraft": 0.3411764705882353,
+        "f1_aircraft": 0.4603174603174603,
+        "precision_anomaly": 0.36470588235294116,
+        "recall_anomaly": 0.36470588235294116,
+        "f1_anomaly": 0.36470588235294116,
+        "precision_bird": 1.0,
+        "recall_bird": 0.9615384615384616,
+        "f1_bird": 0.9803921568627451,
+        "precision_drone": 0.5783132530120482,
+        "recall_drone": 0.7058823529411765,
+        "f1_drone": 0.6357615894039735,
+        "pr_auc_drone": 0.7363694689187508,
+        "kernel": "quantum_zz",
+        "n_train": 400,
+        "kernel_seconds": 4.7
+      },
+      {
+        "accuracy": 0.71,
+        "macro_f1": 0.7562818226783213,
+        "precision_aircraft": 0.6857142857142857,
+        "recall_aircraft": 0.5647058823529412,
+        "f1_aircraft": 0.6193548387096774,
+        "precision_anomaly": 0.6090909090909091,
+        "recall_anomaly": 0.788235294117647,
+        "f1_anomaly": 0.6871794871794872,
+        "precision_bird": 1.0,
+        "recall_bird": 1.0,
+        "f1_bird": 1.0,
+        "precision_drone": 0.7371134020618557,
+        "recall_drone": 0.7009803921568627,
+        "f1_drone": 0.7185929648241206,
+        "pr_auc_drone": 0.8062130760701287,
+        "kernel": "rbf",
+        "n_train": 400
+      },
+      {
+        "accuracy": 0.7075,
+        "macro_f1": 0.7545983868480357,
+        "precision_aircraft": 0.6857142857142857,
+        "recall_aircraft": 0.5647058823529412,
+        "f1_aircraft": 0.6193548387096774,
+        "precision_anomaly": 0.6036036036036037,
+        "recall_anomaly": 0.788235294117647,
+        "f1_anomaly": 0.6836734693877551,
+        "precision_bird": 1.0,
+        "recall_bird": 1.0,
+        "f1_bird": 1.0,
+        "precision_drone": 0.7357512953367875,
+        "recall_drone": 0.696078431372549,
+        "f1_drone": 0.7153652392947103,
+        "pr_auc_drone": 0.812522211545616,
+        "kernel": "linear",
+        "n_train": 400
+      },
+      {
+        "accuracy": 0.61,
+        "macro_f1": 0.6563429838758017,
+        "precision_aircraft": 0.7142857142857143,
+        "recall_aircraft": 0.4117647058823529,
+        "f1_aircraft": 0.5223880597014925,
+        "precision_anomaly": 0.4224137931034483,
+        "recall_anomaly": 0.5764705882352941,
+        "f1_anomaly": 0.48756218905472637,
+        "precision_bird": 1.0,
+        "recall_bird": 0.9230769230769231,
+        "f1_bird": 0.96,
+        "precision_drone": 0.6445497630331753,
+        "recall_drone": 0.6666666666666666,
+        "f1_drone": 0.655421686746988,
+        "pr_auc_drone": 0.7403473433366121,
+        "kernel": "quantum_zz",
+        "n_train": 800,
+        "kernel_seconds": 7.1
+      },
+      {
+        "accuracy": 0.7,
+        "macro_f1": 0.7510603178767408,
+        "precision_aircraft": 0.684931506849315,
+        "recall_aircraft": 0.5882352941176471,
+        "f1_aircraft": 0.6329113924050633,
+        "precision_anomaly": 0.5714285714285714,
+        "recall_anomaly": 0.8,
+        "f1_anomaly": 0.6666666666666666,
+        "precision_bird": 1.0,
+        "recall_bird": 1.0,
+        "f1_bird": 1.0,
+        "precision_drone": 0.7472527472527473,
+        "recall_drone": 0.6666666666666666,
+        "f1_drone": 0.7046632124352331,
+        "pr_auc_drone": 0.8180056483938503,
+        "kernel": "rbf",
+        "n_train": 800
+      },
+      {
+        "accuracy": 0.7075,
+        "macro_f1": 0.7593578523926783,
+        "precision_aircraft": 0.6883116883116883,
+        "recall_aircraft": 0.6235294117647059,
+        "f1_aircraft": 0.654320987654321,
+        "precision_anomaly": 0.5862068965517241,
+        "recall_anomaly": 0.8,
+        "f1_anomaly": 0.6766169154228856,
+        "precision_bird": 1.0,
+        "recall_bird": 1.0,
+        "f1_bird": 1.0,
+        "precision_drone": 0.7513812154696132,
+        "recall_drone": 0.6666666666666666,
+        "f1_drone": 0.7064935064935065,
+        "pr_auc_drone": 0.819267612233293,
+        "kernel": "linear",
+        "n_train": 800
+      }
+    ],
+    "kernel_target_alignment_largest_n": {
+      "quantum_zz": 0.1506454129398288,
+      "rbf": 0.16747486899116354
+    },
+    "total_seconds": 16.3,
+    "assumptions": [
+      "kernel ablation subsamples train/test (class-proportional, not drone-boosted) because quantum kernels cost O(n^2) circuit evaluations -- same tractability constraint as radarsense/quantum.py",
+      "bottleneck embeddings are frozen (not fine-tuned jointly with the quantum kernel): train CNN, freeze, train kernel on top",
+      "same variant/chronological holdout split as the CNN classifier above and as diat_usat_bridge.py Experiment B"
+    ],
+    "role_of_each_model": {
+      "catboost (deployed, tabular schema)": "production detector behind the ONNX handoff",
+      "random_forest / xgboost / svm / logreg (tabular)": "classical baseline sweep",
+      "quantum_zz kernel (tabular, 4 physics features, radarsense/quantum.py)": "research ablation on the tabular schema",
+      "diat_usat_cnn (this script, image classifier)": "image-domain research experiment on real DIAT-uSAT spectrograms",
+      "quantum_zz / rbf / linear kernel on frozen CNN embeddings (this script)": "research ablation: does a quantum kernel on CNN-learned features beat a classical kernel on the same features?"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "data": "SAAB 77GHz real, drone vs rest",
+  "protocol": "measurement-GROUPED 5-fold CV (leak-free); doppler_freq_shift dropped (collinear)",
+  "n_segments": 75868,
+  "n_recordings": 130,
+  "n_features_used": 10,
+  "accuracy": {
+    "mean": 0.9224249422946522,
+    "std": 0.031067486373768348
+  },
+  "recall_drone": {
+    "mean": 0.9236197148074122,
+    "std": 0.03883718777785989
+  },
+  "pr_auc_drone": {
+    "mean": 0.9905817502144469,
+    "std": 0.005721913045568709
+  },
+  "conformal": {
+    "alpha": 0.1,
+    "empirical_coverage": {
+      "mean": 0.8237084960048321,
+      "std": 0.052126640671267356
+    },
+    "mean_set_size": {
+      "mean": 0.8559588286361007,
+      "std": 0.038633119921489566
+    }
+  },
+  "correction_note": "supersedes an earlier random-split result (PR-AUC 0.9999 +/- 0.00002) that leaked whole-recording segments across train/test; the dataset's own split column also leaks (all 130 measurements span splits), so grouped CV is the only honest protocol."
+}

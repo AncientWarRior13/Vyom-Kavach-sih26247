@@ -1,0 +1,748 @@
+{
+  "n_seed_attacks_for_harvesting": 300,
+  "n_evasions_harvested": 300,
+  "n_augmented_rows": 900,
+  "retrained_threshold_fbeta2": 0.4,
+  "sanity_check_normal_test_performance": {
+    "original_model": {
+      "accuracy": 0.9758974358974359,
+      "recall_drone": 0.9179487179487179
+    },
+    "retrained_model": {
+      "accuracy": 0.9708974358974359,
+      "recall_drone": 0.9282051282051282
+    }
+  },
+  "re_attack_results": {
+    "n_attacked": 181,
+    "success_rate_before": 1.0,
+    "success_rate_after": 0.8011049723756906,
+    "median_perturbation_norm_after": 1.5549254845557754
+  },
+  "per_sample_results": [
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4255133206634454
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.1352606220234467
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.4345840672171057
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.968314869349794
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9555468009911186
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.548534257374861
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.2053297199153572
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8433499836099474
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.2776701582804835
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.36856887231935187
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.509667112185902
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4950047423012187
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1017467168759882
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8966063966580827
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.291389702143871
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1933967812824635
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.9751795605184066
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.046525134545303
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.043757789259823
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.435952563405007
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.0558977981310798
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9391167103568946
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.907978681445643
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 5.611505765521545
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.8162224034428163
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.4260128665403272
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.7910158952689126
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8102055003983049
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.023462457001427
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0800293147325866
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.7756845453548045
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.272504199850479
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.135489828326111
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.4490612076587159
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0521917737921505
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.104189672511989
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8114613975727325
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8599940740183938
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.446703978058651
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.5626770904714253
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.0827316566068926
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.07280707006215609
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3272827774927476
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 5.0408391557498105
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.477170745904398
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9843827638313788
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3203587712465413
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0397911967469784
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.1480898539096978
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.1536707056888362
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7049463146172704
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.3120325563184532
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.1389735213530964
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.789101718128948
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5670976499796905
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.46233163857172
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 4.840926640485756
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.8647301487021988
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.6737896595750645
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.208563036990748
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.6493332396107914
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.807104708338739
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.23226982377053
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9542234981558949
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.095650052937944
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.23714910441259932
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.6585013297570916
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.54635635377997
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.816297477071381
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.0393159505426683
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7348134205054753
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.6072731420640514
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.698695563921243
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.8247389750460831
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.28654282460055436
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.323382250717247
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5167023196102205
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.365010370299521
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5261819196776085
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.9550311641147036
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.979444444577671
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.6368624207777802
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 4.204162901571039
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.5115535654178208
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.150810262391855
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.1534543189676807
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9524754070396325
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.8957504368253417
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0586192024097267
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4665462959066768
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.2675487424159444
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.0957599637009883
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.492149598816429
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.5521216578654196
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.8747381936737972
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.397340195940818
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.8972680565516957
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.10959478041969459
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1877723377748677
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.6947120406260754
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.7174210833459236
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.991755976377526
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1444212311514574
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.27429360126904506
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.6099166863938303
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.3048621395974567
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.6438957653686805
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.8280151100483213
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.098502744716535
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.19739238581541868
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.569216168697597
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 4.671490394707552
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.590558271180634
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.44052988730303916
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9497553899008883
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.2546758239329296
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.6602260775784612
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1634706056538107
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.8053082127758535
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4602725148748403
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.25179450102841966
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.823467492994259
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.9857359492347726
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4386233459060365
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.950751305427694
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 4.512457392607024
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 3.161621111622113
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5592271384418568
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.0647093536295274
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5549254845557754
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 4.697901396849306
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.025831911614528455
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.531432590489804
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.756275307643715
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.6748420369960177
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.1029682415116575
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.040860184909832314
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.6852360523830405
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.25841636416137265
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 0.9362489799116286
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.5350443132352671
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 2.7084956073641733
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 4.033133968052802
+    },
+    {
+      "success": false,
+      "min_perturbation_norm": null
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 1.4967237349664595
+    },
+    {
+      "success": true,
+      "min_perturbation_norm": 5.021187950400439
+    }
+  ]
+}

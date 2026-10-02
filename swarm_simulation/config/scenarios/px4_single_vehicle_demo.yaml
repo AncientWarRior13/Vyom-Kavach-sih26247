@@ -1,0 +1,46 @@
+# Minimal scenario for driving a REAL PX4 SITL vehicle through
+# ares_swarm_manager's actual task allocation logic (not a manual test
+# command) - see docs/simulation.md "Live mission through the PX4 bridge".
+#
+# Only 1 UAV because only one PX4 instance's ROS2 command path is
+# currently reliable (see docs/simulation.md's multi-instance findings) -
+# this scenario exists to prove the swarm_manager -> real flight pipeline
+# works at all, not to exercise relay/multi-UAV logic.
+
+scenario:
+  name: px4_single_vehicle_demo
+  seed: 1
+  duration_seconds: 300
+  dt_seconds: 1.0
+  geofence:
+    min: [-50, -50, 0]
+    max: [50, 50, 30]
+
+gcs:
+  position: [0, 0, 0]
+
+swarm:
+  count: 1
+  battery_percent: 100
+  max_speed_mps: 8.0
+  comm_range_m: 200.0
+  battery_drain_rate_pct_per_s: 0.01
+  battery_drain_rate_relay_bonus: 0.0
+  battery_reserve_pct: 15.0
+  home_position: [0, 0, 0]
+
+pois:
+  - id: poi_01
+    priority: 0.9
+    position: [8, -6, 6]
+    required_data: [imagery]
+    deadline: 250
+    risk: 0.1
+  - id: poi_02
+    priority: 0.7
+    position: [-6, 8, 5]
+    required_data: [imagery]
+    deadline: 250
+    risk: 0.1
+
+events: []

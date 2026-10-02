@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Drone Threat Trainer</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #05070a; color: #d7dde3; margin: 0; }
+  header { padding: 12px 20px; border-bottom: 1px solid #1f2733; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  header select, header button, header input { background: #0e141c; color: #d7dde3; border: 1px solid #1f2733; border-radius: 4px; padding: 6px 10px; }
+  main { display: flex; }
+  #scope { background: radial-gradient(circle, #0a2a12 0%, #04140a 70%, #020a05 100%); border-right: 1px solid #1f2733; }
+  #sidebar { width: 360px; padding: 16px; }
+  .contact-row { border: 1px solid #1f2733; border-radius: 6px; padding: 8px; margin-bottom: 8px; }
+  .contact-row.selected { border-color: #58a6ff; }
+  .contact-row button { margin-right: 4px; margin-top: 6px; }
+  select.cls { width: 100%; margin-top: 4px; }
+  #result { white-space: pre-wrap; font-size: 13px; background: #0e141c; padding: 12px; border-radius: 6px; }
+  .blip { fill: #3fb950; }
+  .blip.tagged { fill: #58a6ff; }
+  #timer { font-variant-numeric: tabular-nums; font-size: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Drone Threat Trainer</strong>
+  <label>Trainee ID <input id="traineeId" value="trainee-1" /></label>
+  <label>Unit ID <input id="unitId" value="unit-A" /></label>
+  <label>Difficulty
+    <select id="difficulty"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+  </label>
+  <label>Time of day
+    <select id="timeOfDay"><option>day</option><option>night</option><option>dusk</option></select>
+  </label>
+  <label>Terrain
+    <select id="terrain"><option>rural</option><option>urban</option><option>coastal</option><option>mountain</option></select>
+  </label>
+  <label>Sensor degradation
+    <select id="degradation"><option value="0">none</option><option value="0.3">moderate</option><option value="0.6">severe</option></select>
+  </label>
+  <button onclick="startScenario()">New scenario</button>
+  <span id="timer">00:00</span>
+  <button onclick="finishSession()">Finish &amp; score</button>
+</header>
+<main>
+  <svg id="scope" width="760" height="760" viewBox="-3000 -3000 6000 6000"></svg>
+  <div id="sidebar">
+    <h3>Contacts</h3>
+    <div id="contactList"></div>
+    <h3>Result</h3>
+    <div id="result">No session scored yet.</div>
+  </div>
+</main>
+
+<script>
+let scenario = null;       // sanitized (client) scenario
+let simStart = null;       // Date.now() at scenario start
+let elapsed = 0;
+let tickHandle = null;
+let log = {};              // contact_id -> {detected_at, classification, engagement_action}
+const CLASS_OPTIONS = ["hostile_drone", "hostile_swarm_member", "friendly_drone", "decoy", "bird"];
+
+function fmtTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const ss = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${ss}`;
+}
+
+async function startScenario() {
+  const params = {
+    difficulty: parseInt(document.getElementById('difficulty').value),
+    time_of_day: document.getElementById('timeOfDay').value,
+    terrain: document.getElementById('terrain').value,
+    sensor_degradation: parseFloat(document.getElementById('degradation').value),
+  };
+  const res = await fetch('/api/scenario/new', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(params)
+  });
+  scenario = await res.json();
+  log = {};
+  elapsed = 0;
+  simStart = Date.now();
+  renderContactList();
+  document.getElementById('result').textContent = 'Session in progress...';
+  if (tickHandle) clearInterval(tickHandle);
+  tickHandle = setInterval(tick, 200);
+}
+
+function tick() {
+  elapsed = (Date.now() - simStart) / 1000;
+  document.getElementById('timer').textContent = fmtTime(elapsed);
+  drawScope();
+  if (elapsed >= scenario.duration_s) {
+    clearInterval(tickHandle);
+  }
+}
+
+function posAt(contact, t) {
+  const pts = contact.path;
+  if (t <= pts[0].t) return pts[0];
+  if (t >= pts[pts.length - 1].t) return pts[pts.length - 1];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    if (a.t <= t && t <= b.t) {
+      const f = b.t === a.t ? 0 : (t - a.t) / (b.t - a.t);
+      return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+    }
+  }
+  return pts[pts.length - 1];
+}
+
+function drawScope() {
+  const svg = document.getElementById('scope');
+  svg.innerHTML = '';
+  if (!scenario) return;
+  for (const c of scenario.contacts) {
+    if (elapsed < c.spawn_t || elapsed > c.despawn_t) continue;
+    const p = posAt(c, elapsed);
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', p.x);
+    circle.setAttribute('cy', p.y);
+    circle.setAttribute('r', 30);
+    circle.setAttribute('class', 'blip' + (log[c.contact_id] ? ' tagged' : ''));
+    circle.onclick = () => tagDetected(c.contact_id);
+    svg.appendChild(circle);
+  }
+}
+
+function tagDetected(contactId) {
+  if (!log[contactId]) log[contactId] = { contact_id: contactId };
+  if (log[contactId].detected_at === undefined) {
+    log[contactId].detected_at = elapsed;
+  }
+  renderContactList();
+  drawScope();
+}
+
+function setClassification(contactId, value) {
+  if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
+  log[contactId].classification = value;
+}
+
+function setEngagement(contactId, action) {
+  if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
+  log[contactId].engagement_action = action;
+  renderContactList();
+}
+
+function renderContactList() {
+  const el = document.getElementById('contactList');
+  el.innerHTML = '';
+  if (!scenario) return;
+  for (const c of scenario.contacts) {
+    const entry = log[c.contact_id];
+    const div = document.createElement('div');
+    div.className = 'contact-row' + (entry ? ' selected' : '');
+    const classOpts = CLASS_OPTIONS.map(o => `<option value="${o}" ${entry && entry.classification === o ? 'selected' : ''}>${o}</option>`).join('');
+    div.innerHTML = `
+      <div>Contact ${c.contact_id} ${entry ? `(detected @ ${entry.detected_at.toFixed(1)}s)` : '(not yet detected — click blip)'}</div>
+      <select class="cls" onchange="setClassification('${c.contact_id}', this.value)">
+        <option value="">classify...</option>${classOpts}
+      </select>
+      <div>
+        <button onclick="setEngagement('${c.contact_id}', 'engage')" ${entry && entry.engagement_action === 'engage' ? 'style=background:#f85149' : ''}>Engage</button>
+        <button onclick="setEngagement('${c.contact_id}', 'monitor')" ${entry && entry.engagement_action === 'monitor' ? 'style=background:#d29922' : ''}>Monitor</button>
+        <button onclick="setEngagement('${c.contact_id}', 'ignore')" ${entry && entry.engagement_action === 'ignore' ? 'style=background:#3fb950' : ''}>Ignore</button>
+      </div>`;
+    el.appendChild(div);
+  }
+}
+
+async function finishSession() {
+  if (!scenario) return;
+  clearInterval(tickHandle);
+  const trainee_id = document.getElementById('traineeId').value || 'trainee-1';
+  const unit_id = document.getElementById('unitId').value || 'unit-A';
+  const difficulty = parseInt(document.getElementById('difficulty').value);
+  const res = await fetch('/api/session/submit', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      scenario_id: scenario.scenario_id, trainee_id, unit_id, difficulty,
+      trainee_log: Object.values(log),
+    }),
+  });
+  const result = await res.json();
+  document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+}
+</script>
+</body>
+</html>

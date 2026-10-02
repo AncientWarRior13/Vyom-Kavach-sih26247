@@ -1,0 +1,16 @@
+{
+  "cpu": "Apple M2",
+  "platform": "Darwin 23.5.0 (arm64)",
+  "onnxruntime_version": "1.23.2",
+  "gpu_dependency": "none - CPUExecutionProvider only",
+  "model_file": "feat31_model.onnx",
+  "model_size_kib": 3446.3,
+  "parity_label_agreement": 1.0,
+  "parity_max_proba_deviation": 2.9253151279107215e-07,
+  "fp32": {
+    "single_sample_latency_ms_median": 0.0538,
+    "single_sample_latency_ms_p95": 0.3273,
+    "batched_throughput_samples_per_sec": 41384,
+    "batch_size_used": 7800
+  }
+}

@@ -1,0 +1,31 @@
+numpy>=1.26.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+scikit-learn>=1.5.0,<1.6.0
+imbalanced-learn>=0.12.0,<0.13.0
+xgboost>=2.0.0,<3.0.0
+catboost>=1.2.0,<1.3.0
+shap>=0.45.0,<0.48.0
+matplotlib>=3.8.0,<4.0.0
+seaborn>=0.13.0,<0.14.0
+joblib>=1.4.0,<1.5.0
+pyarrow>=14.0.0,<18.0.0
+skl2onnx>=1.17.0,<1.18.0
+onnxmltools>=1.12.0,<1.17.0
+onnxruntime>=1.17.0,<1.20.0
+qiskit~=1.4.0
+qiskit-machine-learning~=0.8.2
+qiskit-aer~=0.15.1
+pennylane>=0.38.0,<0.46.0          # differentiable VQC (radarsense/vqc_pennylane.py)
+# pennylane-qiskit       # optional: run the same PennyLane circuit on a Qiskit/IBM device
+fastapi>=0.110.0,<0.116.0
+uvicorn>=0.30.0,<0.35.0
+slowapi>=0.1.9,<0.2.0
+httpx>=0.27.0,<0.29.0                   # optional real webhook dispatch (api/alerting.py)
+lime>=0.2.0,<0.3.0              # live LIME explanations (api/explain.py)
+reportlab>=4.0.0,<5.0.0          # PDF report rendering (api/explain.py)
+scipy>=1.13.1,<1.15.0           # KD-tree association/NMS (radarsense/fleet_tracking.py)
+
+# DIAT-uSAT CNN side-experiment only (radarsense/diat_usat_cnn.py) --
+# not required for the main tabular pipeline / backend API
+# tensorflow>=2.15
+

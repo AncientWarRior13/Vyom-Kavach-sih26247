@@ -1,0 +1,51 @@
+{
+  "data": "SAAB SIRS-1600 77GHz FMCW, real I/Q",
+  "radar_params": {
+    "carrier_hz": 77000000000.0,
+    "bw_hz": 160000000.0,
+    "range_res_m": 1.0,
+    "prf_hz": 17000.0,
+    "n_range": 5,
+    "n_slow": 256
+  },
+  "cfar": {
+    "type": "CA-CFAR (Doppler axis)",
+    "train": 16,
+    "guard": 4,
+    "design_pfa": 0.001,
+    "detection_rate": 0.9958058717795086,
+    "empirical_false_alarm_rate": 0.019173157579388856,
+    "ca_cfar_guard_fa": 0.03296703296703297,
+    "os_cfar_guard_fa": 0.0,
+    "os_cfar_reduces_false_alarms": true
+  },
+  "tracking": {
+    "type": "constant-velocity Kalman, Mahalanobis-gated",
+    "raw_doppler_jitter": 21.601275718211383,
+    "kalman_doppler_jitter": 11.697225328531792,
+    "jitter_reduction_pct": 45.84937722603941
+  },
+  "n_sequences": 20,
+  "labels_processed": [
+    "seagull",
+    "seagull",
+    "D4",
+    "CR",
+    "heron",
+    "seagull and black-headed gull",
+    "D2",
+    "D2",
+    "seagull",
+    "seagull",
+    "human_walk",
+    "D2",
+    "seagull",
+    "black-headed gull",
+    "D2",
+    "seagull",
+    "CR",
+    "human_run",
+    "seagull",
+    "seagull"
+  ]
+}

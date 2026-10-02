@@ -1,0 +1,35 @@
+{
+  "task": "drone-vs-rest, pooled cross-sensor test, decision-level fusion",
+  "best_single_specialist": "single_SAAB_77GHz_FMCW",
+  "results": {
+    "single_SAAB_77GHz_FMCW": {
+      "accuracy": 0.9249437215175973,
+      "pr_auc": 0.978573537929323
+    },
+    "single_RADDAR_8.75GHz_FMCW": {
+      "accuracy": 0.3459616757261297,
+      "pr_auc": 0.8495540966890406
+    },
+    "single_TSMS_2.5GHz_CW": {
+      "accuracy": 0.5405479602481744,
+      "pr_auc": 0.6046366084649051
+    },
+    "single_DIAT_uSAT_Xband_CW": {
+      "accuracy": 0.6178004721901939,
+      "pr_auc": 0.5729492928888007
+    },
+    "fusion_mean": {
+      "accuracy": 0.7596771536814363,
+      "pr_auc": 0.9053902520123556
+    },
+    "fusion_stacked": {
+      "accuracy": 0.9262614615933674,
+      "pr_auc": 0.9583200812540589
+    },
+    "pooled_trained": {
+      "accuracy": 0.95805194092132,
+      "pr_auc": 0.9979587774645184
+    }
+  },
+  "fusion_gain_over_best_single": 0.001317740075770124
+}

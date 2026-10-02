@@ -1,0 +1,55 @@
+{
+  "micro_doppler_masking": {
+    "metric": "drone recall at x0.3 masking",
+    "components": {
+      "no defense (original)": 0.12307692307692308,
+      "+ curriculum feature-dropout (k2)": 0.7743589743589744,
+      "+ probability-blend fallback stack (REJECTED, hurts)": 0.7384615384615385,
+      "escalation routing (precision-preserving)": 0.48717948717948717
+    }
+  },
+  "adversarial_evasion": {
+    "metric": "fraction of drones certified un-evadable within attack median (+ empirical evasion)",
+    "components": {
+      "no defense (original), certified": 0.19166666666666668,
+      "+ iterative adversarial training, certified": 0.8333333333333334,
+      "empirical evasion original -> hardened": [
+        1.0,
+        0.7133333333333334
+      ],
+      "+ physics gate (catches of remaining evasions)": 0.41333333333333333
+    }
+  },
+  "evasion_physical_achievability": {
+    "metric": "achievable evasion rate by physical-cost budget",
+    "components": {
+      "budget 1.0": 0.11388888888888889,
+      "budget 2.0": 0.21944444444444444,
+      "budget 4.0": 0.4694444444444444,
+      "budget 8.0": 0.8444444444444444,
+      "budget inf": 1.0
+    }
+  },
+  "model_extraction": {
+    "metric": "defense effect",
+    "components": {
+      "response hardening (label noise)": "no effect (fidelity ~0.99 unchanged)",
+      "anomaly filter vs uniform queries": 0.954,
+      "anomaly filter vs realistic queries (DEFEATED)": 0.011,
+      "fingerprint theft detection": "not separable (model too generic)",
+      "hardening: clone transfer rate": [
+        1.0,
+        0.7789473684210526
+      ]
+    }
+  },
+  "cross_sensor": {
+    "metric": "mean cross-sensor accuracy by recovery mechanism",
+    "components": {
+      "zero-shot baseline": 0.48944389475960354,
+      "+ CORAL (zero label)": 0.5406922942974624,
+      "+ leave-one-out pooling": 0.6402554692813162,
+      "+ few-shot 500 labels": 0.8198296666681908
+    }
+  }
+}

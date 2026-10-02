@@ -1,0 +1,58 @@
+{
+  "simulated": {
+    "fidelity_ZZ": {
+      "pr_auc_mean": 0.3694177448939115,
+      "pr_auc_std": 0.04896336073029918
+    },
+    "fidelity_Z": {
+      "pr_auc_mean": 0.764748007284134,
+      "pr_auc_std": 0.025964855164761956
+    },
+    "fidelity_Pauli": {
+      "pr_auc_mean": 0.38071614521495745,
+      "pr_auc_std": 0.028361981510686845
+    },
+    "projected_quantum_kernel": {
+      "pr_auc_mean": 0.3841137914441529,
+      "pr_auc_std": 0.04771922489458182
+    },
+    "classical_rbf": {
+      "pr_auc_mean": 0.9366676711363207,
+      "pr_auc_std": 0.02942514187799873
+    }
+  },
+  "real_saab": {
+    "fidelity_ZZ": {
+      "pr_auc_mean": 0.3193784612846565,
+      "pr_auc_std": 0.01874953248899919
+    },
+    "fidelity_Z": {
+      "pr_auc_mean": 0.4382708190981119,
+      "pr_auc_std": 0.05774146236983264
+    },
+    "fidelity_Pauli": {
+      "pr_auc_mean": 0.3322142551863973,
+      "pr_auc_std": 0.050458784133345515
+    },
+    "projected_quantum_kernel": {
+      "pr_auc_mean": 0.32357907290430743,
+      "pr_auc_std": 0.040648560034910936
+    },
+    "classical_rbf": {
+      "pr_auc_mean": 0.4963622814102295,
+      "pr_auc_std": 0.05060590677413903
+    }
+  },
+  "verdict": {
+    "simulated": {
+      "best_quantum": "fidelity_Z",
+      "quantum_robustly_wins": false,
+      "note": "classical wins or within noise (best quantum fidelity_Z -0.1719, pooled std 0.0277)"
+    },
+    "real_saab": {
+      "best_quantum": "fidelity_Z",
+      "quantum_robustly_wins": false,
+      "note": "classical wins or within noise (best quantum fidelity_Z -0.0581, pooled std 0.0542)"
+    }
+  }
+}

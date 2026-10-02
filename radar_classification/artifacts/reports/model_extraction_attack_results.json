@@ -1,0 +1,642 @@
+{
+  "extraction_query_budgets": [
+    200,
+    500,
+    1000,
+    2000,
+    5000
+  ],
+  "extraction_fidelity": {
+    "200": {
+      "overall_agreement": 0.5428205128205128,
+      "drone_gate_agreement": 0.9298717948717948
+    },
+    "500": {
+      "overall_agreement": 0.8078205128205128,
+      "drone_gate_agreement": 0.9867948717948718
+    },
+    "1000": {
+      "overall_agreement": 0.8291025641025641,
+      "drone_gate_agreement": 0.9901282051282051
+    },
+    "2000": {
+      "overall_agreement": 0.8533333333333334,
+      "drone_gate_agreement": 0.9889743589743589
+    },
+    "5000": {
+      "overall_agreement": 0.933974358974359,
+      "drone_gate_agreement": 0.9917948717948718
+    }
+  },
+  "leak_disclosed": "API returns full class probabilities, not just the hard label -- makes extraction easier than a label-only API would allow.",
+  "transfer_attack": {
+    "n_attacked": 100,
+    "surrogate_query_budget_used": 5000,
+    "n_surrogate_evaded": 100,
+    "n_transferred_to_real_target_with_zero_extra_live_queries": 100,
+    "transfer_rate_among_surrogate_successes": 1.0,
+    "overall_transfer_rate": 1.0
+  },
+  "per_sample_transfer_results": [
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.000364347773618722,
+      "real_p_drone": 0.00342906909697795
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00012755122681719968,
+      "real_p_drone": 0.025850818157019752
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00027218598678635915,
+      "real_p_drone": 0.01370790536110998
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0030412447785075685,
+      "real_p_drone": 0.00018909524730662485
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00012775197002672786,
+      "real_p_drone": 0.0013828624112330015
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00037894411487003914,
+      "real_p_drone": 7.695378242746072e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0007269402445425607,
+      "real_p_drone": 0.10989858121367532
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00188069657111107,
+      "real_p_drone": 0.00042416175265672784
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00027700872319963367,
+      "real_p_drone": 0.01965857635644679
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00012839124727701738,
+      "real_p_drone": 0.0006462654684520112
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0015951209843119772,
+      "real_p_drone": 0.00040636915912125384
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00020632232545713194,
+      "real_p_drone": 0.0012632036542595205
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0013590501256798625,
+      "real_p_drone": 0.00019406966191177157
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0008130118697817937,
+      "real_p_drone": 0.012241205161421423
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0002847089781348986,
+      "real_p_drone": 0.00022060101047944442
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0002380071459505951,
+      "real_p_drone": 0.0011288045266586346
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0018423110983013578,
+      "real_p_drone": 0.0003210205146746157
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00097314082468599,
+      "real_p_drone": 3.9909478335641347e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0009515546709373706,
+      "real_p_drone": 0.0001612388367503414
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0013012137315851723,
+      "real_p_drone": 0.0008419486655101361
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00039523424359739167,
+      "real_p_drone": 0.005525509261586335
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0005021435374249743,
+      "real_p_drone": 0.00012234527680619916
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0013510870473954872,
+      "real_p_drone": 3.395863840252681e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00023213497972751572,
+      "real_p_drone": 0.008751428878256116
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00016522035050038633,
+      "real_p_drone": 0.006639961035356389
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00045659265870166615,
+      "real_p_drone": 8.634458686940657e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00029409861182244824,
+      "real_p_drone": 0.004132771838320795
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0015013954061397945,
+      "real_p_drone": 0.0005178106699725306
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.003669178055211005,
+      "real_p_drone": 0.0010926481771641662
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0020993457646471337,
+      "real_p_drone": 0.00038722481580367486
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0009185820903134317,
+      "real_p_drone": 0.00023371378455546422
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0007685480796643015,
+      "real_p_drone": 0.05140892452451479
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0008147725642232446,
+      "real_p_drone": 0.04548492480672058
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0008061478427069967,
+      "real_p_drone": 8.582513566935975e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0010150281453604987,
+      "real_p_drone": 0.0002592696223309259
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0007759311843714958,
+      "real_p_drone": 0.07212876976055221
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00039050471296606657,
+      "real_p_drone": 0.0006056754938059072
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00011460824881906283,
+      "real_p_drone": 0.00404230554421835
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0006714933819179423,
+      "real_p_drone": 7.918060450703072e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.000668369612952189,
+      "real_p_drone": 0.06737409655190375
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0033636372162200692,
+      "real_p_drone": 0.0013149093351090067
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00019051042449223714,
+      "real_p_drone": 0.001420912709524679
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00563347736592733,
+      "real_p_drone": 8.786347046229264e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00038461321618781435,
+      "real_p_drone": 4.5700292619312664e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00022938876023044665,
+      "real_p_drone": 0.0028183866261546967
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0005778113150948232,
+      "real_p_drone": 0.04542932485308265
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00014631226756728867,
+      "real_p_drone": 0.0014156104287864908
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.001767240689029161,
+      "real_p_drone": 7.668360554782067e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0005031428641246445,
+      "real_p_drone": 0.0009031961138663095
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0006753374089584964,
+      "real_p_drone": 0.0031479785167851616
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00015998755464282342,
+      "real_p_drone": 0.0005232296863502738
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00023349369057327885,
+      "real_p_drone": 0.00382301596522482
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00023257644644008706,
+      "real_p_drone": 0.01494654510044397
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 5.9686013605486255e-05,
+      "real_p_drone": 0.0006047590006600065
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0015847720072101345,
+      "real_p_drone": 0.00019313573039336958
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0008229280603691808,
+      "real_p_drone": 8.992306662929124e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00041769978304010926,
+      "real_p_drone": 0.00015545500798090162
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0004792655125701342,
+      "real_p_drone": 0.01356157649385192
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00010905910352444085,
+      "real_p_drone": 0.0006320083002587772
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.000732027558865992,
+      "real_p_drone": 0.00040435403294064755
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00012609842568399378,
+      "real_p_drone": 0.0006093997425962701
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0020524128448885424,
+      "real_p_drone": 5.725057148084199e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0015590066634285243,
+      "real_p_drone": 0.00020161704667047325
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.001338212233786824,
+      "real_p_drone": 0.00014798932403206288
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0013449381747563092,
+      "real_p_drone": 5.67356388347402e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0003929066975021384,
+      "real_p_drone": 0.005575836017170527
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0007708650309610358,
+      "real_p_drone": 0.00014720035630928714
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0012525491114006942,
+      "real_p_drone": 0.00011956466871235156
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00029486824562211086,
+      "real_p_drone": 0.0067480940613998276
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00044035375753687534,
+      "real_p_drone": 0.0031772324148037876
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0008315460283468783,
+      "real_p_drone": 0.024175071214213792
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0005269861941536594,
+      "real_p_drone": 0.0027079033012430338
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0008134657582962795,
+      "real_p_drone": 0.00017183508375104382
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.003566650422153246,
+      "real_p_drone": 0.0005615710593994238
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0007475950823974708,
+      "real_p_drone": 0.00021303438772160075
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0009526573374961229,
+      "real_p_drone": 8.991035238059666e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0003208985392392241,
+      "real_p_drone": 0.00013806265507827997
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0013155515266102661,
+      "real_p_drone": 0.0005863901821419764
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0019857672631204953,
+      "real_p_drone": 7.181057916978245e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0002645360911680231,
+      "real_p_drone": 0.0007220267342963933
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0005626842667406544,
+      "real_p_drone": 0.00010587719992604333
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0002892512521936835,
+      "real_p_drone": 0.013497458182436481
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00021873446596059823,
+      "real_p_drone": 0.002493949433267361
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0010773823250871653,
+      "real_p_drone": 0.00031881399646653747
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00013495599146678218,
+      "real_p_drone": 0.0029389234175273738
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0002453054467541255,
+      "real_p_drone": 0.01770085414167685
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0014578776736666724,
+      "real_p_drone": 0.00045363036096647574
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0003045894408157778,
+      "real_p_drone": 0.002135676839854958
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00269643791816107,
+      "real_p_drone": 4.176943476632654e-05
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0007549181769460582,
+      "real_p_drone": 0.00013701999777400748
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.000269119462566614,
+      "real_p_drone": 0.004456907693962309
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.001072974049083016,
+      "real_p_drone": 0.0001593622672350087
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.001768162737984047,
+      "real_p_drone": 0.000510916315166137
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0004994019207585169,
+      "real_p_drone": 0.03368093181397989
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.00020517430684096244,
+      "real_p_drone": 0.019647439782066976
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.000121029457354,
+      "real_p_drone": 0.0004313824054436938
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0004610557037893545,
+      "real_p_drone": 0.002345001236906514
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0003020640738283388,
+      "real_p_drone": 0.00012581565126225128
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0003721480370656055,
+      "real_p_drone": 0.011094202653422465
+    },
+    {
+      "surrogate_evaded": true,
+      "transferred_to_real_target": true,
+      "surrogate_p_drone": 0.0022465175167529937,
+      "real_p_drone": 0.000550007495527349
+    }
+  ]
+}

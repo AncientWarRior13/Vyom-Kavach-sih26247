@@ -1,0 +1,113 @@
+{
+  "dataset": "DIAT-uSAT micro-Doppler spectrogram images (DIAT, Pune; X-band ~10 GHz CW radar; Paul & Bandyopadhyay, IEEE Access 2026)",
+  "n_samples": 4849,
+  "assumptions": [
+    "frequency axis calibrated to +-500 Hz (no ground-truth axis values burned into the images)",
+    "time axis calibrated to 3.0 s",
+    "rcs/power proxy uncalibrated (no known-RCS reference target in this dataset)",
+    "range/azimuth/altitude unavailable -> constants",
+    "velocity_variance/acceleration derived from the per-image time axis, not a cross-file sequence"
+  ],
+  "experiment_a_zero_shot": {
+    "accuracy": 0.22396370385646525,
+    "macro_f1": 0.13030369407451087,
+    "precision_aircraft": 0.0,
+    "recall_aircraft": 0.0,
+    "f1_aircraft": 0.0,
+    "precision_anomaly": 0.08940513903555086,
+    "recall_anomaly": 0.3116564417177914,
+    "f1_anomaly": 0.1389496717724289,
+    "precision_bird": 0.0,
+    "recall_bird": 0.0,
+    "f1_bird": 0.0,
+    "precision_drone": 0.43355914538822304,
+    "recall_drone": 0.3418241577649959,
+    "f1_drone": 0.3822651045256145,
+    "pr_auc_drone": 0.4287995301257205,
+    "confusion_matrix": [
+      [
+        0,
+        633,
+        0,
+        167
+      ],
+      [
+        0,
+        254,
+        23,
+        538
+      ],
+      [
+        0,
+        418,
+        0,
+        382
+      ],
+      [
+        0,
+        1536,
+        66,
+        832
+      ]
+    ]
+  },
+  "experiment_b_variant_holdout_retrain": {
+    "accuracy": 0.7178666666666667,
+    "macro_f1": 0.7039747757509222,
+    "precision_aircraft": 0.5197368421052632,
+    "recall_aircraft": 0.1975,
+    "f1_aircraft": 0.286231884057971,
+    "precision_anomaly": 0.9446366782006921,
+    "recall_anomaly": 0.6825,
+    "f1_anomaly": 0.7924528301886793,
+    "precision_bird": 0.937007874015748,
+    "recall_bird": 0.9916666666666667,
+    "f1_bird": 0.9635627530364372,
+    "precision_drone": 0.6694720734506503,
+    "recall_drone": 0.9162303664921466,
+    "f1_drone": 0.7736516357206012,
+    "pr_auc_drone": 0.7053336904468035,
+    "confusion_matrix": [
+      [
+        79,
+        2,
+        0,
+        319
+      ],
+      [
+        6,
+        273,
+        8,
+        113
+      ],
+      [
+        0,
+        1,
+        119,
+        0
+      ],
+      [
+        67,
+        13,
+        0,
+        875
+      ]
+    ],
+    "threshold_fbeta2": 0.135,
+    "threshold_cost_optimal": 0.060000000000000005,
+    "split_sizes": {
+      "train": 2491,
+      "val": 483,
+      "test": 1875
+    },
+    "test_folders": [
+      "2_blade_rotor_2",
+      "3_long_blades_rotor",
+      "3_short_blade_rotor_2",
+      "Bird",
+      "Bird+2_Blade_rotor_2",
+      "drone_2"
+    ]
+  },
+  "summary": "4849 real DIAT-uSAT spectrogram images (10 class-folders, all 4 schema classes populated -- first real bridge to include aircraft): zero-shot drone recall 34.2%; variant-holdout retrain (train on '_1'/first-index-block folders, test on '_2'/last-index-block folders) drone recall 91.6%, accuracy 71.8%."
+}

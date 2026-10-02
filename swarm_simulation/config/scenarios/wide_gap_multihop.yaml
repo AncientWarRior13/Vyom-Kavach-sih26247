@@ -1,0 +1,54 @@
+# Deliberately exercises the multi-hop relay chain theorem
+# (ares/connectivity_bounds.py, docs/connectivity_analysis.md) at k_min >= 2
+# in a live simulation run - every scenario until now only ever produced
+# k_min=1 gaps (see docs/connectivity_analysis.md's honest finding that
+# the theorem was validated but never exercised beyond k_min=1 outside
+# synthetic unit tests). A tight comm_range plus a PoI far from the GCS
+# forces a real multi-relay chain the moment a UAV is assigned to survey it.
+
+scenario:
+  name: wide_gap_multihop
+  seed: 1
+  duration_seconds: 700
+  dt_seconds: 1.0
+  geofence:
+    min: [-50, -50, 0]
+    max: [500, 200, 60]
+
+gcs:
+  position: [0, 50, 0]
+
+swarm:
+  count: 20   # generous headroom above config/planner.yaml's max_relay_fraction
+              # (0.6) cap, so this scenario tests chain-building capability
+              # rather than just re-demonstrating the commitment cap
+  battery_percent: 100
+  max_speed_mps: 3.0     # deliberately slow: gives the chain time to actually
+                          # form before the gap UAV reaches its target and
+                          # goes IDLE - at higher speeds the UAV reliably
+                          # outran the chain-building process (discovered
+                          # empirically building this scenario, see
+                          # docs/connectivity_analysis.md)
+  comm_range_m: 80.0     # tight range: effective hop ~68m
+  battery_drain_rate_pct_per_s: 0.025
+  battery_drain_rate_relay_bonus: 0.004
+  battery_reserve_pct: 15.0
+  home_position: [0, 50, 0]
+
+pois:
+  - id: poi_near
+    priority: 0.4
+    position: [60, 40, 30]
+    required_data: [imagery]
+    deadline: 650
+    risk: 0.1
+  - id: poi_far
+    # distance from GCS ~ sqrt(400^2 + 10^2) ~ 400m; effective hop ~68m
+    # => k_min = ceil(400/68) - 1 = 6 - 1 = 5 relays needed
+    priority: 0.85
+    position: [400, 40, 30]
+    required_data: [imagery, thermal_proxy]
+    deadline: 650
+    risk: 0.2
+
+events: []

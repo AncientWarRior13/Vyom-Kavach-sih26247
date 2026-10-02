@@ -1,0 +1,18 @@
+{
+  "drone_class_top5_features": [
+    "energy_spectral_bandwidth",
+    "snr_db",
+    "amplitude_mean",
+    "amplitude_spectral_bandwidth",
+    "amplitude_min"
+  ],
+  "physically_plausible_matches": [
+    "energy_spectral_bandwidth",
+    "amplitude_spectral_bandwidth"
+  ],
+  "note": "unlike the 11-feature schema's single named micro_doppler_bandwidth, drone-discriminative signal here is spread across several raw-statistic features -- reporting which ones rank highest rather than requiring one specific name",
+  "waterfall_instance": {
+    "test_row": 17,
+    "p_drone": 0.9740432013988453
+  }
+}

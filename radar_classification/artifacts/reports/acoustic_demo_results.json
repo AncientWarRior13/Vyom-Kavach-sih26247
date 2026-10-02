@@ -1,0 +1,27 @@
+{
+  "n_clips": 1000,
+  "accuracy": 1.0,
+  "drone_recall": 1.0,
+  "drone_precision": 1.0,
+  "modulation_spectrum_importance_pct": 8.690133838856157,
+  "feature_importance": {
+    "spectral_centroid": 1.057444389901973,
+    "spectral_bandwidth": 0.8300941193694457,
+    "spectral_flatness": 10.897697210697169,
+    "spectral_rolloff": 2.03978679698421,
+    "zero_crossing_rate": 43.20432959988351,
+    "mfcc_0": 3.972514173087677,
+    "mfcc_1": 6.103151678787613,
+    "mfcc_2": 6.876225158602666,
+    "mfcc_3": 0.17651291735749158,
+    "mfcc_4": 0.36176270898674634,
+    "mfcc_5": 4.533919992758097,
+    "mfcc_6": 0.9785535000358249,
+    "mfcc_7": 1.0589886324012088,
+    "mod_peak_freq": 0.4046301924486282,
+    "mod_peak_strength": 0.20618224252576434,
+    "mod_band_energy": 8.079321403881766,
+    "harmonic_ratio": 9.218885282290225
+  },
+  "note": "trained on physically-motivated synthetic audio; classify_wav() runs on real phone recordings"
+}

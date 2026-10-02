@@ -1,0 +1,46 @@
+{
+  "dataset": "TSMS-Drone CW radar subset (figshare, real 2.495 GHz S-band CW measurements, Han & Jung 2026)",
+  "n_frames": 2250,
+  "experiment_a_zero_shot": {
+    "accuracy": 0.34355555555555556,
+    "macro_f1": 0.343545052276392,
+    "precision_aircraft": 0.0,
+    "recall_aircraft": 0.0,
+    "f1_aircraft": 0.0,
+    "precision_anomaly": 0.21328866554997208,
+    "recall_anomaly": 0.8488888888888889,
+    "f1_anomaly": 0.34091923248549755,
+    "precision_bird": 0.0,
+    "recall_bird": 0.0,
+    "f1_bird": 0.0,
+    "precision_drone": 0.8518518518518519,
+    "recall_drone": 0.21722222222222223,
+    "f1_drone": 0.3461708720672864,
+    "pr_auc_drone": 0.8533389891211256
+  },
+  "experiment_b_range_generalization": {
+    "recall_drone": 0.7760416666666666,
+    "precision_drone": 0.8543577981651376,
+    "accuracy": 0.715,
+    "train_distances": [
+      4.0,
+      8.0,
+      12.0,
+      16.0,
+      20.0,
+      24.0,
+      28.0
+    ],
+    "test_distances": [
+      2.0,
+      6.0,
+      10.0,
+      14.0,
+      18.0,
+      22.0,
+      26.0,
+      30.0
+    ]
+  },
+  "summary": "2250 real CW frames (4 drones + corner reflector, 2-30 m): zero-shot drone recall 21.7%; range-generalization retrain (train even / test odd distances) drone recall 77.6%, accuracy 71.5%."
+}

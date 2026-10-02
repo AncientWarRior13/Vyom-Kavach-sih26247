@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>AAR Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0e1117; color: #e6e6e6; margin: 0; padding: 24px; }
+  h1 { font-size: 20px; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; flex: 1; min-width: 280px; }
+  input, button { background: #0e1117; color: #e6e6e6; border: 1px solid #30363d; border-radius: 4px; padding: 6px 10px; }
+  button { cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #30363d; }
+  .flag { color: #e06666; }
+</style>
+</head>
+<body>
+  <h1>After-Action Review</h1>
+  <div class="row">
+    <input id="traineeId" placeholder="trainee id" />
+    <input id="unitId" placeholder="unit id" />
+    <button onclick="loadAll()">Load</button>
+  </div>
+
+  <div class="row" style="margin-top:16px">
+    <div class="card">
+      <h3>Trainee performance over sessions</h3>
+      <canvas id="traineeChart" height="180"></canvas>
+    </div>
+    <div class="card">
+      <h3>Unit leaderboard (avg score)</h3>
+      <canvas id="unitChart" height="180"></canvas>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Recent sessions</h3>
+    <table id="sessionsTable">
+      <thead><tr><th>Time</th><th>Trainee</th><th>Difficulty</th><th>Overall</th><th>Detect</th><th>Classify</th><th>Engage</th><th>Missed</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+let traineeChart, unitChart;
+
+async function loadAll() {
+  const traineeId = document.getElementById('traineeId').value.trim();
+  const unitId = document.getElementById('unitId').value.trim();
+
+  const sessions = await fetch(`/api/aar/sessions?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`).then(r => r.json());
+  const tbody = document.querySelector('#sessionsTable tbody');
+  tbody.innerHTML = '';
+  for (const s of sessions) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${s.created_at}</td><td>${s.trainee_id}</td><td>${s.difficulty}</td>
+      <td>${s.overall_score}</td><td>${s.detection_score}</td><td>${s.classification_score}</td>
+      <td>${s.engagement_score}</td><td class="${s.contacts_missed ? 'flag' : ''}">${s.contacts_missed}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  if (traineeId) {
+    const trend = await fetch(`/api/aar/trend/trainee/${encodeURIComponent(traineeId)}`).then(r => r.json());
+    const labels = trend.map(t => t.created_at);
+    if (traineeChart) traineeChart.destroy();
+    traineeChart = new Chart(document.getElementById('traineeChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Overall', data: trend.map(t => t.overall_score), borderColor: '#58a6ff' },
+          { label: 'Detection', data: trend.map(t => t.detection_score), borderColor: '#3fb950' },
+          { label: 'Classification', data: trend.map(t => t.classification_score), borderColor: '#d29922' },
+          { label: 'Engagement', data: trend.map(t => t.engagement_score), borderColor: '#f85149' },
+        ],
+      },
+      options: { responsive: true, scales: { y: { min: 0, max: 100 } } },
+    });
+  }
+
+  if (unitId) {
+    const trend = await fetch(`/api/aar/trend/unit/${encodeURIComponent(unitId)}`).then(r => r.json());
+    if (unitChart) unitChart.destroy();
+    unitChart = new Chart(document.getElementById('unitChart'), {
+      type: 'bar',
+      data: {
+        labels: trend.map(t => t.trainee_id),
+        datasets: [{ label: 'Avg score', data: trend.map(t => t.avg_score), backgroundColor: '#58a6ff' }],
+      },
+      options: { responsive: true, scales: { y: { min: 0, max: 100 } } },
+    });
+  }
+}
+
+loadAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "dataset": "SAAB 77GHz real, drone-vs-rest",
+  "n_seeds": 5,
+  "computed_baselines": {
+    "majority_class": {
+      "accuracy_mean": 0.8633333333333333,
+      "accuracy_std": 0.0,
+      "pr_auc_mean": 0.8633333333333333
+    },
+    "logistic_regression": {
+      "accuracy_mean": 0.9306666666666669,
+      "accuracy_std": 0.0036960105285511113,
+      "pr_auc_mean": 0.9970020531488603
+    },
+    "linear_svm": {
+      "accuracy_mean": 0.946,
+      "accuracy_std": 0.0033314809667922022,
+      "pr_auc_mean": 0.9969412190305196
+    },
+    "knn_k15": {
+      "accuracy_mean": 0.9820555555555556,
+      "accuracy_std": 0.002060804110110168,
+      "pr_auc_mean": 0.9988256359586114
+    },
+    "random_forest": {
+      "accuracy_mean": 0.9874444444444445,
+      "accuracy_std": 0.001342560663732737,
+      "pr_auc_mean": 0.9994673548301952
+    },
+    "catboost_OURS": {
+      "accuracy_mean": 0.9898888888888889,
+      "accuracy_std": 0.0014120294474598632,
+      "pr_auc_mean": 0.9997870900371006
+    }
+  },
+  "referenced_external": {
+    "DIAT_uSAT_microDoppler_CNN": {
+      "source": "Paul & Bandyopadhyay, IEEE Access 2026",
+      "full_precision_accuracy": 0.9783,
+      "binarized_accuracy": 0.9687,
+      "note": "image-CNN on DIAT spectrograms; different model family and split -- context only, not a head-to-head with our tabular pipeline"
+    }
+  }
+}

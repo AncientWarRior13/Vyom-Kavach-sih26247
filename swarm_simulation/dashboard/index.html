@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ARES-X Mission Dashboard</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: -apple-system, sans-serif; background: #0d1117; color: #c9d1d9; margin: 0; padding: 24px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #8b949e; font-size: 13px; margin-bottom: 20px; }
+  select, button { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 20px 0; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px 16px; }
+  .card .label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: .04em; }
+  .card .value { font-size: 24px; font-weight: 600; margin-top: 4px; }
+  .card .value.warn { color: #d29922; }
+  .card .value.bad { color: #f85149; }
+  .card .value.good { color: #3fb950; }
+  canvas { background: #161b22; border: 1px solid #30363d; border-radius: 8px; width: 100%; height: 220px; }
+  .chart-title { font-size: 12px; color: #8b949e; margin: 18px 0 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #21262d; }
+  th { color: #8b949e; font-weight: 500; }
+  .log-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; background: #21262d; }
+</style>
+</head>
+<body>
+  <h1>ARES-X &mdash; Mission Dashboard</h1>
+  <div class="sub" id="meta">loading run...</div>
+
+  <div>
+    <label for="runSelect" style="font-size:12px;color:#8b949e;">Run:</label>
+    <select id="runSelect"></select>
+  </div>
+
+  <div class="grid" id="summaryCards"></div>
+
+  <div class="chart-title">Connectivity health / mean PDR over time</div>
+  <canvas id="healthChart" height="220"></canvas>
+
+  <div class="chart-title">Mean latency (ms) over time</div>
+  <canvas id="latencyChart" height="220"></canvas>
+
+  <div class="chart-title">Recent decision log</div>
+  <table id="logTable">
+    <thead><tr><th>t</th><th>event</th><th>source</th><th>reason</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+const RESULTS_DIR = "../results/raw/";
+
+async function listRuns() {
+  // No directory listing over file://, so we probe known scenario names.
+  // Extend this list as new scenarios are added to config/scenarios/.
+  const known = [
+    "baseline_earthquake_01",
+    "multi_failure_stress",
+    "comms_outage_region",
+    "cascading_emergency_priorities",
+  ];
+  const select = document.getElementById("runSelect");
+  for (const name of known) {
+    const opt = document.createElement("option");
+    opt.value = name; opt.textContent = name;
+    select.appendChild(opt);
+  }
+  select.addEventListener("change", () => loadRun(select.value));
+  if (known.length) loadRun(known[0]);
+}
+
+async function loadRun(name) {
+  document.getElementById("meta").textContent = `Loading ${name}...`;
+  const [metrics, timeseries, events] = await Promise.all([
+    fetch(`${RESULTS_DIR}${name}_metrics.json`).then(r => r.json()),
+    fetch(`${RESULTS_DIR}${name}_timeseries.csv`).then(r => r.text()),
+    fetch(`${RESULTS_DIR}${name}_events.json`).then(r => r.json()).catch(() => []),
+  ]);
+  renderSummary(metrics);
+  renderCharts(parseCsv(timeseries));
+  renderLog(events);
+  document.getElementById("meta").textContent =
+    `${name} — ${metrics.run_metadata.uav_count} UAVs, ${metrics.run_metadata.num_pois} PoIs, ${metrics.scenario_time_s}s — internal score ${(metrics.internal_score_estimate.overall_score*100).toFixed(1)}%`;
+}
+
+function parseCsv(text) {
+  const lines = text.trim().split("\n");
+  const header = lines[0].split(",");
+  return lines.slice(1).map(l => {
+    const cols = l.split(",");
+    const row = {};
+    header.forEach((h, i) => row[h] = cols[i]);
+    return row;
+  });
+}
+
+function cardClass(value, goodAbove, warnAbove) {
+  if (value >= goodAbove) return "good";
+  if (value >= warnAbove) return "warn";
+  return "bad";
+}
+
+function renderSummary(m) {
+  const cards = [
+    ["Mission Completion", (m.mission.mission_completion_rate*100).toFixed(0) + "%", cardClass(m.mission.mission_completion_rate, 0.9, 0.6)],
+    ["Priority-weighted Score", (m.mission.priority_weighted_score*100).toFixed(0) + "%", cardClass(m.mission.priority_weighted_score, 0.9, 0.6)],
+    ["Packet Delivery Ratio", (m.communication.packet_delivery_ratio*100).toFixed(1) + "%", cardClass(m.communication.packet_delivery_ratio, 0.9, 0.6)],
+    ["Connectivity Availability", (m.communication.connectivity_availability*100).toFixed(1) + "%", cardClass(m.communication.connectivity_availability, 0.9, 0.6)],
+    ["Comm Downtime (s)", m.communication.total_communication_downtime_s.toFixed(1), cardClass(1 - m.communication.total_communication_downtime_s/300, 0.9, 0.6)],
+    ["Relay Reallocations", m.autonomy.relay_reallocations, "good"],
+    ["Successful Recoveries", m.autonomy.successful_recoveries, m.autonomy.successful_recoveries > 0 ? "good" : "bad"],
+    ["Mean Reconfig Time (s)", m.autonomy.mean_reconfiguration_time_s == null ? "N/A" : m.autonomy.mean_reconfiguration_time_s.toFixed(1), "warn"],
+    ["Collisions", m.safety.collision_count, m.safety.collision_count === 0 ? "good" : "bad"],
+    ["Geofence Violations", m.safety.geofence_violations, m.safety.geofence_violations === 0 ? "good" : "bad"],
+    ["Min Separation (m)", m.safety.minimum_inter_uav_distance_m == null ? "N/A" : m.safety.minimum_inter_uav_distance_m.toFixed(1), "good"],
+    ["Internal Score (unofficial)", (m.internal_score_estimate.overall_score*100).toFixed(1) + "%", "warn"],
+  ];
+  const grid = document.getElementById("summaryCards");
+  grid.innerHTML = "";
+  for (const [label, value, cls] of cards) {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `<div class="label">${label}</div><div class="value ${cls}">${value}</div>`;
+    grid.appendChild(div);
+  }
+}
+
+function drawLine(canvas, series, color, maxY) {
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width = canvas.clientWidth;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  if (!series.length) return;
+  const max = maxY ?? Math.max(...series, 0.01);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  series.forEach((v, i) => {
+    const x = (i / (series.length - 1)) * (w - 20) + 10;
+    const y = h - 10 - (v / max) * (h - 20);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+function renderCharts(rows) {
+  const health = rows.map(r => parseFloat(r.connectivity_health));
+  const pdr = rows.map(r => parseFloat(r.mean_pdr));
+  const latency = rows.map(r => parseFloat(r.mean_latency_ms));
+
+  const healthCanvas = document.getElementById("healthChart");
+  drawLine(healthCanvas, health, "#3fb950", 1.0);
+  const ctx = healthCanvas.getContext("2d");
+  ctx.strokeStyle = "#58a6ff";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  pdr.forEach((v, i) => {
+    const x = (i / (pdr.length - 1)) * (healthCanvas.width - 20) + 10;
+    const y = healthCanvas.height - 10 - v * (healthCanvas.height - 20);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  drawLine(document.getElementById("latencyChart"), latency, "#d29922");
+}
+
+function renderLog(events) {
+  const tbody = document.querySelector("#logTable tbody");
+  tbody.innerHTML = "";
+  events.slice(-40).reverse().forEach(e => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${e.timestamp.toFixed(0)}s</td><td><span class="log-badge">${e.event_type}</span></td><td>${e.source}</td><td>${e.reason}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+listRuns();
+</script>
+</body>
+</html>

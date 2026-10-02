@@ -1,0 +1,73 @@
+{
+  "association": "KD-tree-gated greedy global-nearest-neighbour (scipy.spatial.cKDTree)",
+  "detection": "OS-CFAR per range row + KD-tree 2D non-max suppression",
+  "tracker": "bank of constant-velocity Kalman filters (radar_dsp.KalmanTracker), spawn/coast/kill",
+  "grid": {
+    "n_range": 1024,
+    "n_doppler": 768
+  },
+  "scales_tested": [
+    100,
+    500,
+    1000
+  ],
+  "results": [
+    {
+      "n_targets": 100,
+      "n_frames": 20,
+      "track_completeness_mean": 0.8925000000000004,
+      "track_completeness_std": 0.04602988159880493,
+      "cardinality_error": 0.0,
+      "spurious_tracks": 0,
+      "detect_latency_ms_mean": 504.67,
+      "assoc_latency_ms_mean": 4.625,
+      "assoc_latency_ms_p95": 5.067,
+      "fleet_summary_final_frame": {
+        "confirmed_tracks": 100,
+        "tentative_tracks": 27,
+        "heading_coherence": 0.08208036705609104,
+        "coordinated_swarm_detected": false,
+        "association_latency_ms": 5.021
+      },
+      "wall_time_s": 10.41
+    },
+    {
+      "n_targets": 500,
+      "n_frames": 20,
+      "track_completeness_mean": 0.8850000000000001,
+      "track_completeness_std": 0.053898051912847474,
+      "cardinality_error": 1.0,
+      "spurious_tracks": 1,
+      "detect_latency_ms_mean": 497.86,
+      "assoc_latency_ms_mean": 20.291,
+      "assoc_latency_ms_p95": 21.391,
+      "fleet_summary_final_frame": {
+        "confirmed_tracks": 499,
+        "tentative_tracks": 44,
+        "heading_coherence": 0.015501452006561396,
+        "coordinated_swarm_detected": false,
+        "association_latency_ms": 21.11
+      },
+      "wall_time_s": 11.48
+    },
+    {
+      "n_targets": 1000,
+      "n_frames": 20,
+      "track_completeness_mean": 0.8613500000000002,
+      "track_completeness_std": 0.09109707734060409,
+      "cardinality_error": 14.0,
+      "spurious_tracks": 16,
+      "detect_latency_ms_mean": 512.71,
+      "assoc_latency_ms_mean": 39.619,
+      "assoc_latency_ms_p95": 41.624,
+      "fleet_summary_final_frame": {
+        "confirmed_tracks": 992,
+        "tentative_tracks": 34,
+        "heading_coherence": 0.6736792205676777,
+        "coordinated_swarm_detected": true,
+        "association_latency_ms": 41.017
+      },
+      "wall_time_s": 14.99
+    }
+  ]
+}

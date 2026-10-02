@@ -1,0 +1,38 @@
+{
+  "non_md_features": [
+    "doppler_velocity",
+    "doppler_freq_shift",
+    "rcs_estimate",
+    "range_m",
+    "azimuth_deg",
+    "altitude_m",
+    "velocity_variance",
+    "acceleration",
+    "snr_db"
+  ],
+  "suspicion_percentile_cutoff": 20,
+  "md_bw_suspicion_cutoff_value": 166.77417919562328,
+  "overall_unperturbed_accuracy": {
+    "primary_only": 0.9758974358974359,
+    "blended": 0.9646153846153847
+  },
+  "fraction_test_samples_triggering_any_blend": 0.9562820512820512,
+  "naturally_quiet_drones_recall": {
+    "primary_only": 0.7692307692307693,
+    "blended": 0.8205128205128205
+  },
+  "masking_stress_test": {
+    "primary_only": {
+      "unperturbed": 0.9179487179487179,
+      "x0.7": 0.764102564102564,
+      "x0.5": 0.517948717948718,
+      "x0.3": 0.12307692307692308
+    },
+    "blended_with_fallback": {
+      "unperturbed": 0.9282051282051282,
+      "x0.7": 0.7897435897435897,
+      "x0.5": 0.5794871794871795,
+      "x0.3": 0.2923076923076923
+    }
+  }
+}

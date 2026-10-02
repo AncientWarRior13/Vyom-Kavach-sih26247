@@ -1,0 +1,631 @@
+{
+  "replication_of": "diat_usat_cnn.py quantum-kernel-on-CNN-embeddings finding, second independent real sensor (RAD-DAR, 8.75GHz FMCW range-Doppler matrices vs. DIAT-uSAT's X-band CW spectrogram images)",
+  "n_seeds": 5,
+  "split_sizes": {
+    "train": 11886,
+    "val": 2543,
+    "test": 3056
+  },
+  "cnn_test_metrics": {
+    "accuracy": 0.9538612565445026,
+    "recall_drone": 0.9780701754385965,
+    "precision_drone": 0.9233954451345756,
+    "f1_drone": 0.9499467518636848,
+    "pr_auc_drone": 0.986173016079838,
+    "roc_auc": 0.9907036424988223
+  },
+  "circuit": {
+    "feature_map": "ZZFeatureMap",
+    "qubits": 8,
+    "reps": 2,
+    "circuit_depth": 67,
+    "backend": "Qiskit exact statevector simulation (noiseless)"
+  },
+  "per_seed_results": [
+    {
+      "accuracy": 0.88,
+      "recall_drone": 0.8283582089552238,
+      "precision_drone": 0.8951612903225806,
+      "f1_drone": 0.8604651162790697,
+      "pr_auc_drone": 0.9506697210640892,
+      "roc_auc": 0.9665527782772882,
+      "kernel": "quantum_zz",
+      "n_train": 200,
+      "seed": 0
+    },
+    {
+      "accuracy": 0.9566666666666667,
+      "recall_drone": 0.9626865671641791,
+      "precision_drone": 0.9416058394160584,
+      "f1_drone": 0.9520295202952029,
+      "pr_auc_drone": 0.9578615766160326,
+      "roc_auc": 0.9819277108433735,
+      "kernel": "rbf",
+      "n_train": 200,
+      "seed": 0
+    },
+    {
+      "accuracy": 0.9433333333333334,
+      "recall_drone": 0.9328358208955224,
+      "precision_drone": 0.9398496240601504,
+      "f1_drone": 0.9363295880149812,
+      "pr_auc_drone": 0.9898755162534492,
+      "roc_auc": 0.9924698795180723,
+      "kernel": "linear",
+      "n_train": 200,
+      "seed": 0
+    },
+    {
+      "accuracy": 0.8066666666666666,
+      "recall_drone": 0.6194029850746269,
+      "precision_drone": 0.9222222222222223,
+      "f1_drone": 0.7410714285714286,
+      "pr_auc_drone": 0.9156453505030069,
+      "roc_auc": 0.9590451357669483,
+      "kernel": "quantum_zz",
+      "n_train": 200,
+      "seed": 1
+    },
+    {
+      "accuracy": 0.94,
+      "recall_drone": 0.9328358208955224,
+      "precision_drone": 0.9328358208955224,
+      "f1_drone": 0.9328358208955224,
+      "pr_auc_drone": 0.9831262109619452,
+      "roc_auc": 0.9895702211832405,
+      "kernel": "rbf",
+      "n_train": 200,
+      "seed": 1
+    },
+    {
+      "accuracy": 0.9366666666666666,
+      "recall_drone": 0.9253731343283582,
+      "precision_drone": 0.9323308270676691,
+      "f1_drone": 0.9288389513108615,
+      "pr_auc_drone": 0.9908009487416931,
+      "roc_auc": 0.9925373134328359,
+      "kernel": "linear",
+      "n_train": 200,
+      "seed": 1
+    },
+    {
+      "accuracy": 0.93,
+      "recall_drone": 0.8955223880597015,
+      "precision_drone": 0.9448818897637795,
+      "f1_drone": 0.9195402298850575,
+      "pr_auc_drone": 0.9685041792680515,
+      "roc_auc": 0.9837709045135767,
+      "kernel": "quantum_zz",
+      "n_train": 200,
+      "seed": 2
+    },
+    {
+      "accuracy": 0.96,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9692307692307692,
+      "f1_drone": 0.9545454545454546,
+      "pr_auc_drone": 0.970967086588653,
+      "roc_auc": 0.9825570940478332,
+      "kernel": "rbf",
+      "n_train": 200,
+      "seed": 2
+    },
+    {
+      "accuracy": 0.9566666666666667,
+      "recall_drone": 0.9328358208955224,
+      "precision_drone": 0.9689922480620154,
+      "f1_drone": 0.9505703422053232,
+      "pr_auc_drone": 0.9926226016449327,
+      "roc_auc": 0.9939759036144578,
+      "kernel": "linear",
+      "n_train": 200,
+      "seed": 2
+    },
+    {
+      "accuracy": 0.9266666666666666,
+      "recall_drone": 0.8805970149253731,
+      "precision_drone": 0.9516129032258065,
+      "f1_drone": 0.9147286821705426,
+      "pr_auc_drone": 0.9693089072547558,
+      "roc_auc": 0.9759036144578315,
+      "kernel": "quantum_zz",
+      "n_train": 200,
+      "seed": 3
+    },
+    {
+      "accuracy": 0.9533333333333334,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9545454545454546,
+      "f1_drone": 0.9473684210526315,
+      "pr_auc_drone": 0.9612829313834906,
+      "roc_auc": 0.9848048912066174,
+      "kernel": "rbf",
+      "n_train": 200,
+      "seed": 3
+    },
+    {
+      "accuracy": 0.9566666666666667,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9618320610687023,
+      "f1_drone": 0.9509433962264151,
+      "pr_auc_drone": 0.9782033083532617,
+      "roc_auc": 0.9877719834562129,
+      "kernel": "linear",
+      "n_train": 200,
+      "seed": 3
+    },
+    {
+      "accuracy": 0.8733333333333333,
+      "recall_drone": 0.7611940298507462,
+      "precision_drone": 0.9444444444444444,
+      "f1_drone": 0.8429752066115702,
+      "pr_auc_drone": 0.9591989606976097,
+      "roc_auc": 0.9762632620032369,
+      "kernel": "quantum_zz",
+      "n_train": 200,
+      "seed": 4
+    },
+    {
+      "accuracy": 0.9566666666666667,
+      "recall_drone": 0.9552238805970149,
+      "precision_drone": 0.9481481481481482,
+      "f1_drone": 0.9516728624535316,
+      "pr_auc_drone": 0.9375805570072532,
+      "roc_auc": 0.9778816759575616,
+      "kernel": "rbf",
+      "n_train": 200,
+      "seed": 4
+    },
+    {
+      "accuracy": 0.9566666666666667,
+      "recall_drone": 0.9552238805970149,
+      "precision_drone": 0.9481481481481482,
+      "f1_drone": 0.9516728624535316,
+      "pr_auc_drone": 0.9680095511063579,
+      "roc_auc": 0.9860636576155367,
+      "kernel": "linear",
+      "n_train": 200,
+      "seed": 4
+    },
+    {
+      "accuracy": 0.9066666666666666,
+      "recall_drone": 0.8582089552238806,
+      "precision_drone": 0.9274193548387096,
+      "f1_drone": 0.8914728682170543,
+      "pr_auc_drone": 0.9696454714336303,
+      "roc_auc": 0.9795900017982377,
+      "kernel": "quantum_zz",
+      "n_train": 400,
+      "seed": 0
+    },
+    {
+      "accuracy": 0.96,
+      "recall_drone": 0.9701492537313433,
+      "precision_drone": 0.9420289855072463,
+      "f1_drone": 0.9558823529411765,
+      "pr_auc_drone": 0.962859024732402,
+      "roc_auc": 0.9835011688545225,
+      "kernel": "rbf",
+      "n_train": 400,
+      "seed": 0
+    },
+    {
+      "accuracy": 0.9533333333333334,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9545454545454546,
+      "f1_drone": 0.9473684210526315,
+      "pr_auc_drone": 0.9900183906707579,
+      "roc_auc": 0.9925373134328358,
+      "kernel": "linear",
+      "n_train": 400,
+      "seed": 0
+    },
+    {
+      "accuracy": 0.9166666666666666,
+      "recall_drone": 0.8880597014925373,
+      "precision_drone": 0.9224806201550387,
+      "f1_drone": 0.9049429657794676,
+      "pr_auc_drone": 0.9527651101650108,
+      "roc_auc": 0.9683510160043158,
+      "kernel": "quantum_zz",
+      "n_train": 400,
+      "seed": 1
+    },
+    {
+      "accuracy": 0.9433333333333334,
+      "recall_drone": 0.9477611940298507,
+      "precision_drone": 0.927007299270073,
+      "f1_drone": 0.9372693726937269,
+      "pr_auc_drone": 0.9762615304517825,
+      "roc_auc": 0.9879967631720913,
+      "kernel": "rbf",
+      "n_train": 400,
+      "seed": 1
+    },
+    {
+      "accuracy": 0.9433333333333334,
+      "recall_drone": 0.9328358208955224,
+      "precision_drone": 0.9398496240601504,
+      "f1_drone": 0.9363295880149812,
+      "pr_auc_drone": 0.9913322385106911,
+      "roc_auc": 0.9929419169214171,
+      "kernel": "linear",
+      "n_train": 400,
+      "seed": 1
+    },
+    {
+      "accuracy": 0.95,
+      "recall_drone": 0.9626865671641791,
+      "precision_drone": 0.9280575539568345,
+      "f1_drone": 0.945054945054945,
+      "pr_auc_drone": 0.9794111097268152,
+      "roc_auc": 0.9875921596835102,
+      "kernel": "quantum_zz",
+      "n_train": 400,
+      "seed": 2
+    },
+    {
+      "accuracy": 0.9566666666666667,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9618320610687023,
+      "f1_drone": 0.9509433962264151,
+      "pr_auc_drone": 0.9687663865624502,
+      "roc_auc": 0.9852544506383742,
+      "kernel": "rbf",
+      "n_train": 400,
+      "seed": 2
+    },
+    {
+      "accuracy": 0.9566666666666667,
+      "recall_drone": 0.9328358208955224,
+      "precision_drone": 0.9689922480620154,
+      "f1_drone": 0.9505703422053232,
+      "pr_auc_drone": 0.9925183822961516,
+      "roc_auc": 0.9938410357849308,
+      "kernel": "linear",
+      "n_train": 400,
+      "seed": 2
+    },
+    {
+      "accuracy": 0.9633333333333334,
+      "recall_drone": 0.9701492537313433,
+      "precision_drone": 0.948905109489051,
+      "f1_drone": 0.959409594095941,
+      "pr_auc_drone": 0.9480899957875552,
+      "roc_auc": 0.9727566984355333,
+      "kernel": "quantum_zz",
+      "n_train": 400,
+      "seed": 3
+    },
+    {
+      "accuracy": 0.9533333333333334,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9545454545454546,
+      "f1_drone": 0.9473684210526315,
+      "pr_auc_drone": 0.9701658387821025,
+      "roc_auc": 0.9839956842294552,
+      "kernel": "rbf",
+      "n_train": 400,
+      "seed": 3
+    },
+    {
+      "accuracy": 0.9533333333333334,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9545454545454546,
+      "f1_drone": 0.9473684210526315,
+      "pr_auc_drone": 0.9781873134662586,
+      "roc_auc": 0.9877719834562129,
+      "kernel": "linear",
+      "n_train": 400,
+      "seed": 3
+    },
+    {
+      "accuracy": 0.92,
+      "recall_drone": 0.8880597014925373,
+      "precision_drone": 0.9296875,
+      "f1_drone": 0.9083969465648855,
+      "pr_auc_drone": 0.9441807398964769,
+      "roc_auc": 0.9713630641970868,
+      "kernel": "quantum_zz",
+      "n_train": 400,
+      "seed": 4
+    },
+    {
+      "accuracy": 0.9533333333333334,
+      "recall_drone": 0.9477611940298507,
+      "precision_drone": 0.9477611940298507,
+      "f1_drone": 0.9477611940298507,
+      "pr_auc_drone": 0.9319966853112773,
+      "roc_auc": 0.9768027333213452,
+      "kernel": "rbf",
+      "n_train": 400,
+      "seed": 4
+    },
+    {
+      "accuracy": 0.9533333333333334,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9545454545454546,
+      "f1_drone": 0.9473684210526315,
+      "pr_auc_drone": 0.9681515457899863,
+      "roc_auc": 0.9861535695018881,
+      "kernel": "linear",
+      "n_train": 400,
+      "seed": 4
+    },
+    {
+      "accuracy": 0.9466666666666667,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9402985074626866,
+      "f1_drone": 0.9402985074626866,
+      "pr_auc_drone": 0.970868318454682,
+      "roc_auc": 0.9817478870706707,
+      "kernel": "quantum_zz",
+      "n_train": 800,
+      "seed": 0
+    },
+    {
+      "accuracy": 0.9433333333333334,
+      "recall_drone": 0.9328358208955224,
+      "precision_drone": 0.9398496240601504,
+      "f1_drone": 0.9363295880149812,
+      "pr_auc_drone": 0.9663237154069633,
+      "roc_auc": 0.9839057723431038,
+      "kernel": "rbf",
+      "n_train": 800,
+      "seed": 0
+    },
+    {
+      "accuracy": 0.9466666666666667,
+      "recall_drone": 0.9253731343283582,
+      "precision_drone": 0.9538461538461539,
+      "f1_drone": 0.9393939393939394,
+      "pr_auc_drone": 0.9898842129762149,
+      "roc_auc": 0.9924474015464844,
+      "kernel": "linear",
+      "n_train": 800,
+      "seed": 0
+    },
+    {
+      "accuracy": 0.9433333333333334,
+      "recall_drone": 0.9477611940298507,
+      "precision_drone": 0.927007299270073,
+      "f1_drone": 0.9372693726937269,
+      "pr_auc_drone": 0.9688018963615427,
+      "roc_auc": 0.9749595396511419,
+      "kernel": "quantum_zz",
+      "n_train": 800,
+      "seed": 1
+    },
+    {
+      "accuracy": 0.9433333333333334,
+      "recall_drone": 0.9477611940298507,
+      "precision_drone": 0.927007299270073,
+      "f1_drone": 0.9372693726937269,
+      "pr_auc_drone": 0.9728514606979163,
+      "roc_auc": 0.9857040100701313,
+      "kernel": "rbf",
+      "n_train": 800,
+      "seed": 1
+    },
+    {
+      "accuracy": 0.9433333333333334,
+      "recall_drone": 0.9328358208955224,
+      "precision_drone": 0.9398496240601504,
+      "f1_drone": 0.9363295880149812,
+      "pr_auc_drone": 0.9915247410228829,
+      "roc_auc": 0.9930767847509441,
+      "kernel": "linear",
+      "n_train": 800,
+      "seed": 1
+    },
+    {
+      "accuracy": 0.95,
+      "recall_drone": 0.9552238805970149,
+      "precision_drone": 0.9343065693430657,
+      "f1_drone": 0.9446494464944649,
+      "pr_auc_drone": 0.9373619392882183,
+      "roc_auc": 0.9793202661391835,
+      "kernel": "quantum_zz",
+      "n_train": 800,
+      "seed": 2
+    },
+    {
+      "accuracy": 0.96,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9692307692307692,
+      "f1_drone": 0.9545454545454546,
+      "pr_auc_drone": 0.9668118140671168,
+      "roc_auc": 0.9830965653659414,
+      "kernel": "rbf",
+      "n_train": 800,
+      "seed": 2
+    },
+    {
+      "accuracy": 0.9566666666666667,
+      "recall_drone": 0.9328358208955224,
+      "precision_drone": 0.9689922480620154,
+      "f1_drone": 0.9505703422053232,
+      "pr_auc_drone": 0.9925469563330687,
+      "roc_auc": 0.9938859917281064,
+      "kernel": "linear",
+      "n_train": 800,
+      "seed": 2
+    },
+    {
+      "accuracy": 0.94,
+      "recall_drone": 0.917910447761194,
+      "precision_drone": 0.9461538461538461,
+      "f1_drone": 0.9318181818181818,
+      "pr_auc_drone": 0.9588796358674901,
+      "roc_auc": 0.9659233950728286,
+      "kernel": "quantum_zz",
+      "n_train": 800,
+      "seed": 3
+    },
+    {
+      "accuracy": 0.9533333333333334,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9545454545454546,
+      "f1_drone": 0.9473684210526315,
+      "pr_auc_drone": 0.9627486846713155,
+      "roc_auc": 0.9792303542528321,
+      "kernel": "rbf",
+      "n_train": 800,
+      "seed": 3
+    },
+    {
+      "accuracy": 0.9566666666666667,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9618320610687023,
+      "f1_drone": 0.9509433962264151,
+      "pr_auc_drone": 0.9744972017893498,
+      "roc_auc": 0.9805790325481029,
+      "kernel": "linear",
+      "n_train": 800,
+      "seed": 3
+    },
+    {
+      "accuracy": 0.9466666666666667,
+      "recall_drone": 0.9328358208955224,
+      "precision_drone": 0.946969696969697,
+      "f1_drone": 0.9398496240601504,
+      "pr_auc_drone": 0.9472179758854198,
+      "roc_auc": 0.9736558172990469,
+      "kernel": "quantum_zz",
+      "n_train": 800,
+      "seed": 4
+    },
+    {
+      "accuracy": 0.9533333333333334,
+      "recall_drone": 0.9477611940298507,
+      "precision_drone": 0.9477611940298507,
+      "f1_drone": 0.9477611940298507,
+      "pr_auc_drone": 0.9390517120544638,
+      "roc_auc": 0.9735209494695198,
+      "kernel": "rbf",
+      "n_train": 800,
+      "seed": 4
+    },
+    {
+      "accuracy": 0.9533333333333334,
+      "recall_drone": 0.9402985074626866,
+      "precision_drone": 0.9545454545454546,
+      "f1_drone": 0.9473684210526315,
+      "pr_auc_drone": 0.9666676374943518,
+      "roc_auc": 0.9844901996043878,
+      "kernel": "linear",
+      "n_train": 800,
+      "seed": 4
+    }
+  ],
+  "summary_mean_std": [
+    {
+      "n_train": 200,
+      "kernel": "linear",
+      "accuracy_mean": 0.95,
+      "accuracy_std": 0.009428090415820687,
+      "recall_drone_mean": 0.9373134328358208,
+      "recall_drone_std": 0.011317724543360445,
+      "pr_auc_mean": 0.9839023852199389,
+      "pr_auc_std": 0.010540069980792217
+    },
+    {
+      "n_train": 200,
+      "kernel": "quantum_zz",
+      "accuracy_mean": 0.8833333333333334,
+      "accuracy_std": 0.0501109879279097,
+      "recall_drone_mean": 0.7970149253731342,
+      "recall_drone_std": 0.11236238829919645,
+      "pr_auc_mean": 0.9526654237575027,
+      "pr_auc_std": 0.022051232828363347
+    },
+    {
+      "n_train": 200,
+      "kernel": "rbf",
+      "accuracy_mean": 0.9533333333333334,
+      "accuracy_std": 0.007817359599705719,
+      "recall_drone_mean": 0.946268656716418,
+      "recall_drone_std": 0.0122624453172798,
+      "pr_auc_mean": 0.9621636725114749,
+      "pr_auc_std": 0.016885951406596215
+    },
+    {
+      "n_train": 400,
+      "kernel": "linear",
+      "accuracy_mean": 0.952,
+      "accuracy_std": 0.005055250296034368,
+      "recall_drone_mean": 0.9373134328358208,
+      "recall_drone_std": 0.004087481772426623,
+      "pr_auc_mean": 0.9840415741467691,
+      "pr_auc_std": 0.010577071526714714
+    },
+    {
+      "n_train": 400,
+      "kernel": "quantum_zz",
+      "accuracy_mean": 0.9313333333333332,
+      "accuracy_std": 0.024106246309019412,
+      "recall_drone_mean": 0.9134328358208956,
+      "recall_drone_std": 0.049949852330392605,
+      "pr_auc_mean": 0.9588184854018976,
+      "pr_auc_std": 0.015060604550976669
+    },
+    {
+      "n_train": 400,
+      "kernel": "rbf",
+      "accuracy_mean": 0.9533333333333334,
+      "accuracy_std": 0.006236095644623213,
+      "recall_drone_mean": 0.9492537313432836,
+      "recall_drone_std": 0.01226244531727979,
+      "pr_auc_mean": 0.962009893168003,
+      "pr_auc_std": 0.017441276382352693
+    },
+    {
+      "n_train": 800,
+      "kernel": "linear",
+      "accuracy_mean": 0.9513333333333334,
+      "accuracy_std": 0.006055300708194979,
+      "recall_drone_mean": 0.9343283582089553,
+      "recall_drone_std": 0.006243731541299017,
+      "pr_auc_mean": 0.9830241499231736,
+      "pr_auc_std": 0.01172869024409398
+    },
+    {
+      "n_train": 800,
+      "kernel": "quantum_zz",
+      "accuracy_mean": 0.9453333333333334,
+      "accuracy_std": 0.003800584750330459,
+      "recall_drone_mean": 0.9388059701492537,
+      "recall_drone_std": 0.014354764225127839,
+      "pr_auc_mean": 0.9566259531714707,
+      "pr_auc_std": 0.014281018123996073
+    },
+    {
+      "n_train": 800,
+      "kernel": "rbf",
+      "accuracy_mean": 0.9506666666666668,
+      "accuracy_std": 0.007226494462892924,
+      "recall_drone_mean": 0.9417910447761194,
+      "recall_drone_std": 0.006243731541299017,
+      "pr_auc_mean": 0.9615574773795551,
+      "pr_auc_std": 0.013093964123171544
+    }
+  ],
+  "paired_quantum_vs_rbf_drone_recall": {
+    "200": {
+      "quantum_wins_n_of_5_seeds": 0,
+      "mean_diff_quantum_minus_rbf": -0.14925373134328362,
+      "std_diff": 0.09809956253823869
+    },
+    "400": {
+      "quantum_wins_n_of_5_seeds": 2,
+      "mean_diff_quantum_minus_rbf": -0.035820895522388055,
+      "std_diff": 0.05410319092654283
+    },
+    "800": {
+      "quantum_wins_n_of_5_seeds": 2,
+      "mean_diff_quantum_minus_rbf": -0.0029850746268656803,
+      "std_diff": 0.013841221635068205
+    }
+  },
+  "total_seconds": 123.3
+}

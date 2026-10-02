@@ -1,0 +1,26 @@
+{
+  "model_family": "catboost",
+  "variant": "class_weight",
+  "drone_threshold_deployed": 0.54,
+  "drone_threshold_cost_optimal": 0.060000000000000005,
+  "drone_threshold_fbeta2": 0.54,
+  "classes": [
+    "aircraft",
+    "anomaly",
+    "bird",
+    "drone"
+  ],
+  "feature_order": [
+    "doppler_velocity",
+    "doppler_freq_shift",
+    "rcs_estimate",
+    "micro_doppler_bandwidth",
+    "micro_doppler_jitter",
+    "range_m",
+    "azimuth_deg",
+    "altitude_m",
+    "velocity_variance",
+    "acceleration",
+    "snr_db"
+  ]
+}

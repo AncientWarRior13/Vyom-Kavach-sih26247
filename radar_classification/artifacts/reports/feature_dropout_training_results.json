@@ -1,0 +1,31 @@
+{
+  "dropout_fraction": 0.5,
+  "attenuation_range": [
+    0.3,
+    0.9
+  ],
+  "n_augmented_rows": 455,
+  "retrained_threshold_fbeta2": 0.6,
+  "sanity_check_normal_test_performance": {
+    "original_model": {
+      "accuracy": 0.9758974358974359,
+      "recall_drone": 0.9179487179487179
+    },
+    "retrained_model": {
+      "accuracy": 0.9730769230769231,
+      "recall_drone": 0.882051282051282
+    }
+  },
+  "masking_stress_test": {
+    "unperturbed": 0.882051282051282,
+    "x0.7": 0.8461538461538461,
+    "x0.5": 0.7743589743589744,
+    "x0.3": 0.6410256410256411
+  },
+  "comparison_vs_original": {
+    "unperturbed": 0.918,
+    "x0.7": 0.764,
+    "x0.5": 0.518,
+    "x0.3": 0.123
+  }
+}

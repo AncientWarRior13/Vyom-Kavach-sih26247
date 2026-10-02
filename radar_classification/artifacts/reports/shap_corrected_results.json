@@ -1,0 +1,35 @@
+{
+  "collinearity": {
+    "pair": [
+      "doppler_velocity",
+      "doppler_freq_shift"
+    ],
+    "correlation": 0.9999999999999991,
+    "explanation": "doppler_freq_shift = 2*v*f_c/c, fixed carrier -> exact linear dependence"
+  },
+  "features_used": [
+    "doppler_velocity",
+    "rcs_estimate",
+    "micro_doppler_bandwidth",
+    "micro_doppler_jitter",
+    "range_m",
+    "azimuth_deg",
+    "altitude_m",
+    "velocity_variance",
+    "acceleration",
+    "snr_db"
+  ],
+  "corrected_drone_shap_mean_abs": {
+    "micro_doppler_bandwidth": 1.1380228315275644,
+    "range_m": 1.0396035381539115,
+    "rcs_estimate": 0.8969784175900585,
+    "altitude_m": 0.7693941928509294,
+    "micro_doppler_jitter": 0.5632714390038867,
+    "snr_db": 0.4182143106078417,
+    "doppler_velocity": 0.41078401239894086,
+    "acceleration": 0.29769465423869784,
+    "velocity_variance": 0.2570168170661715,
+    "azimuth_deg": 0.10294881686441358
+  },
+  "note": "supersedes shap_report.json for interpretation; the frozen ONNX schema keeps the 11th column for contract stability, but attributions must be read on the 10 independent features."
+}

@@ -1,0 +1,74 @@
+scenario:
+  name: cascading_emergency_priorities
+  seed: 21
+  duration_seconds: 600
+  dt_seconds: 1.0
+  geofence:
+    min: [-50, -50, 0]
+    max: [550, 450, 120]
+
+gcs:
+  position: [0, 220, 0]
+
+swarm:
+  count: 9
+  battery_percent: 100
+  max_speed_mps: 13.0
+  comm_range_m: 140.0
+  battery_drain_rate_pct_per_s: 0.03
+  battery_drain_rate_relay_bonus: 0.005
+  battery_reserve_pct: 20.0
+  home_position: [0, 220, 0]
+
+pois:
+  - id: poi_01
+    priority: 0.4
+    position: [130, 90, 40]
+    required_data: [imagery]
+    deadline: 550
+    risk: 0.1
+  - id: poi_02
+    priority: 0.45
+    position: [190, 330, 40]
+    required_data: [imagery]
+    deadline: 550
+    risk: 0.1
+  - id: poi_03
+    priority: 0.5
+    position: [270, 140, 40]
+    required_data: [imagery]
+    deadline: 550
+    risk: 0.15
+
+# Stress test: three emerging CRITICAL-priority PoIs appear in sequence
+# while the swarm is mid-survey, forcing repeated interruption of
+# lower-priority work without collapsing connectivity (section 11 /
+# section 28 Phase 6's "emerging emergencies").
+events:
+  - time: 100
+    type: NEW_PRIORITY_POI
+    poi_id: poi_em_1
+    priority: 1.0
+    position: [340, 250, 40]
+
+  - time: 220
+    type: UAV_FAILURE
+    uav_id: uav_04
+
+  - time: 280
+    type: NEW_PRIORITY_POI
+    poi_id: poi_em_2
+    priority: 0.98
+    position: [400, 80, 40]
+
+  - time: 400
+    type: NEW_PRIORITY_POI
+    poi_id: poi_em_3
+    priority: 1.0
+    position: [80, 380, 40]
+
+  - time: 480
+    type: LINK_DEGRADATION
+    link: [uav_02, uav_06]
+    packet_loss: 0.5
+    duration: 60

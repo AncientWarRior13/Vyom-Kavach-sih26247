@@ -1,0 +1,95 @@
+{
+  "iterative_adversarial_training": {
+    "n_rounds": 4,
+    "rounds": [
+      {
+        "round": 0,
+        "evasion_rate": 1.0,
+        "median_norm": 1.0213457774507435,
+        "n_attacked": 150,
+        "clean_acc": 0.9758974358974359,
+        "clean_drone_recall": 0.9179487179487179
+      },
+      {
+        "round": 1,
+        "n_evasions_harvested": 250,
+        "n_augmented": 750,
+        "threshold": 0.385,
+        "evasion_rate": 0.82,
+        "median_norm": 1.4655465780442745,
+        "n_attacked": 150,
+        "clean_acc": 0.9733333333333334,
+        "clean_drone_recall": 0.9333333333333333
+      },
+      {
+        "round": 2,
+        "n_evasions_harvested": 218,
+        "n_augmented": 654,
+        "threshold": 0.495,
+        "evasion_rate": 0.72,
+        "median_norm": 1.499987220221034,
+        "n_attacked": 150,
+        "clean_acc": 0.9719230769230769,
+        "clean_drone_recall": 0.8769230769230769
+      },
+      {
+        "round": 3,
+        "n_evasions_harvested": 209,
+        "n_augmented": 627,
+        "threshold": 0.65,
+        "evasion_rate": 0.8,
+        "median_norm": 1.462397003118475,
+        "n_attacked": 150,
+        "clean_acc": 0.973974358974359,
+        "clean_drone_recall": 0.8307692307692308
+      },
+      {
+        "round": 4,
+        "n_evasions_harvested": 219,
+        "n_augmented": 657,
+        "threshold": 0.5,
+        "evasion_rate": 0.7133333333333334,
+        "median_norm": 1.3723222376077286,
+        "n_attacked": 150,
+        "clean_acc": 0.9711538461538461,
+        "clean_drone_recall": 0.8923076923076924
+      }
+    ],
+    "evasion_curve": [
+      1.0,
+      0.82,
+      0.72,
+      0.8,
+      0.7133333333333334
+    ],
+    "plateaued": false,
+    "final_evasion_rate": 0.7133333333333334
+  },
+  "certified_robustness_randomized_smoothing": {
+    "sigma_std_units": 1.0,
+    "n0": 100,
+    "n": 500,
+    "alpha": 0.05,
+    "original_model": {
+      "n_certified": 120,
+      "smoothed_drone_recall": 0.7333333333333333,
+      "mean_certified_radius": 0.528982096254485,
+      "median_certified_radius": 0.4416657470338459,
+      "frac_certified_beyond_attack_median_1.04": 0.19166666666666668,
+      "frac_certified_beyond_0.5": 0.4583333333333333
+    },
+    "hardened_model": {
+      "n_certified": 120,
+      "smoothed_drone_recall": 1.0,
+      "mean_certified_radius": 1.936418200359885,
+      "median_certified_radius": 2.3474075412956905,
+      "frac_certified_beyond_attack_median_1.04": 0.8333333333333334,
+      "frac_certified_beyond_0.5": 0.9833333333333333
+    }
+  },
+  "physics_plausibility_gate": {
+    "n_evasions_tested": 150,
+    "frac_evasions_flagged_anomalous": 0.41333333333333333,
+    "frac_clean_drones_false_flagged": 0.06666666666666667
+  }
+}

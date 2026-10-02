@@ -1,0 +1,26 @@
+# Role scoring weights (PROJECT_CONTEXT.md section 5) and resilience
+# potential map weights (section 21). Tune these to compare policies
+# without touching ares/roles.py or ares/resilience.py.
+
+role_weights:
+  w_battery: 1.0
+  w_connectivity: 1.2
+  w_distance: 0.8
+  w_priority: 1.0
+  w_necessity: 1.5
+  w_energy_cost: 0.6
+  w_safety_risk: 1.0
+
+resilience_weights:
+  w_connectivity_gain: 2.0
+  w_redundancy_gain: 1.0
+  w_coverage_gain: 0.5
+  w_progress_gain: 1.5   # pulls every hop of a multi-hop chain toward the real target, not just GCS-ward
+  w_energy_cost: 1.0
+  w_collision_risk: 1.5
+  w_latency_penalty: 0.5
+
+proactive_battery_margin: 2.0  # multiple of reserve_pct that triggers pre-positioning
+
+# Maximum fraction of alive UAVs that may be committed to RELAY / BACKUP_RELAY.
+max_relay_fraction: 0.6

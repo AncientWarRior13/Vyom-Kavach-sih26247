@@ -1,0 +1,26 @@
+[project]
+name = "radarsense"
+version = "0.1.0"
+description = "Radar target classification with a real 77GHz DSP front-end, certified-robust ML, and a quantum-kernel investigation"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib>=3.7.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0,<2.0.0",
+]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.setuptools]
+packages = ["radarsense", "api"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501", "E741"]   # line-length handled loosely; l/I ambiguous-name in math code
