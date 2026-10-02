@@ -1,5 +1,5 @@
 {
-  "scenario_id": "b6176490-b4d0-462f-a931-c8e9a697b93b",
+  "scenario_id": "84d9275b-3b16-4fa8-b9bc-f612d11834e5",
   "params": {
     "difficulty": 2,
     "time_of_day": "night",
@@ -12,7 +12,7 @@
   "duration_s": 180,
   "contacts": [
     {
-      "contact_id": "3025a2d8",
+      "contact_id": "9b2388ed",
       "contact_type": "hostile_drone",
       "true_threat_level": "high",
       "swarm_id": null,
@@ -58,7 +58,7 @@
       ]
     },
     {
-      "contact_id": "9eb951bf",
+      "contact_id": "916b0807",
       "contact_type": "decoy",
       "true_threat_level": "low",
       "swarm_id": null,
@@ -140,7 +140,7 @@
       ]
     },
     {
-      "contact_id": "0bab58fd",
+      "contact_id": "b6c835c6",
       "contact_type": "decoy",
       "true_threat_level": "low",
       "swarm_id": null,
@@ -180,7 +180,7 @@
       ]
     },
     {
-      "contact_id": "247fa630",
+      "contact_id": "84e9ea50",
       "contact_type": "bird",
       "true_threat_level": "none",
       "swarm_id": null,
@@ -220,7 +220,7 @@
       ]
     },
     {
-      "contact_id": "f61fca42",
+      "contact_id": "07b7353d",
       "contact_type": "bird",
       "true_threat_level": "none",
       "swarm_id": null,
@@ -266,7 +266,7 @@
       ]
     },
     {
-      "contact_id": "908b52fa",
+      "contact_id": "6d48ac8b",
       "contact_type": "bird",
       "true_threat_level": "none",
       "swarm_id": null,
@@ -318,7 +318,7 @@
       ]
     },
     {
-      "contact_id": "72e84e1e",
+      "contact_id": "3d81f7b6",
       "contact_type": "bird",
       "true_threat_level": "none",
       "swarm_id": null,
@@ -358,7 +358,7 @@
       ]
     },
     {
-      "contact_id": "6cb4b985",
+      "contact_id": "af2a7f79",
       "contact_type": "friendly_drone",
       "true_threat_level": "none",
       "swarm_id": null,

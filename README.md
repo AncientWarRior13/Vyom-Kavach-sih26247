@@ -175,7 +175,15 @@ since been closed, with evidence:
   swarm member fails, via deterministic replay-and-diverge of the real
   ares sim (see above). Verified: pre-engagement paths are byte-identical
   across repeated engagement scenarios; post-engagement paths measurably
-  diverge due to real reallocation.
+  diverge due to real reallocation; engaging a target before its own spawn
+  time clamps sensibly instead of crashing; a full sequential swarm
+  wipeout (every member engaged one by one) completes cleanly; the
+  `dusk_rural_swarm_raid` scripted drill — generated before this feature
+  existed — was regenerated so it carries the reactive-engagement metadata
+  too (the other two scripted drills were also regenerated, removing an
+  incidental random-chance swarm that had snuck into the decoy-mix drill,
+  keeping the three drills meaningfully distinct: single-drone / swarm-raid
+  / decoy-mix).
 - ~~The synthetic radar feature derivation is a formula stand-in for
   RadarSense's real DSP front end.~~ **Fixed** — `iq_synthesizer.py` now
   synthesizes physically-modeled I/Q and runs it through the project's
