@@ -26,8 +26,13 @@ from aar_dashboard import (
     certification_status, unit_certification_summary,
     verify_audit_chain,
 )
-from ml_bridge import classify_contact, generate_swarm_paths
+from ml_bridge import (
+    classify_contact, generate_swarm_paths, get_model_status, retrain_async,
+    precompute_hints, get_precomputed_hint,
+)
+import threading
 from ml_bridge.multi_sensor import read_sensor
+from ml_bridge.training_utils import train_with_cutoff
 from research import next_difficulty
 
 AAR_ABLATION_ARMS = ["aar_shown", "aar_withheld"]
@@ -98,6 +103,7 @@ def new_scenario(req: NewScenarioRequest):
     )
     scenario = generate_scenario(params, duration_s=req.duration_s)
     _ACTIVE_SCENARIOS[scenario["scenario_id"]] = scenario
+    _kick_precompute(scenario)
     return sanitize_for_client(scenario)
 
 
@@ -134,6 +140,7 @@ def adaptive_scenario(req: AdaptiveScenarioRequest):
     )
     scenario = generate_scenario(params, duration_s=req.duration_s)
     _ACTIVE_SCENARIOS[scenario["scenario_id"]] = scenario
+    _kick_precompute(scenario)
     out = sanitize_for_client(scenario)
     out["applied_type_weights"] = weights
     return out
@@ -151,6 +158,7 @@ def scripted_load(name: str):
     except FileNotFoundError as e:
         raise HTTPException(404, str(e))
     _ACTIVE_SCENARIOS[scenario["scenario_id"]] = scenario
+    _kick_precompute(scenario)
     return sanitize_for_client(scenario)
 
 
@@ -198,6 +206,11 @@ def classify(req: ClassifyRequest):
     kinematics and returns its sensor-side call (aircraft/anomaly/bird/drone)
     — this is an AI-assist hint the trainee can request, not the ground
     truth; it can be wrong, same as a real classifier would be.
+
+    Roadmap step 7: answers from `scenario["_precomputed_hints"]` (computed
+    in the background right when the scenario was created — see
+    `_kick_precompute`) when available, falling back to a live compute
+    otherwise (e.g. if asked before the background pass finished).
     """
     scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
     if scenario is None:
@@ -205,9 +218,52 @@ def classify(req: ClassifyRequest):
     contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
     if contact is None:
         raise HTTPException(404, "unknown contact_id")
+
+    cached = get_precomputed_hint(scenario, req.contact_id)
+    if cached is not None:
+        return cached
+
     degradation = scenario["params"].get("effective_sensor_degradation", scenario["params"].get("sensor_degradation", 0.0))
     result = classify_contact(contact, req.t, degradation, siblings=scenario["contacts"])
     return {"label": result["label"], "probabilities": result["probabilities"], "source": result["source"]}
+
+
+def _kick_precompute(scenario: dict) -> None:
+    """Fires the roadmap step-7 background precomputation pass; never
+    blocks the request that creates the scenario."""
+    threading.Thread(target=precompute_hints, args=(scenario,), daemon=True).start()
+
+
+@app.get("/api/model/status")
+def model_status():
+    """Roadmap step 5: current state of the serving classifier model —
+    idle/training/trained/timeout_keep_current_model/failed_keep_current_model."""
+    return get_model_status()
+
+
+class RetrainRequest(BaseModel):
+    script_path: str
+    new_onnx_path: str
+    budget_s: float = 600.0
+
+
+@app.post("/api/model/retrain")
+def model_retrain(req: RetrainRequest):
+    """Roadmap steps 5+6: kicks off retraining in the background — this
+    endpoint returns immediately; poll /api/model/status for progress. The
+    training script is run as its own OS subprocess with a hard wall-clock
+    cutoff (`ml_bridge.training_utils.train_with_cutoff`), so a runaway job
+    gets killed, not just abandoned. The classifier keeps serving the
+    current model throughout, and only hot-swaps if the new one finishes in
+    time and loads successfully.
+    """
+    if not Path(req.script_path).exists():
+        raise HTTPException(404, f"no such training script: {req.script_path}")
+    retrain_async(
+        lambda: train_with_cutoff(req.script_path, budget_s=req.budget_s),
+        req.new_onnx_path, budget_s=req.budget_s + 5.0,
+    )
+    return {"started": True, "script_path": req.script_path, "budget_s": req.budget_s}
 
 
 class SensorReadRequest(BaseModel):

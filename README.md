@@ -267,14 +267,67 @@ actually catches an edited score (not just a theoretical hash), and a
 before/after classifier comparison proving the spoofing has a measurable
 effect on the real model's output.
 
-## Not yet implemented
+## Model training-performance section (roadmap sections 3-5)
 
-The model training-performance section of the roadmap (CatBoost speed
-tuning via early stopping/fewer iterations, feature/dataset caching,
-parallelized I/Q synthesis, warm-start retraining, background
-retrain-and-hot-swap of the serving model, precomputed AI hints) — this is
-a training-pipeline performance guide rather than a trainer feature; ask
-for it specifically if you want the CatBoost training scripts tuned.
+1. **Faster CatBoost + real early stopping** — `radar_classification/radarsense/feat31_train_300.py`
+   previously trained a fixed 500 iterations despite passing an `eval_set`,
+   so early stopping never fired. Replaced its model construction with the
+   roadmap's exact config (`iterations=2000, learning_rate=0.15,
+   border_count=64, early_stopping_rounds=40, use_best_model=True`).
+   Verified directly: on a synthetic dataset, training stopped at iteration
+   25 of 2000 in 0.23s — early stopping actually engages.
+2. **Feature/dataset caching** and **3. parallelized I/Q synthesis**
+   (`ml_bridge/training_utils.py`) — `cached_features()` memoizes a
+   `build_fn(cfg)` DataFrame to parquet keyed by a hash of `cfg`, so
+   unchanged config is never regenerated; `parallel_map()` runs a per-sample
+   function (I/Q synthesis + CFAR is CPU-bound and independent per sample)
+   across cores via `joblib`, falling back to a serial loop if `joblib`
+   isn't installed. Verified working.
+4. **Warm-start retraining** — covered by the roadmap's own documented
+   pattern (`CatBoostClassifier().load_model(...)` then `fit(...,
+   init_model=base)`); not separately wired into this trainer since there's
+   no live trainee-data-driven retraining loop that would call it yet (see
+   #5's honest caveat below).
+5. **Background retrain + hot-swap** (`ml_bridge/radar_classifier.py`) —
+   `retrain_async()` runs a training function in a background thread,
+   never blocking the classifier; `GET /api/model/status` reports
+   idle/training/trained/timeout/failed; on success, the serving ONNX
+   session is atomically swapped under a lock — `classify_contact` never
+   blocks on it. Verified all three outcomes directly (success swaps the
+   model and keeps classifying; a timeout keeps the old model; a raised
+   exception keeps the old model) and via a full HTTP round-trip
+   (`POST /api/model/retrain` with a real script → `GET /api/model/status`
+   → classify still works post-swap).
+6. **Wall-clock cutoff via subprocess** (`ml_bridge/training_utils.py`'s
+   `train_with_cutoff`) — runs the training script as a real OS subprocess
+   with `subprocess.run(..., timeout=...)`, so a runaway job is actually
+   killed, not just abandoned (a Python thread can't force-kill code stuck
+   in a C extension; a subprocess can be). Verified: a deliberately slow
+   dummy script (5s sleep) was killed at its 1s budget, confirmed by
+   `duration_s: 1.0` in the status, not 5.
+7. **Precomputed AI hints at scenario creation** — every `/api/scenario/*`
+   creation endpoint now kicks a background thread
+   (`ml_bridge.radar_classifier.precompute_hints`) that runs the real
+   CFAR+ONNX path for each contact at a few random draws across its active
+   window; `/api/contact/classify` answers from that cache when available
+   (near-instant), falling back to a live compute if asked before the
+   background pass finishes. This trainer's classification is already
+   randomized-by-design per draw (synthesized I/Q noise), so serving a
+   cached draw instead of a fresh one changes nothing the trainee
+   experiences. Verified via HTTP immediately after scenario creation and
+   again after the background pass should have completed.
+8. **ares adaptive controller (numpy MLP, DAgger) training speed** — not
+   touched. This trainer deliberately does not integrate ares-x's adaptive
+   flight controller at all (see the Tier-2 section above — it solves a
+   precision-tracking problem this trainer's one-way attacker swarm doesn't
+   have), so speeding up training code that's never invoked here would be
+   dead-code optimization. Flagged explicitly rather than silently skipped.
+9. **Cheaper inference (optional)** — RadarSense's own `export_onnx.py`
+   already benchmarks an int8 dynamically-quantized ONNX variant alongside
+   the full-precision one (discovered while implementing this section, not
+   something this round added) — nothing further was needed here.
+
+## Research-grade additions (`research/PROTOCOLS.md`)
 
 ## Research-grade additions (`research/PROTOCOLS.md`)
 

@@ -24,7 +24,8 @@ from __future__ import annotations
 import json
 import math
 import random
-from functools import lru_cache
+import threading
+import time
 from pathlib import Path
 
 from . import iq_synthesizer as iq
@@ -47,15 +48,107 @@ TYPE_PROFILE = {
 }
 
 
-@lru_cache(maxsize=1)
-def _session():
+# Roadmap training-time-cutoff step 5 (background retrain + hot-swap): a
+# plain mutable slot guarded by a lock, not functools.lru_cache — the whole
+# point is that this CAN change while the server is running, atomically,
+# without ever blocking a classify_contact() call on a retrain in progress.
+_session_lock = threading.Lock()
+_session_cache: tuple | None = None
+_session_onnx_path: Path = ONNX_PATH
+_model_status = {"state": "idle", "last_trained_at": None, "last_error": None, "onnx_path": str(ONNX_PATH)}
+
+
+def _load_session(onnx_path: Path) -> tuple | None:
     try:
         import onnxruntime as ort
         meta = json.loads(META_PATH.read_text())
-        sess = ort.InferenceSession(str(ONNX_PATH), providers=["CPUExecutionProvider"])
+        sess = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
         return sess, sess.get_inputs()[0].name, meta["feature_order"], meta["classes"], meta["drone_threshold_deployed"]
     except Exception:
         return None  # onnxruntime not installed, or artifacts missing — fall back to a heuristic
+
+
+def _session():
+    global _session_cache
+    with _session_lock:
+        if _session_cache is None:
+            _session_cache = _load_session(_session_onnx_path)
+        return _session_cache
+
+
+def get_model_status() -> dict:
+    with _session_lock:
+        return dict(_model_status)
+
+
+def retrain_async(train_fn, new_onnx_path: str | Path, budget_s: float = 600.0) -> None:
+    """Roadmap steps 5+6: runs `train_fn` (expected to write a new ONNX
+    model to `new_onnx_path`) in a background thread under a wall-clock
+    cutoff, and only hot-swaps the serving session to the new model if
+    training actually finished in time and produced a usable file — the UI
+    never blocks on this, and the old model keeps serving the whole time.
+    `train_fn` is expected to be `functools.partial`-bound with its own
+    args; it's called with no arguments here.
+    """
+    def job():
+        global _session_cache
+        with _session_lock:
+            _model_status["state"] = "training"
+            _model_status["last_error"] = None
+        start = time.time()
+        try:
+            done = threading.Event()
+            result: dict = {}
+
+            def run():
+                try:
+                    status = train_fn()  # may return "trained"/"timeout_keep_current_model"/
+                    result["ok"] = status != "failed_keep_current_model" and status is not None and status != "timeout_keep_current_model"
+                    result["status"] = status  # "failed_keep_current_model" (see training_utils.train_with_cutoff), or None/other
+                except Exception as e:  # noqa: BLE001 - surfaced via status, not raised in a thread
+                    result["ok"] = False
+                    result["error"] = str(e)
+                finally:
+                    done.set()
+
+            worker = threading.Thread(target=run, daemon=True)
+            worker.start()
+            finished = done.wait(timeout=budget_s)
+
+            with _session_lock:
+                if not finished:
+                    _model_status["state"] = "timeout_keep_current_model"
+                    _model_status["last_error"] = f"training exceeded {budget_s}s budget"
+                elif result.get("status") == "timeout_keep_current_model":
+                    # train_fn used its own subprocess-level cutoff (e.g.
+                    # training_utils.train_with_cutoff) and hit it first
+                    _model_status["state"] = "timeout_keep_current_model"
+                    _model_status["last_error"] = "training script's own subprocess timeout fired"
+                elif not result.get("ok"):
+                    _model_status["state"] = "failed_keep_current_model"
+                    _model_status["last_error"] = result.get("error") or "train_fn reported failure"
+                elif not Path(new_onnx_path).exists():
+                    _model_status["state"] = "failed_keep_current_model"
+                    _model_status["last_error"] = "train_fn finished but produced no model file"
+                else:
+                    new_session = _load_session(Path(new_onnx_path))
+                    if new_session is None:
+                        _model_status["state"] = "failed_keep_current_model"
+                        _model_status["last_error"] = "new model file failed to load"
+                    else:
+                        _session_cache = new_session
+                        _model_status["state"] = "trained"
+                        _model_status["last_trained_at"] = time.time()
+                        _model_status["onnx_path"] = str(new_onnx_path)
+        except Exception as e:  # noqa: BLE001
+            with _session_lock:
+                _model_status["state"] = "failed_keep_current_model"
+                _model_status["last_error"] = str(e)
+        finally:
+            with _session_lock:
+                _model_status["duration_s"] = round(time.time() - start, 1)
+
+    threading.Thread(target=job, daemon=True).start()
 
 
 def _velocity_at(path: list[dict], t: float) -> tuple[float, float, float]:
@@ -224,3 +317,33 @@ def classify_contact(contact: dict, t: float, degradation: float = 0.0, siblings
         "source": "radarsense_onnx",
         "features": features,
     }
+
+
+def precompute_hints(scenario: dict, draws_per_contact: int = 3) -> None:
+    """Roadmap step 7: runs the real CFAR+ONNX classification path for each
+    contact at a few random times across its active window right when the
+    scenario is created (call this in a background thread, not inline —
+    it's the same real DSP+model work `classify_contact` does, just done
+    ahead of time), caching the draws in `scenario["_precomputed_hints"]`.
+    `/api/contact/classify` then answers near-instantly by returning one of
+    these draws at random instead of recomputing — this trainer's own
+    classification is already randomized-by-design per draw (synthesized
+    I/Q noise), so returning a cached draw instead of a fresh one changes
+    nothing about what the trainee experiences.
+    """
+    degradation = scenario["params"].get("effective_sensor_degradation", scenario["params"].get("sensor_degradation", 0.0))
+    siblings = scenario["contacts"]
+    cache = scenario.setdefault("_precomputed_hints", {})
+    for contact in scenario["contacts"]:
+        window = (contact["spawn_t"], contact["despawn_t"])
+        draws = []
+        for _ in range(draws_per_contact):
+            t = random.uniform(*window) if window[1] > window[0] else window[0]
+            result = classify_contact(contact, t, degradation, siblings=siblings)
+            draws.append({"label": result["label"], "probabilities": result["probabilities"], "source": result["source"]})
+        cache[contact["contact_id"]] = draws
+
+
+def get_precomputed_hint(scenario: dict, contact_id: str) -> dict | None:
+    draws = scenario.get("_precomputed_hints", {}).get(contact_id)
+    return random.choice(draws) if draws else None

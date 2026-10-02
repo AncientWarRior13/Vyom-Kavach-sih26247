@@ -16,12 +16,36 @@ that happens to also come with more accuracy for unrelated reasons.
 """
 
 import json
+import os
 
 import joblib
 import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier
 from sklearn.utils.class_weight import compute_sample_weight
+
+
+def make_clf(seed, use_gpu: bool = False) -> CatBoostClassifier:
+    """Roadmap training-time-cutoff step 1: this script used to train a
+    fixed 500 iterations despite passing an eval_set, so early stopping
+    never had a chance to end the run sooner. A higher learning rate with
+    fewer split candidates (border_count) and real early stopping cuts
+    training time several-fold on this schema's dataset size; re-verify
+    accuracy against the previous fixed-iteration model after switching.
+    """
+    return CatBoostClassifier(
+        iterations=2000,
+        learning_rate=0.15,
+        depth=6,
+        border_count=64,
+        thread_count=os.cpu_count(),
+        task_type="GPU" if use_gpu else "CPU",
+        early_stopping_rounds=40,
+        use_best_model=True,
+        random_seed=seed,
+        verbose=0,
+        allow_writing_files=False,
+    )
 
 from radarsense import config as C
 from radarsense.feat31_features_300 import FEAT31_COLUMNS
@@ -38,8 +62,7 @@ def main():
     test = pd.read_parquet(C.DATA_DIR / "feat31_300_test_features.parquet")
 
     sw = compute_sample_weight("balanced", train[C.LABEL_COLUMN])
-    clf = CatBoostClassifier(iterations=500, depth=6, learning_rate=0.1,
-                             random_seed=C.SEED, verbose=0, allow_writing_files=False)
+    clf = make_clf(C.SEED)
     clf.fit(train[FEAT31_COLUMNS], train[C.LABEL_COLUMN], sample_weight=sw,
             eval_set=(val[FEAT31_COLUMNS], val[C.LABEL_COLUMN]))
 
