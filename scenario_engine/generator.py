@@ -141,31 +141,38 @@ def _spawn_single_contact(contact_type: ContactType, window: tuple[float, float]
     )
 
 
-def _spawn_swarm_ares(window: tuple[float, float], size: int, seed: int | None) -> list[Contact] | None:
+def _spawn_swarm_ares(window: tuple[float, float], size: int, seed: int | None) -> tuple[list[Contact], dict] | None:
     """Try to drive swarm member paths from the real ares autonomy sim
-    (allocator/relay/recovery reacting to an injected failure) instead of
-    straight lines. Returns None if ares isn't importable here, so the
-    caller can fall back to the synthetic generator.
+    (allocator/relay/recovery) instead of straight lines. Returns
+    (contacts, swarm_sim_meta) or None if ares isn't importable here, so
+    the caller can fall back to the synthetic generator. `swarm_sim_meta`
+    is what server.py needs later to deterministically replay-and-diverge
+    the sim when the trainee actually engages a member (see
+    ml_bridge.swarm_kinematics and server.py's /api/contact/engage).
     """
     try:
-        from ml_bridge import generate_swarm_paths
+        from ml_bridge import generate_swarm_paths, pick_swarm_seed
     except Exception:
         return None
 
     spawn_t = random.uniform(*window)
     duration = random.uniform(40, 90)
-    trajectories = generate_swarm_paths(size=size, duration_s=duration, spawn_t=spawn_t, seed=seed)
+    swarm_seed = pick_swarm_seed(seed)
+    trajectories = generate_swarm_paths(size=size, duration_s=duration, spawn_t=spawn_t, seed=swarm_seed)
     if not trajectories:
         return None
 
     swarm_id = str(uuid.uuid4())[:8]
     contacts = []
+    uav_to_contact = {}
     for uid, pts in trajectories.items():
         if not pts:
             continue
+        contact_id = str(uuid.uuid4())[:8]
+        uav_to_contact[uid] = contact_id
         path = [Waypoint(t=p["t"], x=p["x"], y=p["y"], z=p["z"]) for p in pts]
         contacts.append(Contact(
-            contact_id=str(uuid.uuid4())[:8],
+            contact_id=contact_id,
             contact_type=ContactType.HOSTILE_SWARM_MEMBER,
             true_threat_level=ThreatLevel.HIGH,
             swarm_id=swarm_id,
@@ -173,7 +180,19 @@ def _spawn_swarm_ares(window: tuple[float, float], size: int, seed: int | None) 
             despawn_t=path[-1].t,
             path=path,
         ))
-    return contacts or None
+    if not contacts:
+        return None
+
+    meta = {
+        "seed": swarm_seed,
+        "spawn_t": spawn_t,
+        "duration_s": duration,
+        "size": size,
+        "uav_to_contact": uav_to_contact,
+        "contact_to_uav": {v: k for k, v in uav_to_contact.items()},
+        "injected_failures": [],  # list of [uav_id, local_time] applied so far
+    }
+    return contacts, meta
 
 
 def _spawn_swarm_synthetic(window: tuple[float, float], size: int) -> list[Contact]:
@@ -200,8 +219,11 @@ def _spawn_swarm_synthetic(window: tuple[float, float], size: int) -> list[Conta
     return contacts
 
 
-def _spawn_swarm(window: tuple[float, float], size: int, seed: int | None = None) -> list[Contact]:
-    return _spawn_swarm_ares(window, size, seed) or _spawn_swarm_synthetic(window, size)
+def _spawn_swarm(window: tuple[float, float], size: int, seed: int | None = None) -> tuple[list[Contact], dict | None]:
+    ares_result = _spawn_swarm_ares(window, size, seed)
+    if ares_result is not None:
+        return ares_result
+    return _spawn_swarm_synthetic(window, size), None
 
 
 def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 300) -> dict:
@@ -237,9 +259,11 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
     for _ in range(n_friendly):
         contacts.append(_spawn_single_contact(ContactType.FRIENDLY_DRONE, window))
 
+    swarm_sim_meta = None
     if params.swarm_attack or (difficulty >= 3 and random.random() < 0.6):
         swarm_size = random.randint(3, 3 + difficulty * 2)
-        contacts.extend(_spawn_swarm(window, swarm_size, params.seed))
+        swarm_contacts, swarm_sim_meta = _spawn_swarm(window, swarm_size, params.seed)
+        contacts.extend(swarm_contacts)
 
     scenario_params = asdict(params)
     scenario_params["effective_sensor_degradation"] = effective_degradation(params)
@@ -261,6 +285,8 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
             for c in contacts
         ],
     }
+    if swarm_sim_meta is not None:
+        scenario["swarm_sim_meta"] = swarm_sim_meta
     return scenario
 
 

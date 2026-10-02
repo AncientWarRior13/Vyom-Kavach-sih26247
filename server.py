@@ -23,7 +23,7 @@ from aar_dashboard import (
     init_db, save_session, list_sessions, trainee_trend, unit_trend,
     get_or_assign_arm, experiment_results,
 )
-from ml_bridge import classify_contact
+from ml_bridge import classify_contact, generate_swarm_paths
 from research import next_difficulty
 
 AAR_ABLATION_ARMS = ["aar_shown", "aar_withheld"]
@@ -132,6 +132,66 @@ def classify(req: ClassifyRequest):
     degradation = scenario["params"].get("effective_sensor_degradation", scenario["params"].get("sensor_degradation", 0.0))
     result = classify_contact(contact, req.t, degradation, siblings=scenario["contacts"])
     return {"label": result["label"], "probabilities": result["probabilities"], "source": result["source"]}
+
+
+class EngageRequest(BaseModel):
+    scenario_id: str
+    contact_id: str
+    t: float
+
+
+@app.post("/api/contact/engage")
+def engage_contact(req: EngageRequest):
+    """Called the instant a trainee engages a contact (not just logged for
+    scoring at the end). If the target is a live ares-driven swarm member,
+    this deterministically replays the swarm's simulation from t=0 up to
+    `req.t` (identical to what the trainee already saw — see
+    ml_bridge.swarm_kinematics' replay-and-diverge design), injects a real
+    UAV_FAILURE at that instant, and lets ares's actual recovery/relay logic
+    react from there — the remaining swarm members' future paths in the
+    scenario are updated in place and returned so the client can refresh
+    what it's rendering. Non-swarm contacts (and swarm contacts in a
+    scenario where ares wasn't available) are a no-op here; their
+    engagement is still scored normally at session submit.
+    """
+    scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+    contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
+    if contact is None:
+        raise HTTPException(404, "unknown contact_id")
+
+    meta = scenario.get("swarm_sim_meta")
+    if meta is None or req.contact_id not in meta["contact_to_uav"]:
+        return {"reactive": False, "contacts": []}
+
+    uav_id = meta["contact_to_uav"][req.contact_id]
+    local_time = max(0.0, req.t - meta["spawn_t"])
+    if not any(uid == uav_id for uid, _ in meta["injected_failures"]):
+        meta["injected_failures"].append([uav_id, local_time])
+
+    trajectories = generate_swarm_paths(
+        size=meta["size"], duration_s=meta["duration_s"], spawn_t=meta["spawn_t"],
+        seed=meta["seed"], injected_failures=[tuple(f) for f in meta["injected_failures"]],
+    )
+    if not trajectories:
+        raise HTTPException(500, "swarm replay failed")
+
+    by_contact_id = {c["contact_id"]: c for c in scenario["contacts"]}
+    for uid, pts in trajectories.items():
+        cid = meta["uav_to_contact"].get(uid)
+        if cid is None or not pts:
+            continue
+        c = by_contact_id[cid]
+        c["path"] = [{"t": p["t"], "x": p["x"], "y": p["y"], "z": p["z"]} for p in pts]
+        failed_at = next((p["t"] for p in pts if p.get("health") == "FAILED"), None)
+        c["spawn_t"] = c["path"][0]["t"]
+        c["despawn_t"] = failed_at if failed_at is not None else c["path"][-1]["t"]
+
+    updated_ids = set(meta["uav_to_contact"].values())
+    sanitized = sanitize_for_client(scenario)
+    updated_contacts = [c for c in sanitized["contacts"] if c["contact_id"] in updated_ids]
+    return {"reactive": True, "contacts": updated_contacts}
 
 
 class SubmitSessionRequest(BaseModel):

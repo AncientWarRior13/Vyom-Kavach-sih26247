@@ -2,14 +2,22 @@
 ONNX classifier (`radar_classification/artifacts/onnx/radarsense.onnx`).
 
 The scenario engine knows ground truth (what a contact actually is). A real
-sensor doesn't. This module stands in for the missing real 77GHz radar front
-end: it derives the same 11-feature schema RadarSense's model was trained on
-from a contact's kinematics (speed, altitude, range, bearing) plus a
-type-conditioned physical profile (RCS, micro-Doppler signature), adds noise
-scaled by the scenario's `sensor_degradation`, and runs it through the real
-model. The trainee sees this model's output, not the ground truth label —
-exactly like a real operator would see a classifier's call on their scope,
-which can be wrong, especially for decoys built to mimic a drone signature.
+sensor doesn't. There's no physical radar in this trainer, so there's no
+real captured I/Q either — but rather than skip straight to formula-estimated
+feature values, `iq_synthesizer.py` embeds a contact's true kinematics (radial
+velocity, RCS) and a type-conditioned rotor/wing micro-motion signature as
+actual frequency-domain content in a synthesized I/Q segment, then runs it
+through `radar_classification/radarsense/radar_dsp.py`'s genuine range-Doppler
+FFT + CA-CFAR detector — the same real signal-processing chain RadarSense
+validated on actual 77GHz data. doppler_velocity/snr_db/micro_doppler_* are
+therefore *measured* by that real DSP (and can come out noisier, bin-
+quantized, or even undetected at low SNR — a real missed detection), not
+assigned from a lookup table. altitude/range/azimuth remain direct geometry
+(correctly — CFAR doesn't need to "recover" those), and the resulting
+11-feature vector runs through the real trained model. The trainee sees this
+model's output, not the ground truth label — exactly like a real operator
+would see a classifier's call on their scope, which can be wrong, especially
+for decoys built to mimic a drone signature.
 """
 from __future__ import annotations
 
@@ -18,6 +26,8 @@ import math
 import random
 from functools import lru_cache
 from pathlib import Path
+
+from . import iq_synthesizer as iq
 
 RADARSENSE_ROOT = Path(__file__).resolve().parent.parent / "radar_classification"
 ONNX_PATH = RADARSENSE_ROOT / "artifacts" / "onnx" / "radarsense.onnx"
@@ -106,9 +116,7 @@ def derive_features(contact: dict, t: float, degradation: float, siblings: list[
     azimuth_deg = math.degrees(math.atan2(y, x))
 
     radial_unit = (x / range_m, y / range_m) if range_m else (0, 0)
-    doppler_velocity = vx * radial_unit[0] + vy * radial_unit[1]
-    doppler_velocity = max(-50.0, min(50.0, doppler_velocity))
-    doppler_freq_shift = 2 * doppler_velocity * F_CARRIER / C_LIGHT
+    true_doppler_velocity = max(-50.0, min(50.0, vx * radial_unit[0] + vy * radial_unit[1]))
 
     rcs_base, mdb_base, jit_base = TYPE_PROFILE.get(contact["contact_type"], TYPE_PROFILE["hostile_drone"])
     noise_scale = 1.0 + degradation * 2.0
@@ -117,16 +125,32 @@ def derive_features(contact: dict, t: float, degradation: float, siblings: list[
     # overlapping returns from nearby swarm members widen/roughen the
     # apparent micro-Doppler signature of any one member
     mdb_base = mdb_base + swarm_density * 15.0
-    jit_base = jit_base + swarm_density * 0.03
+    jit_base = min(1.0, jit_base + swarm_density * 0.03)
 
     rcs_estimate = max(-20.0, min(20.0, rcs_base + random.gauss(0, 2.0 * noise_scale)))
-    micro_doppler_bandwidth = max(0.0, min(500.0, mdb_base + random.gauss(0, 30.0 * noise_scale)))
-    micro_doppler_jitter = max(0.0, min(1.0, jit_base + random.gauss(0, 0.1 * noise_scale)))
+    true_snr_db = max(-20.0, min(-10.0, -10.0 - (range_m / 500.0) - degradation * 5.0 + random.gauss(0, 1.0)))
+
+    # real signal-processing path: synthesize I/Q embedding the true
+    # kinematics + a type-conditioned rotor/wing micro-motion signature as
+    # actual frequency-domain content, then run RadarSense's genuine
+    # range-Doppler FFT + CA-CFAR chain on it. doppler_velocity/snr_db/
+    # micro_doppler_* below are MEASURED by that real DSP, not assigned.
+    micro_motion_hz = [
+        (mdb_base * 0.3, jit_base * 0.6),
+        (mdb_base * 0.6, jit_base * 0.4),
+        (mdb_base * 0.9, jit_base * 0.25),
+    ]
+    dsp = iq.dsp_measure(true_doppler_velocity, rcs_estimate, true_snr_db, micro_motion_hz)
+
+    doppler_velocity = max(-50.0, min(50.0, dsp["doppler_velocity"]))
+    doppler_freq_shift = 2 * doppler_velocity * F_CARRIER / C_LIGHT
+    snr_db = max(-20.0, min(-10.0, dsp["snr_db"]))
+    micro_doppler_bandwidth = max(0.0, min(500.0, dsp["micro_doppler_bandwidth"]))
+    micro_doppler_jitter = max(0.0, min(1.0, dsp["micro_doppler_jitter"]))
 
     altitude_m = max(0.0, min(3000.0, z))
     velocity_variance = max(0.0, speed * 0.05 * noise_scale)
     acceleration = random.gauss(0, 0.5 * noise_scale)
-    snr_db = max(-20.0, min(-10.0, -10.0 - (range_m / 500.0) - degradation * 5.0 + random.gauss(0, 1.0)))
 
     return {
         "doppler_velocity": doppler_velocity,

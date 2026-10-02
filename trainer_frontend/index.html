@@ -172,10 +172,24 @@ function setClassification(contactId, value) {
   log[contactId].classification = value;
 }
 
-function setEngagement(contactId, action) {
+async function setEngagement(contactId, action) {
   if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
   log[contactId].engagement_action = action;
   renderContactList();
+
+  if (action !== 'engage' || !scenario) return;
+  // live-reactive swarm: if this is an ares-driven swarm member, the real
+  // recovery/relay logic reacts to the kill right now, not just at scoring time
+  const res = await fetch('/api/contact/engage', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed }),
+  });
+  const out = await res.json();
+  if (out.reactive) {
+    const byId = Object.fromEntries(scenario.contacts.map(c => [c.contact_id, c]));
+    for (const updated of out.contacts) byId[updated.contact_id] = updated;
+    scenario.contacts = Object.values(byId);
+  }
 }
 
 function renderContactList() {

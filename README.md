@@ -56,33 +56,53 @@ slider at 0; night+urban+0.3 slider → 0.66.
 
 ## How the ML/simulation engines are actually wired in (`ml_bridge/`)
 
-**`ml_bridge/radar_classifier.py`** — scenario_engine's contacts carry ground
-truth (what they actually are); a real sensor wouldn't know that. This
-module stands in for the missing radar front end: it derives RadarSense's
-frozen 11-feature schema (doppler velocity/freq shift, RCS estimate,
-micro-Doppler bandwidth/jitter, range, azimuth, altitude, velocity variance,
-acceleration, SNR) from a contact's kinematics plus a type-conditioned
-physical signature prior, adds noise scaled by the scenario's
-`sensor_degradation`, and runs the **real trained CatBoost ONNX model**
-(`radar_classification/artifacts/onnx/radarsense.onnx`, loaded via
-`onnxruntime`) to get a classification. The trainee sees this model's call
-via the "AI sensor hint" button (`POST /api/contact/classify`) — it can be
-wrong, especially for decoys, exactly like a real classifier would be. If
-`onnxruntime` isn't installed, it falls back to a simple heuristic so the
-trainer still runs, but the real model is what actually loads and executes
-when the dependency is present (verified: see `source: "radarsense_onnx"`
-in the response).
+**`ml_bridge/radar_classifier.py` + `ml_bridge/iq_synthesizer.py`** —
+scenario_engine's contacts carry ground truth (what they actually are); a
+real sensor wouldn't know that, and there's no physical radar here to
+capture real I/Q. Rather than stop at formula-estimated features,
+`iq_synthesizer.py` embeds a contact's true radial velocity, RCS, and a
+type-conditioned rotor/wing micro-motion signature as actual
+frequency-domain content in a synthesized 77GHz FMCW I/Q segment, then runs
+it through **`radar_classification/radarsense/radar_dsp.py`'s real
+range-Doppler FFT + CA-CFAR detector** — the same signal-processing chain
+RadarSense validated on real 77GHz data. `doppler_velocity`, `snr_db`, and
+`micro_doppler_bandwidth`/`jitter` are therefore *measured* by that real
+DSP off synthesized-but-physically-modeled I/Q (and can come back
+bin-quantized, noisier than the ground truth, or even undetected at low
+SNR — a genuine missed detection), not assigned from a lookup table.
+`altitude`/`range`/`azimuth` stay direct geometry (correctly — CFAR doesn't
+need to "recover" those). The resulting 11-feature vector runs through the
+**real trained CatBoost ONNX model**
+(`radar_classification/artifacts/onnx/radarsense.onnx`, via `onnxruntime`).
+The trainee sees this model's call via the "AI sensor hint" button
+(`POST /api/contact/classify`) — it can be wrong, especially for decoys,
+exactly like a real classifier would be. Verified: classifying the same
+kinematics multiple times shows measurably different CFAR-detected
+bandwidths across contact types (bird vs. drone vs. aircraft), confirming
+real signal processing — not a formula — produces the feature values.
 
 **`ml_bridge/swarm_kinematics.py`** — swarm-attack contacts are no longer
-straight lines. This module builds a real `ares.scenario.Scenario` (the
-"PoIs" are points around the asset the swarm is converging on) and runs the
-**actual `ares.sim.Simulator`** from `swarm_simulation` for the scenario's
-duration, with a scripted `UAV_FAILURE` event injected partway through
-(an automated point-defense kill). The remaining swarm members' paths come
-from ares's real allocator/relay/recovery logic reacting to that loss —
-not a scripted animation. If `ares` can't be imported (e.g. PyYAML
-missing), `scenario_engine` falls back to synthetic straight-line swarm
-paths so the trainer keeps working either way.
+straight lines, and no failure is scripted. This module builds a real
+`ares.scenario.Scenario` (the "PoIs" are points around the asset the swarm
+is converging on) and runs the **actual `ares.sim.Simulator`** from
+`swarm_simulation`. Swarm construction is fully seeded (a real bug fix: the
+previous version took a `seed` parameter but used Python's *global* RNG for
+scenario layout, so a given seed didn't actually reproduce anything — now
+every random choice goes through a `random.Random(seed)` instance local to
+that build). A swarm member only goes down when the **trainee actually
+engages it** — `server.py`'s `POST /api/contact/engage` fires the instant
+that happens (not just at session scoring), deterministically replays the
+swarm's simulation from t=0 up to that moment (same seed ⇒ byte-identical
+to what the trainee already saw), injects a real `UAV_FAILURE` at that
+exact instant, and lets ares's actual recovery/relay logic react forward
+from there, live. Verified: engaging a swarm member mid-flight leaves every
+other contact's pre-engagement path exactly unchanged, and produces a
+measurable position divergence for the rest of the swarm afterward — a real
+reallocation reacting to when and which member was shot down, not a
+scripted timer. If `ares` can't be imported (e.g. PyYAML missing),
+`scenario_engine` falls back to synthetic straight-line swarm paths so the
+trainer keeps working either way (engagement on those is scored normally
+but has no live reallocation to react with).
 
 ## Decision-tree scoring logic (`scoring_engine/scorer.py`)
 
@@ -144,19 +164,52 @@ citations in `research/PROTOCOLS.md`.
 | AAR dashboard, individual/unit performance over repeated sessions | `aar_dashboard/` |
 | Difficulty + randomization to prevent rote learning | `difficulty` param + procedural generation; scripted drills exist as the deliberate counterpart for fixed repeatable drills |
 
-## Known scope limits (honest, not hidden)
+## Previously known scope limits — resolved
 
-- The ares swarm sim reacts to one **scripted** failure event, not live to
-  the trainee's own engagement timing mid-flight — making it fully reactive
-  would mean running the sim stepwise against real-time trainee input
-  instead of precomputing the whole trajectory up front. The sim itself is
-  real and running; only the trigger timing is scripted rather than
-  interactive.
-- The synthetic radar feature derivation in `radar_classifier.py` is a
-  stand-in for RadarSense's real DSP front end (range-Doppler FFT, CA-CFAR,
-  Kalman) — it's not reading a real I/Q stream, since this trainer has no
-  physical radar. The model it feeds is the real, trained artifact.
-- VR mode was built and code-reviewed against the WebXR spec but not
-  hardware-tested on a physical headset in this environment (none
-  available here) — the non-VR desktop 3D fallback in the same file was
-  verified.
+These were honestly flagged in earlier versions of this README and have
+since been closed, with evidence:
+
+- ~~The ares swarm sim reacts to one scripted failure event, not live to
+  the trainee's own engagement timing.~~ **Fixed** — `POST
+  /api/contact/engage` makes a trainee's own engagement the only way a
+  swarm member fails, via deterministic replay-and-diverge of the real
+  ares sim (see above). Verified: pre-engagement paths are byte-identical
+  across repeated engagement scenarios; post-engagement paths measurably
+  diverge due to real reallocation.
+- ~~The synthetic radar feature derivation is a formula stand-in for
+  RadarSense's real DSP front end.~~ **Fixed** — `iq_synthesizer.py` now
+  synthesizes physically-modeled I/Q and runs it through the project's
+  actual range-Doppler FFT + CA-CFAR chain (`radar_dsp.py`) to *measure*
+  doppler velocity, SNR, and micro-Doppler bandwidth/jitter, rather than
+  assigning them. Verified: measured bandwidth differs meaningfully across
+  contact types from the same DSP code path.
+
+## ares-x's adaptive flight controller — deliberately not integrated
+
+ares-x gained a trained adaptive flight controller (MLP-based sim-to-real
+correction) and a dynamic point-mass physics model after this project
+copied `swarm_simulation/`. It was evaluated and **not** pulled in: it
+solves precision *survey-task tracking* for a friendly swarm hitting PoIs
+accurately, which has no equivalent in this trainer — the swarm here is a
+one-way attacker with no survey target, so "precision tracking" isn't a
+meaningful concept for it. The one piece that could still add value —
+`ares/dynamics.py`'s point-mass physics for more inertia-realistic swarm
+motion instead of instant-velocity kinematics — was left out too, as a
+cosmetic upgrade not required by the problem statement, to avoid
+integration risk on the now-verified reactive-engagement path above. Happy
+to wire it in on request; flagging the decision here instead of silently
+dropping it.
+
+## Remaining limitation (not fixable from here)
+
+- **VR mode has not been tested on a physical headset.** The code is
+  written to the WebXR spec and was verified running correctly in a real
+  browser — the Three.js scene initializes, the scenario/contact data
+  pipeline populates the DOM-overlay panel from live data with zero JS
+  errors, and `VRButton` correctly detects the absence of an XR device and
+  reports "VR NOT SUPPORTED" rather than crashing. What's left — an actual
+  headset entering immersive mode and a human pulling a controller trigger
+  — needs physical VR hardware (or at minimum a WebXR device emulator),
+  neither of which is available in this environment. This is a hardware
+  constraint, not an engineering gap: there is nothing further to build
+  here that would close it without that hardware.
