@@ -91,13 +91,15 @@ class ScenarioParams:
     seed: int | None = None
 
 
-def _make_linear_path(duration: float, speed: float, start=None, heading=None) -> list[Waypoint]:
+def _make_linear_path(t_offset: float, duration: float, speed: float, start=None, heading=None) -> list[Waypoint]:
+    """Waypoint timestamps are absolute scenario time (t_offset..t_offset+duration),
+    matching Contact.spawn_t/despawn_t, which are also absolute scenario time."""
     start = start or (random.uniform(-2000, 2000), random.uniform(-2000, 2000), random.uniform(50, 400))
     heading = heading if heading is not None else random.uniform(0, 2 * math.pi)
     vx, vy = math.cos(heading) * speed, math.sin(heading) * speed
     steps = max(2, int(duration // 5))
     return [
-        Waypoint(t=i * duration / steps, x=start[0] + vx * (i * duration / steps),
+        Waypoint(t=t_offset + i * duration / steps, x=start[0] + vx * (i * duration / steps),
                   y=start[1] + vy * (i * duration / steps), z=start[2])
         for i in range(steps + 1)
     ]
@@ -113,7 +115,7 @@ def _spawn_single_contact(contact_type: ContactType, window: tuple[float, float]
         ContactType.DECOY: random.uniform(3, 10),
         ContactType.BIRD: random.uniform(2, 8),
     }[contact_type]
-    path = _make_linear_path(duration, speed)
+    path = _make_linear_path(spawn_t, duration, speed)
     return Contact(
         contact_id=str(uuid.uuid4())[:8],
         contact_type=contact_type,
@@ -125,7 +127,42 @@ def _spawn_single_contact(contact_type: ContactType, window: tuple[float, float]
     )
 
 
-def _spawn_swarm(window: tuple[float, float], size: int) -> list[Contact]:
+def _spawn_swarm_ares(window: tuple[float, float], size: int, seed: int | None) -> list[Contact] | None:
+    """Try to drive swarm member paths from the real ares autonomy sim
+    (allocator/relay/recovery reacting to an injected failure) instead of
+    straight lines. Returns None if ares isn't importable here, so the
+    caller can fall back to the synthetic generator.
+    """
+    try:
+        from ml_bridge import generate_swarm_paths
+    except Exception:
+        return None
+
+    spawn_t = random.uniform(*window)
+    duration = random.uniform(40, 90)
+    trajectories = generate_swarm_paths(size=size, duration_s=duration, spawn_t=spawn_t, seed=seed)
+    if not trajectories:
+        return None
+
+    swarm_id = str(uuid.uuid4())[:8]
+    contacts = []
+    for uid, pts in trajectories.items():
+        if not pts:
+            continue
+        path = [Waypoint(t=p["t"], x=p["x"], y=p["y"], z=p["z"]) for p in pts]
+        contacts.append(Contact(
+            contact_id=str(uuid.uuid4())[:8],
+            contact_type=ContactType.HOSTILE_SWARM_MEMBER,
+            true_threat_level=ThreatLevel.HIGH,
+            swarm_id=swarm_id,
+            spawn_t=path[0].t,
+            despawn_t=path[-1].t,
+            path=path,
+        ))
+    return contacts or None
+
+
+def _spawn_swarm_synthetic(window: tuple[float, float], size: int) -> list[Contact]:
     swarm_id = str(uuid.uuid4())[:8]
     spawn_t = random.uniform(*window)
     duration = random.uniform(40, 90)
@@ -136,7 +173,7 @@ def _spawn_swarm(window: tuple[float, float], size: int) -> list[Contact]:
     for i in range(size):
         jitter = (random.uniform(-80, 80), random.uniform(-80, 80), random.uniform(-20, 20))
         start = (base_start[0] + jitter[0], base_start[1] + jitter[1], base_start[2] + jitter[2])
-        path = _make_linear_path(duration, base_speed + random.uniform(-1, 1), start=start, heading=heading)
+        path = _make_linear_path(spawn_t, duration, base_speed + random.uniform(-1, 1), start=start, heading=heading)
         contacts.append(Contact(
             contact_id=str(uuid.uuid4())[:8],
             contact_type=ContactType.HOSTILE_SWARM_MEMBER,
@@ -147,6 +184,10 @@ def _spawn_swarm(window: tuple[float, float], size: int) -> list[Contact]:
             path=path,
         ))
     return contacts
+
+
+def _spawn_swarm(window: tuple[float, float], size: int, seed: int | None = None) -> list[Contact]:
+    return _spawn_swarm_ares(window, size, seed) or _spawn_swarm_synthetic(window, size)
 
 
 def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 300) -> dict:
@@ -182,7 +223,7 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
 
     if params.swarm_attack or (difficulty >= 3 and random.random() < 0.6):
         swarm_size = random.randint(3, 3 + difficulty * 2)
-        contacts.extend(_spawn_swarm(window, swarm_size))
+        contacts.extend(_spawn_swarm(window, swarm_size, params.seed))
 
     scenario = {
         "scenario_id": str(uuid.uuid4()),

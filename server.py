@@ -20,6 +20,7 @@ from scenario_engine import generate_scenario
 from scenario_engine.generator import ScenarioParams, sanitize_for_client
 from scoring_engine import score_session
 from aar_dashboard import init_db, save_session, list_sessions, trainee_trend, unit_trend
+from ml_bridge import classify_contact
 
 BASE_DIR = Path(__file__).parent
 
@@ -57,6 +58,30 @@ def new_scenario(req: NewScenarioRequest):
     scenario = generate_scenario(params, duration_s=req.duration_s)
     _ACTIVE_SCENARIOS[scenario["scenario_id"]] = scenario
     return sanitize_for_client(scenario)
+
+
+class ClassifyRequest(BaseModel):
+    scenario_id: str
+    contact_id: str
+    t: float
+
+
+@app.post("/api/contact/classify")
+def classify(req: ClassifyRequest):
+    """Runs RadarSense's real trained classifier on a contact's current
+    kinematics and returns its sensor-side call (aircraft/anomaly/bird/drone)
+    — this is an AI-assist hint the trainee can request, not the ground
+    truth; it can be wrong, same as a real classifier would be.
+    """
+    scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+    contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
+    if contact is None:
+        raise HTTPException(404, "unknown contact_id")
+    degradation = scenario["params"].get("sensor_degradation", 0.0)
+    result = classify_contact(contact, req.t, degradation)
+    return {"label": result["label"], "probabilities": result["probabilities"], "source": result["source"]}
 
 
 class SubmitSessionRequest(BaseModel):

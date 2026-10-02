@@ -159,6 +159,8 @@ function renderContactList() {
       <select class="cls" onchange="setClassification('${c.contact_id}', this.value)">
         <option value="">classify...</option>${classOpts}
       </select>
+      <button onclick="requestAiHint('${c.contact_id}')">AI sensor hint</button>
+      <div class="ai-hint" id="hint-${c.contact_id}" style="font-size:12px;color:#8b949e;margin-top:4px;"></div>
       <div>
         <button onclick="setEngagement('${c.contact_id}', 'engage')" ${entry && entry.engagement_action === 'engage' ? 'style=background:#f85149' : ''}>Engage</button>
         <button onclick="setEngagement('${c.contact_id}', 'monitor')" ${entry && entry.engagement_action === 'monitor' ? 'style=background:#d29922' : ''}>Monitor</button>
@@ -166,6 +168,17 @@ function renderContactList() {
       </div>`;
     el.appendChild(div);
   }
+}
+
+async function requestAiHint(contactId) {
+  if (!scenario) return;
+  const res = await fetch('/api/contact/classify', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed }),
+  });
+  const out = await res.json();
+  const el = document.getElementById(`hint-${contactId}`);
+  if (el) el.textContent = `sensor model: ${out.label} (p=${out.probabilities[out.label].toFixed(2)}, ${out.source})`;
 }
 
 async function finishSession() {
