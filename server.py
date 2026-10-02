@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from scenario_engine import generate_scenario
+from scenario_engine import generate_scenario, list_scripted, load_scripted
 from scenario_engine.generator import ScenarioParams, sanitize_for_client
 from scoring_engine import score_session
 from aar_dashboard import init_db, save_session, list_sessions, trainee_trend, unit_trend
@@ -60,6 +60,21 @@ def new_scenario(req: NewScenarioRequest):
     return sanitize_for_client(scenario)
 
 
+@app.get("/api/scenario/scripted")
+def scripted_list():
+    return list_scripted()
+
+
+@app.post("/api/scenario/scripted/{name}")
+def scripted_load(name: str):
+    try:
+        scenario = load_scripted(name)
+    except FileNotFoundError as e:
+        raise HTTPException(404, str(e))
+    _ACTIVE_SCENARIOS[scenario["scenario_id"]] = scenario
+    return sanitize_for_client(scenario)
+
+
 class ClassifyRequest(BaseModel):
     scenario_id: str
     contact_id: str
@@ -79,7 +94,7 @@ def classify(req: ClassifyRequest):
     contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
     if contact is None:
         raise HTTPException(404, "unknown contact_id")
-    degradation = scenario["params"].get("sensor_degradation", 0.0)
+    degradation = scenario["params"].get("effective_sensor_degradation", scenario["params"].get("sensor_degradation", 0.0))
     result = classify_contact(contact, req.t, degradation)
     return {"label": result["label"], "probabilities": result["probabilities"], "source": result["source"]}
 
@@ -126,6 +141,11 @@ def index():
 @app.get("/aar")
 def aar_page():
     return FileResponse(BASE_DIR / "aar_dashboard" / "aar.html")
+
+
+@app.get("/vr")
+def vr_page():
+    return FileResponse(BASE_DIR / "trainer_frontend" / "vr.html")
 
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "trainer_frontend"), name="static")

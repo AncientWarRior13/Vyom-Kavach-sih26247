@@ -37,9 +37,14 @@
   <label>Sensor degradation
     <select id="degradation"><option value="0">none</option><option value="0.3">moderate</option><option value="0.6">severe</option></select>
   </label>
-  <button onclick="startScenario()">New scenario</button>
+  <button onclick="startScenario()">New procedural scenario</button>
+  <label>Scripted drill
+    <select id="scriptedDrill"><option value="">-- select --</option></select>
+  </label>
+  <button onclick="startScripted()">Load drill</button>
   <span id="timer">00:00</span>
   <button onclick="finishSession()">Finish &amp; score</button>
+  <a href="/vr" style="color:#58a6ff">VR mode →</a>
 </header>
 <main>
   <svg id="scope" width="760" height="760" viewBox="-3000 -3000 6000 6000"></svg>
@@ -81,6 +86,31 @@ async function startScenario() {
   simStart = Date.now();
   renderContactList();
   document.getElementById('result').textContent = 'Session in progress...';
+  if (tickHandle) clearInterval(tickHandle);
+  tickHandle = setInterval(tick, 200);
+}
+
+async function loadScriptedList() {
+  const names = await fetch('/api/scenario/scripted').then(r => r.json());
+  const sel = document.getElementById('scriptedDrill');
+  for (const n of names) {
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    sel.appendChild(opt);
+  }
+}
+loadScriptedList();
+
+async function startScripted() {
+  const name = document.getElementById('scriptedDrill').value;
+  if (!name) return;
+  const res = await fetch(`/api/scenario/scripted/${encodeURIComponent(name)}`, { method: 'POST' });
+  scenario = await res.json();
+  log = {};
+  elapsed = 0;
+  simStart = Date.now();
+  renderContactList();
+  document.getElementById('result').textContent = `Scripted drill "${name}" in progress...`;
   if (tickHandle) clearInterval(tickHandle);
   tickHandle = setInterval(tick, 200);
 }

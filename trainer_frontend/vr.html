@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Drone Threat Trainer — VR</title>
+<style>
+  html, body { margin: 0; background: #05070a; color: #d7dde3; font-family: system-ui, sans-serif; }
+  #overlay { position: fixed; top: 0; right: 0; width: 320px; max-height: 100vh; overflow-y: auto;
+             background: rgba(10,14,20,0.85); padding: 12px; box-sizing: border-box; }
+  #overlay.hidden { display: none; }
+  #topbar { position: fixed; top: 0; left: 0; padding: 10px; z-index: 10; background: rgba(10,14,20,0.85); }
+  #topbar select, #topbar button, #topbar input { background: #0e141c; color: #d7dde3; border: 1px solid #1f2733; border-radius: 4px; padding: 6px; margin-right: 6px; }
+  .contact-row { border: 1px solid #1f2733; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 12px; }
+  .contact-row.selected { border-color: #58a6ff; }
+  .contact-row button, .contact-row select { margin-top: 4px; margin-right: 4px; }
+  #notSupported { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <a href="/" style="color:#58a6ff">&larr; 2D trainer</a>
+  <select id="difficulty"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+  <select id="timeOfDay"><option>day</option><option>night</option><option>dusk</option></select>
+  <select id="terrain"><option>rural</option><option>urban</option><option>coastal</option><option>mountain</option></select>
+  <button id="newScenarioBtn">New scenario</button>
+  <span id="timer">00:00</span>
+  <button id="finishBtn">Finish &amp; score</button>
+</div>
+
+<div id="overlay">
+  <h3 style="margin-top:0">Contacts</h3>
+  <p style="font-size:12px;color:#8b949e">Look at a sphere and pull the VR controller trigger (or click it on desktop) to mark it detected. Classify/engage here in the overlay panel.</p>
+  <div id="contactList"></div>
+  <h3>Result</h3>
+  <div id="result" style="white-space:pre-wrap;font-size:11px;background:#0e141c;padding:8px;border-radius:6px;">No session scored yet.</div>
+</div>
+
+<div id="notSupported" class="hidden">
+  WebXR not available in this browser — open this page in a WebXR-capable
+  browser (e.g. the Meta Quest Browser, or Chrome with a WebXR device/emulator)
+  to enter VR. The 3D scope still renders and is mouse/click-controllable here.
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { VRButton } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/webxr/VRButton.js';
+
+const WORLD_SCALE = 1 / 40; // shrink scenario meters down to a human-scale VR volume
+const CLASS_OPTIONS = ["hostile_drone", "hostile_swarm_member", "friendly_drone", "decoy", "bird"];
+
+let scenario = null, simStart = null, elapsed = 0, log = {};
+const sphereByContact = {};
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x030507);
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 200);
+camera.position.set(0, 1.6, 4);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.xr.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+if (navigator.xr) {
+  document.body.appendChild(VRButton.createButton(renderer, {
+    optionalFeatures: ['dom-overlay'],
+    domOverlay: { root: document.getElementById('overlay') },
+  }));
+} else {
+  document.getElementById('notSupported').classList.remove('hidden');
+}
+
+scene.add(new THREE.AmbientLight(0x667788, 1.2));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+dirLight.position.set(2, 4, 2);
+scene.add(dirLight);
+
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(3, 48),
+  new THREE.MeshBasicMaterial({ color: 0x0a1a12, side: THREE.DoubleSide })
+);
+floor.rotation.x = -Math.PI / 2;
+scene.add(floor);
+
+function colorFor(contact) {
+  return log[contact.contact_id] ? 0x58a6ff : 0x3fb950;
+}
+
+function ensureSphere(contact) {
+  if (sphereByContact[contact.contact_id]) return sphereByContact[contact.contact_id];
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.05, 16, 16),
+    new THREE.MeshStandardMaterial({ color: colorFor(contact) })
+  );
+  mesh.userData.contactId = contact.contact_id;
+  scene.add(mesh);
+  sphereByContact[contact.contact_id] = mesh;
+  return mesh;
+}
+
+function posAt(contact, t) {
+  const pts = contact.path;
+  if (t <= pts[0].t) return pts[0];
+  if (t >= pts[pts.length - 1].t) return pts[pts.length - 1];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    if (a.t <= t && t <= b.t) {
+      const f = b.t === a.t ? 0 : (t - a.t) / (b.t - a.t);
+      return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: a.z + (b.z - a.z) * f };
+    }
+  }
+  return pts[pts.length - 1];
+}
+
+function updateScene() {
+  if (!scenario) return;
+  for (const c of scenario.contacts) {
+    const visible = elapsed >= c.spawn_t && elapsed <= c.despawn_t;
+    const mesh = ensureSphere(c);
+    mesh.visible = visible;
+    if (visible) {
+      const p = posAt(c, elapsed);
+      mesh.position.set(p.x * WORLD_SCALE, 1.5 + p.z * WORLD_SCALE * 0.3, -Math.abs(p.y) * WORLD_SCALE - 1);
+      mesh.material.color.setHex(colorFor(c));
+    }
+  }
+}
+
+function tagDetected(contactId) {
+  if (!log[contactId]) log[contactId] = { contact_id: contactId };
+  if (log[contactId].detected_at === undefined) log[contactId].detected_at = elapsed;
+  renderContactList();
+}
+window.tagDetected = tagDetected;
+
+function setClassification(contactId, value) {
+  if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
+  log[contactId].classification = value;
+}
+window.setClassification = setClassification;
+
+function setEngagement(contactId, action) {
+  if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
+  log[contactId].engagement_action = action;
+  renderContactList();
+}
+window.setEngagement = setEngagement;
+
+async function requestAiHint(contactId) {
+  const res = await fetch('/api/contact/classify', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed }),
+  });
+  const out = await res.json();
+  const el = document.getElementById(`hint-${contactId}`);
+  if (el) el.textContent = `sensor: ${out.label} (p=${out.probabilities[out.label].toFixed(2)})`;
+}
+window.requestAiHint = requestAiHint;
+
+function renderContactList() {
+  const el = document.getElementById('contactList');
+  el.innerHTML = '';
+  if (!scenario) return;
+  for (const c of scenario.contacts) {
+    const entry = log[c.contact_id];
+    const div = document.createElement('div');
+    div.className = 'contact-row' + (entry ? ' selected' : '');
+    const classOpts = CLASS_OPTIONS.map(o => `<option value="${o}" ${entry && entry.classification === o ? 'selected' : ''}>${o}</option>`).join('');
+    div.innerHTML = `
+      <div>${c.contact_id} ${entry ? `(detected @ ${entry.detected_at.toFixed(1)}s)` : '(not detected)'}</div>
+      <select onchange="setClassification('${c.contact_id}', this.value)"><option value="">classify...</option>${classOpts}</select>
+      <button onclick="tagDetected('${c.contact_id}')">Tag detected</button>
+      <button onclick="requestAiHint('${c.contact_id}')">AI hint</button>
+      <div id="hint-${c.contact_id}" style="color:#8b949e"></div>
+      <div>
+        <button onclick="setEngagement('${c.contact_id}', 'engage')">Engage</button>
+        <button onclick="setEngagement('${c.contact_id}', 'monitor')">Monitor</button>
+        <button onclick="setEngagement('${c.contact_id}', 'ignore')">Ignore</button>
+      </div>`;
+    el.appendChild(div);
+  }
+}
+
+async function startScenario() {
+  const params = {
+    difficulty: parseInt(document.getElementById('difficulty').value),
+    time_of_day: document.getElementById('timeOfDay').value,
+    terrain: document.getElementById('terrain').value,
+    sensor_degradation: 0.1,
+  };
+  const res = await fetch('/api/scenario/new', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(params)
+  });
+  scenario = await res.json();
+  log = {};
+  for (const id in sphereByContact) { scene.remove(sphereByContact[id]); delete sphereByContact[id]; }
+  elapsed = 0;
+  simStart = performance.now();
+  renderContactList();
+  document.getElementById('result').textContent = 'Session in progress...';
+}
+document.getElementById('newScenarioBtn').onclick = startScenario;
+
+document.getElementById('finishBtn').onclick = async () => {
+  if (!scenario) return;
+  const res = await fetch('/api/session/submit', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      scenario_id: scenario.scenario_id,
+      trainee_id: 'vr-trainee', unit_id: 'vr-unit',
+      difficulty: parseInt(document.getElementById('difficulty').value),
+      trainee_log: Object.values(log),
+    }),
+  });
+  document.getElementById('result').textContent = JSON.stringify(await res.json(), null, 2);
+};
+
+// pointer/controller selection -> raycast against contact spheres
+const raycaster = new THREE.Raycaster();
+
+function handleSelect(originMatrix) {
+  const origin = new THREE.Vector3().setFromMatrixPosition(originMatrix);
+  const dir = new THREE.Vector3(0, 0, -1).transformDirection(originMatrix);
+  raycaster.set(origin, dir);
+  const hits = raycaster.intersectObjects(Object.values(sphereByContact));
+  if (hits.length) tagDetected(hits[0].object.userData.contactId);
+}
+
+function setupController(index) {
+  const controller = renderer.xr.getController(index);
+  controller.addEventListener('select', () => handleSelect(controller.matrixWorld));
+  scene.add(controller);
+}
+setupController(0);
+setupController(1);
+
+// desktop fallback: click on canvas raycasts from camera through mouse
+const mouse = new THREE.Vector2();
+renderer.domElement.addEventListener('click', (ev) => {
+  mouse.x = (ev.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(ev.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(Object.values(sphereByContact));
+  if (hits.length) tagDetected(hits[0].object.userData.contactId);
+});
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+renderer.setAnimationLoop(() => {
+  if (scenario && simStart !== null) {
+    elapsed = (performance.now() - simStart) / 1000;
+    document.getElementById('timer').textContent =
+      `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(Math.floor(elapsed % 60)).padStart(2, '0')}`;
+  }
+  updateScene();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

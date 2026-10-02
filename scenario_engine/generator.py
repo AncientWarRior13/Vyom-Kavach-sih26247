@@ -42,6 +42,20 @@ THREAT_DOCTRINE = {
 TERRAINS = ["urban", "rural", "coastal", "mountain"]
 TIMES_OF_DAY = ["day", "night", "dusk"]
 
+# additional detection difficulty contributed by environment, folded into
+# `sensor_degradation` so terrain/time-of-day have a real effect on the
+# sensor picture (dropout rate, position noise, and the ML classifier's
+# feature noise) rather than being inert dropdowns.
+TIME_OF_DAY_PENALTY = {"day": 0.0, "dusk": 0.15, "night": 0.35}
+TERRAIN_PENALTY = {"rural": 0.0, "coastal": 0.05, "mountain": 0.15, "urban": 0.25}
+# urban clutter and mountain terrain mask real threats behind extra decoys/birds
+TERRAIN_EXTRA_CLUTTER = {"urban": 2, "mountain": 1, "coastal": 0, "rural": 0}
+
+
+def effective_degradation(params: "ScenarioParams") -> float:
+    env_penalty = TIME_OF_DAY_PENALTY.get(params.time_of_day, 0.0) + TERRAIN_PENALTY.get(params.terrain, 0.0)
+    return max(0.0, min(1.0, params.sensor_degradation + env_penalty * 0.6))
+
 
 @dataclass
 class Waypoint:
@@ -209,11 +223,13 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
     for _ in range(n_hostile):
         contacts.append(_spawn_single_contact(ContactType.HOSTILE_DRONE, window))
 
-    n_decoys = random.randint(0, difficulty)
+    clutter = TERRAIN_EXTRA_CLUTTER.get(params.terrain, 0)
+
+    n_decoys = random.randint(0, difficulty) + clutter
     for _ in range(n_decoys):
         contacts.append(_spawn_single_contact(ContactType.DECOY, window))
 
-    n_birds = random.randint(0, difficulty + 1)
+    n_birds = random.randint(0, difficulty + 1) + clutter
     for _ in range(n_birds):
         contacts.append(_spawn_single_contact(ContactType.BIRD, window))
 
@@ -225,9 +241,12 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
         swarm_size = random.randint(3, 3 + difficulty * 2)
         contacts.extend(_spawn_swarm(window, swarm_size, params.seed))
 
+    scenario_params = asdict(params)
+    scenario_params["effective_sensor_degradation"] = effective_degradation(params)
+
     scenario = {
         "scenario_id": str(uuid.uuid4()),
-        "params": asdict(params),
+        "params": scenario_params,
         "duration_s": duration_s,
         "contacts": [
             {
@@ -251,7 +270,7 @@ def sanitize_for_client(scenario: dict) -> dict:
     Classification/threat level must be judged by the trainee, not handed
     to them.
     """
-    degradation = scenario["params"].get("sensor_degradation", 0.0)
+    degradation = scenario["params"].get("effective_sensor_degradation", scenario["params"].get("sensor_degradation", 0.0))
     out_contacts = []
     for c in scenario["contacts"]:
         if degradation and random.random() < degradation * 0.15:
