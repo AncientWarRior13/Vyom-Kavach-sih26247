@@ -26,7 +26,18 @@ CREATE TABLE IF NOT EXISTS sessions (
     classification_score REAL NOT NULL,
     engagement_score REAL NOT NULL,
     contacts_missed INTEGER NOT NULL,
-    result_json TEXT NOT NULL
+    result_json TEXT NOT NULL,
+    aar_ablation_arm TEXT,
+    sequencing_arm TEXT,
+    attempt_number INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS experiment_assignments (
+    experiment_name TEXT NOT NULL,
+    trainee_id TEXT NOT NULL,
+    arm TEXT NOT NULL,
+    assigned_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (experiment_name, trainee_id)
 );
 """
 
@@ -44,25 +55,68 @@ def _conn():
 
 def init_db() -> None:
     with _conn() as conn:
-        conn.execute(SCHEMA)
+        conn.executescript(SCHEMA)
 
 
-def save_session(trainee_id: str, unit_id: str, difficulty: int, result: dict) -> int:
+def save_session(trainee_id: str, unit_id: str, difficulty: int, result: dict,
+                  aar_ablation_arm: str | None = None, sequencing_arm: str | None = None) -> int:
     with _conn() as conn:
+        attempt_number = conn.execute(
+            "SELECT COUNT(*) + 1 FROM sessions WHERE trainee_id = ?", (trainee_id,)
+        ).fetchone()[0]
         cur = conn.execute(
             """INSERT INTO sessions
                (trainee_id, unit_id, scenario_id, difficulty, overall_score,
                 detection_score, classification_score, engagement_score,
-                contacts_missed, result_json)
-               VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                contacts_missed, result_json, aar_ablation_arm, sequencing_arm, attempt_number)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 trainee_id, unit_id, result["scenario_id"], difficulty,
                 result["overall_score"], result["detection_score"],
                 result["classification_score"], result["engagement_score"],
                 result["contacts_missed"], json.dumps(result),
+                aar_ablation_arm, sequencing_arm, attempt_number,
             ),
         )
         return cur.lastrowid
+
+
+def get_or_assign_arm(experiment_name: str, trainee_id: str, arms: list[str]) -> str:
+    """Deterministic, persistent arm assignment: a trainee who returns for
+    another session stays in the same experimental condition. Assignment is
+    a stable hash of (experiment_name, trainee_id) over `arms`, recorded on
+    first use so it's auditable later.
+    """
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT arm FROM experiment_assignments WHERE experiment_name = ? AND trainee_id = ?",
+            (experiment_name, trainee_id),
+        ).fetchone()
+        if row:
+            return row["arm"]
+        import hashlib
+        h = int(hashlib.sha256(f"{experiment_name}:{trainee_id}".encode()).hexdigest(), 16)
+        arm = arms[h % len(arms)]
+        conn.execute(
+            "INSERT INTO experiment_assignments (experiment_name, trainee_id, arm) VALUES (?,?,?)",
+            (experiment_name, trainee_id, arm),
+        )
+        return arm
+
+
+def experiment_results(experiment_name: str, arm_column: str) -> list[dict]:
+    """Raw per-session rows for a given experiment's arm column, for
+    offline analysis (e.g. comparing overall_score across arms with a
+    t-test/ANOVA outside this app)."""
+    with _conn() as conn:
+        rows = conn.execute(
+            f"""SELECT trainee_id, unit_id, {arm_column} as arm, attempt_number,
+                       overall_score, detection_score, classification_score,
+                       engagement_score, difficulty, created_at
+                FROM sessions WHERE {arm_column} IS NOT NULL
+                ORDER BY trainee_id, attempt_number""",
+        ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def list_sessions(trainee_id: str | None = None, unit_id: str | None = None, limit: int = 100) -> list[dict]:

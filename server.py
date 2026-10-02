@@ -19,8 +19,15 @@ from pydantic import BaseModel
 from scenario_engine import generate_scenario, list_scripted, load_scripted
 from scenario_engine.generator import ScenarioParams, sanitize_for_client
 from scoring_engine import score_session
-from aar_dashboard import init_db, save_session, list_sessions, trainee_trend, unit_trend
+from aar_dashboard import (
+    init_db, save_session, list_sessions, trainee_trend, unit_trend,
+    get_or_assign_arm, experiment_results,
+)
 from ml_bridge import classify_contact
+from research import next_difficulty
+
+AAR_ABLATION_ARMS = ["aar_shown", "aar_withheld"]
+SEQUENCING_ARMS = ["blocked", "randomized"]
 
 BASE_DIR = Path(__file__).parent
 
@@ -33,6 +40,34 @@ _ACTIVE_SCENARIOS: dict[str, dict] = {}
 @app.on_event("startup")
 def _startup():
     init_db()
+
+
+@app.get("/api/research/assignment/{trainee_id}")
+def research_assignment(trainee_id: str):
+    """Returns this trainee's (stable, persistent) arm in each running
+    experiment, plus the difficulty their sequencing arm dictates for their
+    *next* attempt. See research/PROTOCOLS.md for the experimental designs.
+    """
+    aar_arm = get_or_assign_arm("aar_ablation", trainee_id, AAR_ABLATION_ARMS)
+    seq_arm = get_or_assign_arm("sequencing", trainee_id, SEQUENCING_ARMS)
+    attempt_number = len(list_sessions(trainee_id=trainee_id, limit=10_000)) + 1
+    return {
+        "trainee_id": trainee_id,
+        "aar_ablation_arm": aar_arm,
+        "sequencing_arm": seq_arm,
+        "attempt_number": attempt_number,
+        "recommended_difficulty": next_difficulty(seq_arm, attempt_number),
+    }
+
+
+@app.get("/api/research/results/{experiment}")
+def research_results(experiment: str):
+    """Raw per-session rows for offline statistical analysis (t-test/ANOVA
+    across arms) — not rendered in-app, this is the researcher-facing export."""
+    column = {"aar_ablation": "aar_ablation_arm", "sequencing": "sequencing_arm"}.get(experiment)
+    if column is None:
+        raise HTTPException(404, "unknown experiment; use 'aar_ablation' or 'sequencing'")
+    return experiment_results(experiment, column)
 
 
 class NewScenarioRequest(BaseModel):
@@ -95,7 +130,7 @@ def classify(req: ClassifyRequest):
     if contact is None:
         raise HTTPException(404, "unknown contact_id")
     degradation = scenario["params"].get("effective_sensor_degradation", scenario["params"].get("sensor_degradation", 0.0))
-    result = classify_contact(contact, req.t, degradation)
+    result = classify_contact(contact, req.t, degradation, siblings=scenario["contacts"])
     return {"label": result["label"], "probabilities": result["probabilities"], "source": result["source"]}
 
 
@@ -105,6 +140,7 @@ class SubmitSessionRequest(BaseModel):
     unit_id: str
     difficulty: int
     trainee_log: list[dict]
+    participate_in_research: bool = False
 
 
 @app.post("/api/session/submit")
@@ -113,8 +149,25 @@ def submit_session(req: SubmitSessionRequest):
     if scenario is None:
         raise HTTPException(404, "unknown or expired scenario_id")
     result = score_session(scenario, req.trainee_log)
-    save_session(req.trainee_id, req.unit_id, req.difficulty, result)
+
+    aar_arm = seq_arm = None
+    if req.participate_in_research:
+        aar_arm = get_or_assign_arm("aar_ablation", req.trainee_id, AAR_ABLATION_ARMS)
+        seq_arm = get_or_assign_arm("sequencing", req.trainee_id, SEQUENCING_ARMS)
+
+    save_session(req.trainee_id, req.unit_id, req.difficulty, result,
+                 aar_ablation_arm=aar_arm, sequencing_arm=seq_arm)
     del _ACTIVE_SCENARIOS[req.scenario_id]
+
+    if aar_arm == "aar_withheld":
+        # the AAR-ablation experiment's control arm: the score is recorded
+        # (so trend/unit data still exists) but not shown back immediately —
+        # that's the manipulation being tested, per research/PROTOCOLS.md.
+        return {
+            "scenario_id": result["scenario_id"],
+            "aar_withheld": True,
+            "message": "Session recorded. Results will be reviewed in a later debrief, not shown immediately (you're in the AAR-timing study's control arm).",
+        }
     return result
 
 

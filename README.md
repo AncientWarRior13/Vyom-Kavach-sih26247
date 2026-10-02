@@ -36,6 +36,7 @@ that trainee/unit ID.
 | `aar_dashboard/` | SQLite-backed session store + a dashboard page (per-trainee score trend over time, per-unit leaderboard) |
 | `trainer_frontend/` | `index.html` — desktop exercise UI (SVG scope, click-to-detect, classify, engage/monitor/ignore, "AI sensor hint", scripted-drill picker). `vr.html` — the same exercise loop rendered in WebXR (Three.js scene, controller/trigger-select to tag a contact, a DOM-overlay panel for classify/engage) |
 | `ml_bridge/` | Wires the two reused repos' real engines into the live scenario/scoring loop (see below) |
+| `research/` | Research-grade additions grounded in the literature (see `research/PROTOCOLS.md`): two live A/B experiments (AAR-timing, scenario-sequencing) with stable arm assignment and an analysis export endpoint, plus a swarm-density-aware classifier feature |
 | `server.py` | FastAPI app tying everything together + serving all three frontends |
 | `radar_classification/` | Reused from RadarSense: real radar DSP + ML classifier, FastAPI backend, Next.js frontend, trained model artifacts — the ONNX model is loaded live by `ml_bridge` |
 | `swarm_simulation/` | Reused from ares-x: multi-UAV swarm simulator (allocator/relay/recovery) — driven live by `ml_bridge` for swarm-attack contacts |
@@ -94,6 +95,39 @@ low→monitor, none→ignore — with explicit `threat_not_engaged` and
 `wasted_or_fratricide_engagement` flags). Weighted 25/35/40 into an overall
 0–100 score. Every number is traceable back to a specific contact and rule,
 by design, so an AAR can explain exactly why a trainee lost points.
+
+## Research-grade additions (`research/PROTOCOLS.md`)
+
+Four directions were identified from the published literature (reviewed via
+Consensus) closest to this trainer's design — chosen because the evidence
+either doesn't exist for this task domain yet or is genuinely contested:
+
+1. **AAR-timing ablation** (`aar_ablation`, live A/B experiment) — tests
+   whether showing the score breakdown immediately vs. withholding it for a
+   later debrief changes outcomes, building on AAR's large documented
+   effect (d=0.67–0.92 across meta-analyses) but testing the one variable
+   (timing) that hasn't been isolated for this task type.
+2. **Scenario-sequencing experiment** (`sequencing`, live A/B experiment) —
+   blocked (ramping) vs. randomized difficulty order per attempt, testing
+   the contested contextual-interference effect for a decision-under-
+   uncertainty task, which no prior study covers (existing evidence is all
+   motor-skill tasks: aiming, surgery, music).
+3. **Swarm-density-aware classification** (implemented in `ml_bridge`) —
+   nearby swarm members measurably widen each other's synthesized
+   micro-Doppler signature before hitting the real trained classifier,
+   modeling an effect the (thin) swarm-classification literature doesn't
+   address at all.
+4. **Transfer-validity study** (protocol only, for a live human-subjects
+   run) — the two-arm design, sample-size estimate, and analysis plan for
+   testing whether simulator training here actually transfers to live-drill
+   performance, reusing this app's own `scoring_engine` as the assessment
+   instrument.
+
+Both live experiments are opt-in (a "Participate in research" checkbox on
+the trainer page), use stable hash-based arm assignment so a trainee stays
+in the same condition across sessions, and are queryable for offline
+analysis via `GET /api/research/results/{aar_ablation|sequencing}`. Full
+citations in `research/PROTOCOLS.md`.
 
 ## Problem-statement coverage
 

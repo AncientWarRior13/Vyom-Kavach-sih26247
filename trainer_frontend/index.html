@@ -37,6 +37,9 @@
   <label>Sensor degradation
     <select id="degradation"><option value="0">none</option><option value="0.3">moderate</option><option value="0.6">severe</option></select>
   </label>
+  <label title="Enrolls you in the AAR-timing and scenario-sequencing studies (see research/PROTOCOLS.md) — your scored sessions get tagged with a study arm for later analysis.">
+    <input type="checkbox" id="participateResearch" /> Participate in research
+  </label>
   <button onclick="startScenario()">New procedural scenario</button>
   <label>Scripted drill
     <select id="scriptedDrill"><option value="">-- select --</option></select>
@@ -217,15 +220,18 @@ async function finishSession() {
   const trainee_id = document.getElementById('traineeId').value || 'trainee-1';
   const unit_id = document.getElementById('unitId').value || 'unit-A';
   const difficulty = parseInt(document.getElementById('difficulty').value);
+  const participate_in_research = document.getElementById('participateResearch').checked;
   const res = await fetch('/api/session/submit', {
     method: 'POST', headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
       scenario_id: scenario.scenario_id, trainee_id, unit_id, difficulty,
-      trainee_log: Object.values(log),
+      trainee_log: Object.values(log), participate_in_research,
     }),
   });
   const result = await res.json();
-  document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+  document.getElementById('result').textContent = result.aar_withheld
+    ? result.message
+    : JSON.stringify(result, null, 2);
 }
 </script>
 </body>

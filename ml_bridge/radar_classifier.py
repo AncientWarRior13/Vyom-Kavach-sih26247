@@ -74,7 +74,30 @@ def _position_at(path: list[dict], t: float) -> tuple[float, float, float]:
     return p["x"], p["y"], p["z"]
 
 
-def derive_features(contact: dict, t: float, degradation: float) -> dict:
+def _swarm_density_at(contact: dict, t: float, siblings: list[dict] | None) -> int:
+    """Count of other same-swarm members within ~150m and active at time t.
+    Dense swarm formations produce overlapping micro-Doppler returns in a
+    real radar — the sparse literature on swarm (vs. single-drone) micro-
+    Doppler classification (see research/PROTOCOLS.md) flags this as an
+    unmodeled confound; we fold it into the bandwidth/jitter features here
+    rather than ignoring it.
+    """
+    if not siblings or not contact.get("swarm_id"):
+        return 0
+    x, y, _ = _position_at(contact["path"], t)
+    count = 0
+    for s in siblings:
+        if s["contact_id"] == contact["contact_id"] or s.get("swarm_id") != contact["swarm_id"]:
+            continue
+        if not (s["spawn_t"] <= t <= s["despawn_t"]):
+            continue
+        sx, sy, _ = _position_at(s["path"], t)
+        if math.hypot(x - sx, y - sy) <= 150.0:
+            count += 1
+    return count
+
+
+def derive_features(contact: dict, t: float, degradation: float, siblings: list[dict] | None = None) -> dict:
     path = contact["path"]
     x, y, z = _position_at(path, t)
     vx, vy, vz = _velocity_at(path, t)
@@ -89,6 +112,13 @@ def derive_features(contact: dict, t: float, degradation: float) -> dict:
 
     rcs_base, mdb_base, jit_base = TYPE_PROFILE.get(contact["contact_type"], TYPE_PROFILE["hostile_drone"])
     noise_scale = 1.0 + degradation * 2.0
+
+    swarm_density = _swarm_density_at(contact, t, siblings)
+    # overlapping returns from nearby swarm members widen/roughen the
+    # apparent micro-Doppler signature of any one member
+    mdb_base = mdb_base + swarm_density * 15.0
+    jit_base = jit_base + swarm_density * 0.03
+
     rcs_estimate = max(-20.0, min(20.0, rcs_base + random.gauss(0, 2.0 * noise_scale)))
     micro_doppler_bandwidth = max(0.0, min(500.0, mdb_base + random.gauss(0, 30.0 * noise_scale)))
     micro_doppler_jitter = max(0.0, min(1.0, jit_base + random.gauss(0, 0.1 * noise_scale)))
@@ -130,13 +160,17 @@ def _heuristic_classify(features: dict) -> dict:
     return {"label": label, "probabilities": {label: 0.6}, "source": "heuristic_fallback"}
 
 
-def classify_contact(contact: dict, t: float, degradation: float = 0.0) -> dict:
+def classify_contact(contact: dict, t: float, degradation: float = 0.0, siblings: list[dict] | None = None) -> dict:
     """Returns the sensor's classification call for `contact` at time `t`:
     {"label": one of aircraft/anomaly/bird/drone, "probabilities": {...}}.
     This is what the trainer shows the trainee — it is independent of (and
     can disagree with) the scenario's ground truth `contact_type`.
+
+    `siblings` (optional): the scenario's other contacts, used only to
+    compute swarm density (see `_swarm_density_at`) — pass the full contact
+    list when classifying a swarm member for the density effect to apply.
     """
-    features = derive_features(contact, t, degradation)
+    features = derive_features(contact, t, degradation, siblings)
     loaded = _session()
     if loaded is None:
         return {**_heuristic_classify(features), "features": features}
