@@ -6,6 +6,7 @@ session as well as show trends across many.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 from contextlib import contextmanager
@@ -31,7 +32,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     sequencing_arm TEXT,
     attempt_number INTEGER,
     scenario_json TEXT,
-    trainee_log_json TEXT
+    trainee_log_json TEXT,
+    chain_hash TEXT
 );
 
 CREATE TABLE IF NOT EXISTS experiment_assignments (
@@ -59,7 +61,7 @@ def init_db() -> None:
     with _conn() as conn:
         conn.executescript(SCHEMA)
         existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(sessions)").fetchall()}
-        for col in ("scenario_json", "trainee_log_json"):
+        for col in ("scenario_json", "trainee_log_json", "chain_hash"):
             if col not in existing_cols:
                 conn.execute(f"ALTER TABLE sessions ADD COLUMN {col} TEXT")
 
@@ -71,24 +73,71 @@ def save_session(trainee_id: str, unit_id: str, difficulty: int, result: dict,
         attempt_number = conn.execute(
             "SELECT COUNT(*) + 1 FROM sessions WHERE trainee_id = ?", (trainee_id,)
         ).fetchone()[0]
+        result_json = json.dumps(result)
+
+        # roadmap feature 12 (offline/audit mode): hash-chained session log —
+        # each row's hash covers its own data plus the previous row's hash,
+        # so editing/deleting a past session (air-gapped, no central server
+        # to cross-check against) breaks every hash after it, detectably.
+        prev = conn.execute("SELECT chain_hash FROM sessions ORDER BY id DESC LIMIT 1").fetchone()
+        prev_hash = prev["chain_hash"] if prev and prev["chain_hash"] else "GENESIS"
+        # every denormalized column, not just result_json, so tampering with
+        # any of them (not only the JSON blob) breaks the chain
+        chain_payload = "|".join(str(v) for v in (
+            prev_hash, trainee_id, unit_id, result["scenario_id"], difficulty, attempt_number,
+            result["overall_score"], result["detection_score"], result["classification_score"],
+            result["engagement_score"], result["contacts_missed"], result_json,
+        ))
+        chain_hash = hashlib.sha256(chain_payload.encode()).hexdigest()
+
         cur = conn.execute(
             """INSERT INTO sessions
                (trainee_id, unit_id, scenario_id, difficulty, overall_score,
                 detection_score, classification_score, engagement_score,
                 contacts_missed, result_json, aar_ablation_arm, sequencing_arm, attempt_number,
-                scenario_json, trainee_log_json)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                scenario_json, trainee_log_json, chain_hash)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 trainee_id, unit_id, result["scenario_id"], difficulty,
                 result["overall_score"], result["detection_score"],
                 result["classification_score"], result["engagement_score"],
-                result["contacts_missed"], json.dumps(result),
+                result["contacts_missed"], result_json,
                 aar_ablation_arm, sequencing_arm, attempt_number,
                 json.dumps(scenario) if scenario is not None else None,
                 json.dumps(trainee_log) if trainee_log is not None else None,
+                chain_hash,
             ),
         )
         return cur.lastrowid
+
+
+def verify_audit_chain() -> dict:
+    """Walks every session in insertion order and recomputes each row's
+    hash from scratch, confirming it matches what's stored and that it
+    correctly chains from the previous row — detects any row that was
+    edited, deleted-and-reinserted, or reordered after the fact."""
+    with _conn() as conn:
+        rows = conn.execute(
+            """SELECT id, trainee_id, unit_id, scenario_id, difficulty, attempt_number,
+                      overall_score, detection_score, classification_score, engagement_score,
+                      contacts_missed, result_json, chain_hash
+               FROM sessions ORDER BY id ASC"""
+        ).fetchall()
+
+    prev_hash = "GENESIS"
+    for row in rows:
+        if row["chain_hash"] is None:
+            continue  # saved before this feature shipped; not part of the chain
+        expected_payload = "|".join(str(v) for v in (
+            prev_hash, row["trainee_id"], row["unit_id"], row["scenario_id"], row["difficulty"],
+            row["attempt_number"], row["overall_score"], row["detection_score"],
+            row["classification_score"], row["engagement_score"], row["contacts_missed"], row["result_json"],
+        ))
+        expected_hash = hashlib.sha256(expected_payload.encode()).hexdigest()
+        if expected_hash != row["chain_hash"]:
+            return {"valid": False, "broken_at_session_id": row["id"], "sessions_checked": len(rows)}
+        prev_hash = row["chain_hash"]
+    return {"valid": True, "broken_at_session_id": None, "sessions_checked": len(rows)}
 
 
 def get_or_assign_arm(experiment_name: str, trainee_id: str, arms: list[str]) -> str:

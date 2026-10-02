@@ -118,7 +118,12 @@ def derive_features(contact: dict, t: float, degradation: float, siblings: list[
     radial_unit = (x / range_m, y / range_m) if range_m else (0, 0)
     true_doppler_velocity = max(-50.0, min(50.0, vx * radial_unit[0] + vy * radial_unit[1]))
 
-    rcs_base, mdb_base, jit_base = TYPE_PROFILE.get(contact["contact_type"], TYPE_PROFILE["hostile_drone"])
+    # roadmap feature 13 (spoofed-signature scenarios): a contact crafted to
+    # evade classification (RadarSense's adversarial-robustness framing)
+    # presents whatever signature it's spoofing, not its true type's —
+    # exactly the real sensor's blind spot a spoofed target exploits.
+    signature_type = contact.get("spoofed_as") or contact["contact_type"]
+    rcs_base, mdb_base, jit_base = TYPE_PROFILE.get(signature_type, TYPE_PROFILE["hostile_drone"])
     noise_scale = 1.0 + degradation * 2.0
 
     swarm_density = _swarm_density_at(contact, t, siblings)

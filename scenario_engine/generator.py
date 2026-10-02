@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 import random
+import time
 import uuid
 from dataclasses import dataclass, field, asdict
 from enum import Enum
@@ -123,6 +124,10 @@ class Contact:
     rf_silent: bool = False
     low_altitude_masked: bool = False
     feint: bool = False
+    # roadmap feature 13 (spoofed-signature scenarios): the contact_type
+    # value whose radar signature this contact mimics (e.g. a decoy
+    # spoofed_as "bird"). None = presents its own true signature.
+    spoofed_as: str | None = None
 
     def position_at(self, t: float) -> Waypoint | None:
         if t < self.spawn_t or t > self.despawn_t:
@@ -161,6 +166,10 @@ class ScenarioParams:
     # approaches, RF-silent drones, decoy saturation. Auto-enabled at
     # difficulty>=4 if not explicitly set, same pattern as swarm_attack.
     red_team_tactics: bool | None = None
+    # roadmap feature 11 (team roles): seconds of comms delay between
+    # detector -> classifier -> engagement authority. Only matters if the
+    # scenario is played via /api/team/* endpoints; ignored in solo mode.
+    team_comms_delay_s: float = 5.0
 
 
 def _make_linear_path(t_offset: float, duration: float, speed: float, start=None, heading=None) -> list[Waypoint]:
@@ -204,7 +213,7 @@ def _make_feint_path(t_offset: float, duration: float, speed: float) -> list[Way
 
 def _spawn_single_contact(contact_type: ContactType, window: tuple[float, float],
                            rf_silent: bool = False, low_altitude_masked: bool = False,
-                           feint: bool = False) -> Contact:
+                           feint: bool = False, spoofed_as: str | None = None) -> Contact:
     spawn_t = random.uniform(*window)
     duration = random.uniform(20, 60)
     speed = {
@@ -229,6 +238,7 @@ def _spawn_single_contact(contact_type: ContactType, window: tuple[float, float]
         rf_silent=rf_silent,
         low_altitude_masked=low_altitude_masked,
         feint=feint,
+        spoofed_as=spoofed_as,
     )
 
 
@@ -253,6 +263,7 @@ def spawn_live_contact(contact_type_str: str, now_t: float) -> dict:
         "rf_silent": contact.rf_silent,
         "low_altitude_masked": contact.low_altitude_masked,
         "feint": contact.feint,
+        "spoofed_as": contact.spoofed_as,
     }
 
 
@@ -380,8 +391,17 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
     if decoy_saturation:
         tactics_used.append("decoy_saturation")
     n_decoys = round((random.randint(0, difficulty) + clutter) * weights.get("decoy", 1.0) * (1.8 if decoy_saturation else 1.0))
+    spoofed_one = False
     for _ in range(max(0, n_decoys)):
-        contacts.append(_spawn_single_contact(ContactType.DECOY, window))
+        # roadmap feature 13: one decoy per red-team scenario is crafted to
+        # mimic a bird's radar signature (RadarSense's adversarial-evasion
+        # framing) — its RF/visual truth is unchanged, only what the radar
+        # classifier's synthesized signature presents as.
+        spoof = "bird" if (red_team and not spoofed_one) else None
+        if spoof:
+            spoofed_one = True
+            tactics_used.append("spoofed_signature")
+        contacts.append(_spawn_single_contact(ContactType.DECOY, window, spoofed_as=spoof))
 
     n_birds = round((random.randint(0, difficulty + 1) + clutter) * weights.get("bird", 1.0))
     for _ in range(max(0, n_birds)):
@@ -424,6 +444,11 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
         "roe_card": _generate_roe_card(difficulty),
         "sensor_outage": sensor_outage,
         "red_team_tactics_used": tactics_used,
+        # roadmap feature 11 (team roles): a server-anchored start time so
+        # multiple browser tabs (one per role) agree on "scenario elapsed
+        # time" regardless of when each tab happened to load the page.
+        "server_start_epoch_ms": time.time() * 1000,
+        "team_comms_delay_s": params.team_comms_delay_s,
         "contacts": [
             {
                 "contact_id": c.contact_id,
@@ -436,6 +461,7 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
                 "rf_silent": c.rf_silent,
                 "low_altitude_masked": c.low_altitude_masked,
                 "feint": c.feint,
+                "spoofed_as": c.spoofed_as,
             }
             for c in contacts
         ],
@@ -481,5 +507,7 @@ def sanitize_for_client(scenario: dict) -> dict:
         "no_engage_zones": scenario["no_engage_zones"],
         "roe_card": scenario["roe_card"],
         "sensor_outage": scenario.get("sensor_outage"),
+        "server_start_epoch_ms": scenario.get("server_start_epoch_ms"),
+        "team_comms_delay_s": scenario.get("team_comms_delay_s"),
         "contacts": out_contacts,
     }

@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from scenario_engine import generate_scenario, list_scripted, load_scripted, spawn_live_contact
+from scenario_engine import generate_scenario, list_scripted, load_scripted, spawn_live_contact, sign_pack, verify_pack
 from scenario_engine.generator import ScenarioParams, sanitize_for_client
 from scoring_engine import score_session
 from aar_dashboard import (
@@ -24,6 +24,7 @@ from aar_dashboard import (
     get_or_assign_arm, experiment_results, weakness_profile,
     get_session_replay, error_taxonomy, missed_positions,
     certification_status, unit_certification_summary,
+    verify_audit_chain,
 )
 from ml_bridge import classify_contact, generate_swarm_paths
 from ml_bridge.multi_sensor import read_sensor
@@ -153,6 +154,38 @@ def scripted_load(name: str):
     return sanitize_for_client(scenario)
 
 
+@app.get("/api/scenario/scripted/{name}/pack")
+def scripted_export_pack(name: str):
+    """Roadmap feature 12 (offline mode and audit): a signed scenario pack
+    — the scripted scenario's ground truth plus an HMAC signature, so it
+    can be distributed to an air-gapped training site and verified as
+    unmodified without any network/central-server check."""
+    try:
+        scenario = load_scripted(name)
+    except FileNotFoundError as e:
+        raise HTTPException(404, str(e))
+    return sign_pack(scenario)
+
+
+class VerifyPackRequest(BaseModel):
+    scenario: dict
+    signature: str
+
+
+@app.post("/api/scenario/pack/verify")
+def verify_scenario_pack(req: VerifyPackRequest):
+    valid = verify_pack({"scenario": req.scenario, "signature": req.signature})
+    return {"valid": valid}
+
+
+@app.get("/api/audit/verify_chain")
+def audit_verify_chain():
+    """Roadmap feature 12: confirms the AAR session log's hash chain is
+    intact — detects any past session row that was edited or tampered
+    with after the fact."""
+    return verify_audit_chain()
+
+
 class ClassifyRequest(BaseModel):
     scenario_id: str
     contact_id: str
@@ -208,54 +241,29 @@ def sensor_read(req: SensorReadRequest):
     )
 
 
-class EngageRequest(BaseModel):
-    scenario_id: str
-    contact_id: str
-    t: float
-    action: str = "hard_kill"  # only a kinetic kill (hard_kill, or legacy "engage") has a live sim effect
-
-
-@app.post("/api/contact/engage")
-def engage_contact(req: EngageRequest):
-    """Called the instant a trainee takes a kinetic (hard_kill) action on a
-    contact (not just logged for scoring at the end) — warn/soft_kill/
-    monitor/ignore never reach this far (see the graduated-response ladder
-    in scoring_engine/scorer.py; only a kinetic kill can plausibly destroy a
-    swarm member). If the target is a live ares-driven swarm member, this
-    deterministically replays the swarm's simulation from t=0 up to
-    `req.t` (identical to what the trainee already saw — see
+def _apply_hard_kill(scenario: dict, contact_id: str, t: float) -> dict:
+    """Shared by the solo `/api/contact/engage` and the team-roles
+    engagement-authority action: if the target is a live ares-driven swarm
+    member, deterministically replays the swarm's simulation from t=0 up to
+    `t` (identical to what's already been shown — see
     ml_bridge.swarm_kinematics' replay-and-diverge design), injects a real
     UAV_FAILURE at that instant, and lets ares's actual recovery/relay logic
-    react from there — the remaining swarm members' future paths in the
-    scenario are updated in place and returned so the client can refresh
-    what it's rendering. Non-swarm contacts (and swarm contacts in a
-    scenario where ares wasn't available) are a no-op here; their
-    engagement is still scored normally at session submit.
+    react from there. Returns {"reactive": bool, "contacts": [...]}.
     """
-    scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
-    if scenario is None:
-        raise HTTPException(404, "unknown or expired scenario_id")
-    contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
-    if contact is None:
-        raise HTTPException(404, "unknown contact_id")
-
-    if req.action not in ("hard_kill", "engage"):
-        return {"reactive": False, "contacts": []}
-
     # a split-swarm scenario (red-team tactic 7) has two independent swarm
     # groups, each with its own replay metadata — find whichever one owns
     # this contact.
     meta = None
     for key in ("swarm_sim_meta", "swarm_sim_meta_2"):
         candidate = scenario.get(key)
-        if candidate is not None and req.contact_id in candidate["contact_to_uav"]:
+        if candidate is not None and contact_id in candidate["contact_to_uav"]:
             meta = candidate
             break
     if meta is None:
         return {"reactive": False, "contacts": []}
 
-    uav_id = meta["contact_to_uav"][req.contact_id]
-    local_time = max(0.0, req.t - meta["spawn_t"])
+    uav_id = meta["contact_to_uav"][contact_id]
+    local_time = max(0.0, t - meta["spawn_t"])
     if not any(uid == uav_id for uid, _ in meta["injected_failures"]):
         meta["injected_failures"].append([uav_id, local_time])
 
@@ -281,6 +289,187 @@ def engage_contact(req: EngageRequest):
     sanitized = sanitize_for_client(scenario)
     updated_contacts = [c for c in sanitized["contacts"] if c["contact_id"] in updated_ids]
     return {"reactive": True, "contacts": updated_contacts}
+
+
+class EngageRequest(BaseModel):
+    scenario_id: str
+    contact_id: str
+    t: float
+    action: str = "hard_kill"  # only a kinetic kill (hard_kill, or legacy "engage") has a live sim effect
+
+
+@app.post("/api/contact/engage")
+def engage_contact(req: EngageRequest):
+    """Called the instant a solo trainee takes a kinetic (hard_kill) action
+    on a contact — warn/soft_kill/monitor/ignore never reach this far (see
+    the graduated-response ladder in scoring_engine/scorer.py). See
+    `_apply_hard_kill` for what actually happens.
+    """
+    scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+    contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
+    if contact is None:
+        raise HTTPException(404, "unknown contact_id")
+
+    if req.action not in ("hard_kill", "engage"):
+        return {"reactive": False, "contacts": []}
+    return _apply_hard_kill(scenario, req.contact_id, req.t)
+
+
+# --- Roadmap feature 11: team roles with comms delay ---
+# detector -> classifier -> engagement_authority: each role only learns
+# what the previous role found out after `team_comms_delay_s` seconds,
+# simulating separate operators relaying information instead of one person
+# doing everything instantly. No new scoring axis needed — the delay just
+# makes the existing detection-window/timeliness scoring harder, honestly.
+
+TEAM_ROLES = ("detector", "classifier", "engagement_authority")
+
+
+def _team_log(scenario: dict) -> dict:
+    return scenario.setdefault("team_log", {})
+
+
+def _team_entry(scenario: dict, contact_id: str) -> dict:
+    log = _team_log(scenario)
+    return log.setdefault(contact_id, {
+        "detected_at": None, "classified_at": None, "classification": None,
+        "ai_hint_requested": False, "ai_hint_label": None,
+        "warn_at": None, "engagement_action": None, "engagement_at": None,
+    })
+
+
+class TeamActionRequest(BaseModel):
+    scenario_id: str
+    role: str
+    contact_id: str
+    t: float
+    field: str   # detector: "detect" | classifier: "classify"|"ai_hint" | engagement_authority: warn/monitor/ignore/soft_kill/hard_kill
+    value: str | None = None
+
+
+@app.post("/api/team/action")
+def team_action(req: TeamActionRequest):
+    if req.role not in TEAM_ROLES:
+        raise HTTPException(400, f"role must be one of {TEAM_ROLES}")
+    scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+    contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
+    if contact is None:
+        raise HTTPException(404, "unknown contact_id")
+
+    delay = scenario.get("team_comms_delay_s", 5.0)
+    entry = _team_entry(scenario, req.contact_id)
+
+    if req.role == "detector":
+        if req.field != "detect":
+            raise HTTPException(400, "detector's only action is 'detect'")
+        if entry["detected_at"] is None:
+            entry["detected_at"] = req.t
+        return {"ok": True, "entry": entry}
+
+    if req.role == "classifier":
+        if entry["detected_at"] is None or req.t < entry["detected_at"] + delay:
+            wait = None if entry["detected_at"] is None else round(entry["detected_at"] + delay - req.t, 1)
+            raise HTTPException(403, f"detection not yet relayed to classifier (wait {wait}s)" if wait else
+                                       "contact not yet detected")
+        if req.field == "classify":
+            entry["classification"] = req.value
+            entry["classified_at"] = req.t
+        elif req.field == "ai_hint":
+            degradation = scenario["params"].get("effective_sensor_degradation", 0.0)
+            result = classify_contact(contact, req.t, degradation, siblings=scenario["contacts"])
+            entry["ai_hint_requested"] = True
+            entry["ai_hint_label"] = result["label"]
+            return {"ok": True, "entry": entry, "hint": {"label": result["label"], "probabilities": result["probabilities"]}}
+        else:
+            raise HTTPException(400, "classifier's actions are 'classify' or 'ai_hint'")
+        return {"ok": True, "entry": entry}
+
+    # engagement_authority
+    if entry["classified_at"] is None or req.t < entry["classified_at"] + delay:
+        wait = None if entry["classified_at"] is None else round(entry["classified_at"] + delay - req.t, 1)
+        raise HTTPException(403, f"classification not yet relayed to engagement authority (wait {wait}s)" if wait else
+                                   "contact not yet classified")
+    if req.field == "warn":
+        entry["warn_at"] = req.t
+        return {"ok": True, "entry": entry}
+    if req.field not in ("monitor", "ignore", "soft_kill", "hard_kill"):
+        raise HTTPException(400, "engagement_authority's actions are warn/monitor/ignore/soft_kill/hard_kill")
+    entry["engagement_action"] = req.field
+    entry["engagement_at"] = req.t
+    reactive = _apply_hard_kill(scenario, req.contact_id, req.t) if req.field == "hard_kill" else {"reactive": False, "contacts": []}
+    return {"ok": True, "entry": entry, **reactive}
+
+
+@app.get("/api/team/state/{scenario_id}")
+def team_state(scenario_id: str, role: str, t: float):
+    """What this role can currently see: detector sees all live contacts'
+    positions; classifier sees only contacts whose detection has been
+    relayed to them; engagement_authority sees only contacts whose
+    classification has been relayed to them."""
+    if role not in TEAM_ROLES:
+        raise HTTPException(400, f"role must be one of {TEAM_ROLES}")
+    scenario = _ACTIVE_SCENARIOS.get(scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+
+    sanitized = sanitize_for_client(scenario)
+    delay = scenario.get("team_comms_delay_s", 5.0)
+    log = _team_log(scenario)
+
+    visible = []
+    for c in sanitized["contacts"]:
+        entry = log.get(c["contact_id"], {})
+        if role == "detector":
+            visible.append({**c, "team": entry})
+        elif role == "classifier":
+            if entry.get("detected_at") is not None and t >= entry["detected_at"] + delay:
+                visible.append({**c, "team": entry})
+        else:
+            if entry.get("classified_at") is not None and t >= entry["classified_at"] + delay:
+                visible.append({**c, "team": entry})
+    return {"role": role, "team_comms_delay_s": delay, "contacts": visible}
+
+
+class SubmitTeamSessionRequest(BaseModel):
+    scenario_id: str
+    trainee_id: str
+    unit_id: str
+    difficulty: int
+    participate_in_research: bool = False
+
+
+@app.post("/api/session/submit_team")
+def submit_team_session(req: SubmitTeamSessionRequest):
+    """Assembles the standard scoring_engine trainee_log from whatever the
+    three roles recorded in `scenario["team_log"]` over the session, then
+    scores exactly like a solo session — the comms delay already made the
+    timings harder; no separate scoring path is needed."""
+    scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+
+    trainee_log = [{"contact_id": cid, **entry} for cid, entry in _team_log(scenario).items()]
+    result = score_session(scenario, trainee_log)
+
+    aar_arm = seq_arm = None
+    if req.participate_in_research:
+        aar_arm = get_or_assign_arm("aar_ablation", req.trainee_id, AAR_ABLATION_ARMS)
+        seq_arm = get_or_assign_arm("sequencing", req.trainee_id, SEQUENCING_ARMS)
+
+    save_session(req.trainee_id, req.unit_id, req.difficulty, result,
+                 aar_ablation_arm=aar_arm, sequencing_arm=seq_arm,
+                 scenario=scenario, trainee_log=trainee_log)
+    del _ACTIVE_SCENARIOS[req.scenario_id]
+    return result
+
+
+@app.get("/team")
+def team_page():
+    return FileResponse(BASE_DIR / "trainer_frontend" / "team.html")
 
 
 class SubmitSessionRequest(BaseModel):

@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 venv/
 aar_dashboard/aar.db
+scenario_engine/scripted/.pack_signing_key
 node_modules/
 .next/
 *.log

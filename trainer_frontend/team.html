@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Team Roles — Drone Threat Trainer</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #05070a; color: #d7dde3; margin: 0; padding: 20px; }
+  select, button, input { background: #0e141c; color: #d7dde3; border: 1px solid #1f2733; border-radius: 4px; padding: 6px 10px; margin-right: 6px; }
+  .contact-row { border: 1px solid #1f2733; border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+  .contact-row button { margin-right: 4px; margin-top: 6px; }
+  #timer { font-variant-numeric: tabular-nums; font-size: 18px; }
+  #roleBanner { padding: 10px; margin: 12px 0; border-radius: 6px; font-weight: bold; }
+  .role-detector { background: #0d2744; }
+  .role-classifier { background: #2d2410; }
+  .role-engagement_authority { background: #3a0e0e; }
+</style>
+</head>
+<body>
+<h1>Team Roles (comms-delay pipeline)</h1>
+<p><a href="/" style="color:#58a6ff">&larr; Solo trainer</a></p>
+<p style="color:#8b949e; font-size:13px; max-width:700px;">
+  Three separate operators share one scenario: a <strong>detector</strong> spots contacts,
+  a <strong>classifier</strong> only learns of a detection after the comms delay and identifies it,
+  and the <strong>engagement authority</strong> only learns the classification after a second comms
+  delay and decides the response. Open this page in up to three browser tabs/windows with the same
+  Scenario ID, one per role, to play it as a real team.
+</p>
+
+<div>
+  <label>Trainee/Unit <input id="traineeId" value="team-1" style="width:90px" /> <input id="unitId" value="unit-A" style="width:90px" /></label>
+  <label>Difficulty <select id="difficulty"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
+  <button onclick="startScenario()">New team scenario</button>
+  <label>Scenario ID <input id="joinScenarioId" placeholder="paste to join an existing one" style="width:280px" /></label>
+  <button onclick="joinScenario()">Join</button>
+</div>
+
+<div style="margin-top:12px;">
+  <label>My role
+    <select id="role" onchange="renderRoleBanner()">
+      <option value="detector">Detector</option>
+      <option value="classifier">Classifier</option>
+      <option value="engagement_authority">Engagement authority</option>
+    </select>
+  </label>
+  <span id="timer">00:00</span>
+  <button onclick="finishSession()">Finish &amp; score (any role can do this once)</button>
+</div>
+
+<div id="roleBanner"></div>
+<div id="contactList"></div>
+<h3>Result</h3>
+<div id="result" style="white-space:pre-wrap; font-size:13px; background:#0e141c; padding:12px; border-radius:6px;">No session scored yet.</div>
+
+<script>
+let scenario = null;
+let elapsed = 0;
+let pollHandle = null;
+const CLASS_OPTIONS = ["hostile_drone", "hostile_swarm_member", "friendly_drone", "decoy", "bird"];
+
+function fmtTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const ss = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${ss}`;
+}
+
+function renderRoleBanner() {
+  const role = document.getElementById('role').value;
+  const el = document.getElementById('roleBanner');
+  el.className = `role-${role}`;
+  const names = { detector: 'DETECTOR — click a contact as soon as you spot it',
+                  classifier: 'CLASSIFIER — you only see contacts once the detector\'s report reaches you',
+                  engagement_authority: 'ENGAGEMENT AUTHORITY — you only see contacts once the classifier\'s report reaches you' };
+  el.textContent = names[role];
+}
+renderRoleBanner();
+
+async function startScenario() {
+  const difficulty = parseInt(document.getElementById('difficulty').value);
+  const res = await fetch('/api/scenario/new', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ difficulty, duration_s: 180 }),
+  });
+  scenario = await res.json();
+  document.getElementById('joinScenarioId').value = scenario.scenario_id;
+  startClock();
+}
+
+async function joinScenario() {
+  const id = document.getElementById('joinScenarioId').value.trim();
+  if (!id) return;
+  // re-fetch via team state as detector just to recover server_start_epoch_ms isn't directly exposed
+  // here, so we approximate: ask for detector view once to confirm the scenario exists, then poll normally.
+  scenario = { scenario_id: id };
+  startClock();
+}
+
+function startClock() {
+  if (pollHandle) clearInterval(pollHandle);
+  const startedAtLocal = Date.now();
+  pollHandle = setInterval(async () => {
+    elapsed += 0.5;
+    document.getElementById('timer').textContent = fmtTime(elapsed);
+    await refreshContacts();
+  }, 500);
+}
+
+function posAt(path, t) {
+  if (t <= path[0].t) return path[0];
+  if (t >= path[path.length - 1].t) return path[path.length - 1];
+  for (let i = 0; i < path.length - 1; i++) {
+    const a = path[i], b = path[i + 1];
+    if (a.t <= t && t <= b.t) {
+      const f = b.t === a.t ? 0 : (t - a.t) / (b.t - a.t);
+      return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+    }
+  }
+  return path[path.length - 1];
+}
+
+async function refreshContacts() {
+  if (!scenario) return;
+  const role = document.getElementById('role').value;
+  const res = await fetch(`/api/team/state/${scenario.scenario_id}?role=${role}&t=${elapsed}`);
+  if (!res.ok) return;
+  const state = await res.json();
+  renderContacts(state.contacts, role);
+}
+
+function renderContacts(contacts, role) {
+  const el = document.getElementById('contactList');
+  el.innerHTML = '';
+  for (const c of contacts) {
+    const entry = c.team || {};
+    const div = document.createElement('div');
+    div.className = 'contact-row';
+    if (role === 'detector') {
+      div.innerHTML = `<div>Contact ${c.contact_id} ${entry.detected_at !== null ? `(detected @ ${entry.detected_at?.toFixed(1)}s)` : ''}</div>
+        <button onclick="teamAction('${c.contact_id}', 'detect')" ${entry.detected_at !== null ? 'disabled' : ''}>Detect</button>`;
+    } else if (role === 'classifier') {
+      const opts = CLASS_OPTIONS.map(o => `<option value="${o}" ${entry.classification === o ? 'selected' : ''}>${o}</option>`).join('');
+      div.innerHTML = `<div>Contact ${c.contact_id} — detected, awaiting your classification</div>
+        <select onchange="teamAction('${c.contact_id}', 'classify', this.value)"><option value="">classify...</option>${opts}</select>
+        <button onclick="teamAiHint('${c.contact_id}')">AI sensor hint</button>
+        <div id="hint-${c.contact_id}" style="font-size:12px;color:#8b949e;margin-top:4px;"></div>`;
+    } else {
+      div.innerHTML = `<div>Contact ${c.contact_id} — classified as <strong>${entry.classification}</strong></div>
+        <button onclick="teamAction('${c.contact_id}', 'warn')">Warn</button>
+        <button onclick="teamAction('${c.contact_id}', 'soft_kill')">Soft-kill</button>
+        <button onclick="teamAction('${c.contact_id}', 'hard_kill')">Hard-kill</button>
+        <button onclick="teamAction('${c.contact_id}', 'monitor')">Monitor</button>
+        <button onclick="teamAction('${c.contact_id}', 'ignore')">Ignore</button>`;
+    }
+    el.appendChild(div);
+  }
+}
+
+async function teamAction(contactId, field, value) {
+  const role = document.getElementById('role').value;
+  const res = await fetch('/api/team/action', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id: scenario.scenario_id, role, contact_id: contactId, t: elapsed, field, value: value || null }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    alert(err.detail || 'action rejected');
+    return;
+  }
+  refreshContacts();
+}
+
+async function teamAiHint(contactId) {
+  const res = await fetch('/api/team/action', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id: scenario.scenario_id, role: 'classifier', contact_id: contactId, t: elapsed, field: 'ai_hint' }),
+  });
+  const out = await res.json();
+  const el = document.getElementById(`hint-${contactId}`);
+  if (el && out.hint) el.textContent = `sensor model: ${out.hint.label} (p=${out.hint.probabilities[out.hint.label].toFixed(2)})`;
+}
+
+async function finishSession() {
+  if (!scenario) return;
+  clearInterval(pollHandle);
+  const trainee_id = document.getElementById('traineeId').value || 'team-1';
+  const unit_id = document.getElementById('unitId').value || 'unit-A';
+  const difficulty = parseInt(document.getElementById('difficulty').value);
+  const res = await fetch('/api/session/submit_team', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id: scenario.scenario_id, trainee_id, unit_id, difficulty }),
+  });
+  const result = await res.json();
+  document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+}
+</script>
+</body>
+</html>

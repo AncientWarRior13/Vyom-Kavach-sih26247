@@ -24,6 +24,8 @@
     <input id="unitId" placeholder="unit id" />
     <button onclick="loadAll()">Load</button>
     <a id="csvLink" href="#" style="color:#58a6ff; align-self:center;">Export CSV</a>
+    <button onclick="checkAuditChain()">Verify audit chain</button>
+    <span id="auditStatus" style="align-self:center; font-size:12px;"></span>
   </div>
 
   <div class="row" style="margin-top:16px">
@@ -137,6 +139,16 @@ async function loadAll() {
       options: { responsive: true, scales: { y: { min: 0, max: 100 } } },
     });
   }
+}
+
+async function checkAuditChain() {
+  const el = document.getElementById('auditStatus');
+  el.textContent = 'checking...';
+  const r = await fetch('/api/audit/verify_chain').then(r => r.json());
+  el.style.color = r.valid ? '#3fb950' : '#e06666';
+  el.textContent = r.valid
+    ? `Chain intact (${r.sessions_checked} sessions)`
+    : `TAMPERED — broken at session ${r.broken_at_session_id}`;
 }
 
 function drawHeatmap(points) {

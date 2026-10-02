@@ -214,13 +214,67 @@ click-throughs of the multi-sensor buttons and the updated AAR dashboard
 (certification badges, error taxonomy, report links all confirmed
 populating from live data).
 
+## Tier-3 roadmap features
+
+11. **Team roles with comms delay** (`/team`, `trainer_frontend/team.html`)
+    — a scenario can be played by three separate operators (detector,
+    classifier, engagement authority) instead of one trainee doing
+    everything. Each role only learns what the previous role found after
+    `team_comms_delay_s` (default 5s): a classifier can't act on a contact
+    until the detector's detection has had time to "reach" them, and the
+    engagement authority can't act until the classifier's call has. `POST
+    /api/team/action` enforces this server-side (returns 403 with the wait
+    time if a role acts too early); `GET /api/team/state` filters what each
+    role can even see. No new scoring axis was needed — the delay just
+    makes the existing detection-window and timeliness scoring harder,
+    honestly, by adding real relay latency. `POST /api/session/submit_team`
+    assembles the standard trainee_log from all three roles' actions and
+    scores it through the same `scoring_engine` as a solo session. Open the
+    page in up to three tabs/windows with the same scenario ID (one role
+    per tab) to actually play it as a team.
+12. **Offline mode and audit** — session records now form a hash chain
+    (`aar_dashboard/store.py`): each row's hash covers its own data (every
+    score column, not just the JSON blob — a tampering test against a
+    column-only edit was caught and fixed during verification) plus the
+    previous row's hash, so editing or reinserting a past session breaks
+    every hash after it, detectably, with no central server to cross-check
+    against (`GET /api/audit/verify_chain`, with a "Verify audit chain"
+    button on the AAR dashboard). Scripted scenarios can be exported as
+    **signed packs** (`scenario_engine/signing.py`, HMAC-SHA256 over the
+    scenario JSON, `GET /api/scenario/scripted/{name}/pack`) — verifiable
+    (`POST /api/scenario/pack/verify`) without any network connection,
+    for distributing scenario content to an air-gapped site. (The backend
+    itself makes no runtime network calls; full air-gap for the frontend
+    would additionally need vendoring the two CDN-hosted libraries,
+    Three.js and Chart.js — not done, flagged honestly rather than silently
+    glossed over.)
+13. **Spoofed-signature scenarios** (`ml_bridge/radar_classifier.py`) — a
+    contact can carry `spoofed_as`, the contact type whose radar signature
+    it presents instead of its own ground truth (e.g. a decoy spoofed to
+    mimic a bird) — directly exercising RadarSense's adversarial-evasion
+    framing. Only the radar/ML signature is spoofable; EO/IR's visual shape
+    reading is deliberately left reading the true type, since a camera
+    can't be fooled by RF spoofing — a trainee who cross-cues with EO/IR
+    catches what pure-radar trust would miss. Verified: the real trained
+    classifier calls a spoofed decoy "bird" far more consistently (13/15
+    samples) than an ordinary decoy (6/15).
+
+All three verified: a 15-check HTTP integration pass for team roles
+(including the exact 403-with-wait-time rejection and successful action
+after the delay, confirmed through a real browser clicking through all
+three roles in sequence), a tamper-injection test proving the audit chain
+actually catches an edited score (not just a theoretical hash), and a
+before/after classifier comparison proving the spoofing has a measurable
+effect on the real model's output.
+
 ## Not yet implemented
 
-Tier 3 of the roadmap (team roles with comms delay, offline/air-gapped
-audit mode, spoofed-signature scenarios exposing RadarSense's adversarial
-work) and the model training-performance section (CatBoost speed tuning,
-feature caching, background retrain/hot-swap) — each is independently
-large; ask for them specifically when ready.
+The model training-performance section of the roadmap (CatBoost speed
+tuning via early stopping/fewer iterations, feature/dataset caching,
+parallelized I/Q synthesis, warm-start retraining, background
+retrain-and-hot-swap of the serving model, precomputed AI hints) — this is
+a training-pipeline performance guide rather than a trainer feature; ask
+for it specifically if you want the CatBoost training scripts tuned.
 
 ## Research-grade additions (`research/PROTOCOLS.md`)
 
