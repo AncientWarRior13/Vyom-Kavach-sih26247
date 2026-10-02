@@ -18,27 +18,42 @@
 </head>
 <body>
   <h1>After-Action Review</h1>
+  <p><a href="/" style="color:#58a6ff">&larr; Trainee view</a> &nbsp; <a href="/instructor" style="color:#58a6ff">Instructor console &rarr;</a></p>
   <div class="row">
     <input id="traineeId" placeholder="trainee id" />
     <input id="unitId" placeholder="unit id" />
     <button onclick="loadAll()">Load</button>
+    <a id="csvLink" href="#" style="color:#58a6ff; align-self:center;">Export CSV</a>
   </div>
 
   <div class="row" style="margin-top:16px">
     <div class="card">
       <h3>Trainee performance over sessions</h3>
       <canvas id="traineeChart" height="180"></canvas>
+      <div id="certBadge" style="margin-top:8px; font-weight:bold;"></div>
     </div>
     <div class="card">
       <h3>Unit leaderboard (avg score)</h3>
       <canvas id="unitChart" height="180"></canvas>
+      <div id="unitCertBadge" style="margin-top:8px; font-weight:bold;"></div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:16px">
+    <div class="card">
+      <h3>Error taxonomy (roadmap feature 9)</h3>
+      <table id="taxonomyTable"><thead><tr><th>Flag type</th><th>Count</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h3>Missed-contact heatmap</h3>
+      <canvas id="heatmapCanvas" width="300" height="300" style="background:#05070a; width:100%; max-width:300px;"></canvas>
     </div>
   </div>
 
   <div class="card" style="margin-top:16px">
     <h3>Recent sessions</h3>
     <table id="sessionsTable">
-      <thead><tr><th>Time</th><th>Trainee</th><th>Difficulty</th><th>Overall</th><th>Detect</th><th>Classify</th><th>Engage</th><th>Missed</th></tr></thead>
+      <thead><tr><th>Time</th><th>Trainee</th><th>Difficulty</th><th>Overall</th><th>Detect</th><th>Classify</th><th>Engage</th><th>Timeliness</th><th>Missed</th><th></th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
@@ -49,16 +64,46 @@ let traineeChart, unitChart;
 async function loadAll() {
   const traineeId = document.getElementById('traineeId').value.trim();
   const unitId = document.getElementById('unitId').value.trim();
+  document.getElementById('csvLink').href = `/api/aar/export.csv?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`;
 
   const sessions = await fetch(`/api/aar/sessions?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`).then(r => r.json());
   const tbody = document.querySelector('#sessionsTable tbody');
   tbody.innerHTML = '';
   for (const s of sessions) {
+    const timeliness = JSON.parse(s.result_json || '{}').timeliness_score ?? '-';
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${s.created_at}</td><td>${s.trainee_id}</td><td>${s.difficulty}</td>
       <td>${s.overall_score}</td><td>${s.detection_score}</td><td>${s.classification_score}</td>
-      <td>${s.engagement_score}</td><td class="${s.contacts_missed ? 'flag' : ''}">${s.contacts_missed}</td>`;
+      <td>${s.engagement_score}</td><td>${timeliness}</td>
+      <td class="${s.contacts_missed ? 'flag' : ''}">${s.contacts_missed}</td>
+      <td><a href="/aar/session/${s.id}/print" target="_blank" style="color:#58a6ff">report</a></td>`;
     tbody.appendChild(tr);
+  }
+
+  const taxonomy = await fetch(`/api/aar/error_taxonomy?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`).then(r => r.json());
+  const taxBody = document.querySelector('#taxonomyTable tbody');
+  taxBody.innerHTML = '';
+  for (const [flag, count] of Object.entries(taxonomy)) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${flag}</td><td>${count}</td>`;
+    taxBody.appendChild(tr);
+  }
+
+  const points = await fetch(`/api/aar/missed_heatmap?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`).then(r => r.json());
+  drawHeatmap(points);
+
+  if (traineeId) {
+    const cert = await fetch(`/api/aar/certification/${encodeURIComponent(traineeId)}`).then(r => r.json());
+    const badge = document.getElementById('certBadge');
+    badge.style.color = cert.certified ? '#3fb950' : '#e06666';
+    badge.textContent = cert.avg_score === null ? 'No sessions yet'
+      : `${cert.certified ? 'CERTIFIED' : 'NOT CERTIFIED'} — avg ${cert.avg_score} over last ${cert.sessions_counted}/${cert.window} sessions (threshold ${cert.threshold})`;
+  }
+  if (unitId) {
+    const unitCert = await fetch(`/api/aar/certification/unit/${encodeURIComponent(unitId)}`).then(r => r.json());
+    document.getElementById('unitCertBadge').textContent = unitCert.total_trainees
+      ? `${unitCert.certified_count}/${unitCert.total_trainees} trainees certified (${Math.round(unitCert.certification_rate*100)}%)`
+      : 'No trainees in this unit yet';
   }
 
   if (traineeId) {
@@ -91,6 +136,25 @@ async function loadAll() {
       },
       options: { responsive: true, scales: { y: { min: 0, max: 100 } } },
     });
+  }
+}
+
+function drawHeatmap(points) {
+  const canvas = document.getElementById('heatmapCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!points.length) return;
+  const xs = points.map(p => p.x), ys = points.map(p => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs, minX + 1);
+  const minY = Math.min(...ys), maxY = Math.max(...ys, minY + 1);
+  for (const p of points) {
+    const px = ((p.x - minX) / (maxX - minX)) * canvas.width;
+    const py = ((p.y - minY) / (maxY - minY)) * canvas.height;
+    const grad = ctx.createRadialGradient(px, py, 0, px, py, 24);
+    grad.addColorStop(0, 'rgba(248,81,73,0.5)');
+    grad.addColorStop(1, 'rgba(248,81,73,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(px - 24, py - 24, 48, 48);
   }
 }
 

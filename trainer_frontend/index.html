@@ -43,6 +43,9 @@
   <label title="Enrolls you in the AAR-timing and scenario-sequencing studies (see research/PROTOCOLS.md) — your scored sessions get tagged with a study arm for later analysis.">
     <input type="checkbox" id="participateResearch" /> Participate in research
   </label>
+  <label title="Feints, swarm splitting, terrain-masked low approaches, RF-silent drones, decoy saturation">
+    <input type="checkbox" id="redTeamTactics" /> Red-team tactics
+  </label>
   <button onclick="startScenario()">New procedural scenario</button>
   <button onclick="startAdaptive()" title="Weights the scenario toward whatever you've scored worst on in past sessions">Adaptive scenario</button>
   <label>Scripted drill
@@ -52,6 +55,7 @@
   <span id="timer">00:00</span>
   <button onclick="finishSession()">Finish &amp; score</button>
   <a href="/vr" style="color:#58a6ff">VR mode →</a>
+  <a href="/instructor" style="color:#58a6ff">Instructor console →</a>
 </header>
 <div id="roeCard">No scenario loaded — ROE card and no-engage zones will appear here.</div>
 <main>
@@ -69,6 +73,7 @@ let scenario = null;       // sanitized (client) scenario
 let simStart = null;       // Date.now() at scenario start
 let elapsed = 0;
 let tickHandle = null;
+let refreshHandle = null;
 let log = {};              // contact_id -> {detected_at, classification, engagement_action}
 const CLASS_OPTIONS = ["hostile_drone", "hostile_swarm_member", "friendly_drone", "decoy", "bird"];
 
@@ -84,6 +89,7 @@ function readScenarioParams() {
     time_of_day: document.getElementById('timeOfDay').value,
     terrain: document.getElementById('terrain').value,
     sensor_degradation: parseFloat(document.getElementById('degradation').value),
+    red_team_tactics: document.getElementById('redTeamTactics').checked ? true : null,
   };
 }
 
@@ -96,6 +102,24 @@ function onScenarioStarted(label) {
   document.getElementById('result').textContent = label;
   if (tickHandle) clearInterval(tickHandle);
   tickHandle = setInterval(tick, 200);
+  if (refreshHandle) clearInterval(refreshHandle);
+  refreshHandle = setInterval(pollInstructorUpdates, 3000);
+}
+
+// picks up instructor-injected threats and sensor-outage changes (instructor
+// console, roadmap feature 8) without a full reload
+async function pollInstructorUpdates() {
+  if (!scenario) return;
+  try {
+    const fresh = await fetch(`/api/scenario/${scenario.scenario_id}/refresh`).then(r => r.json());
+    const knownIds = new Set(scenario.contacts.map(c => c.contact_id));
+    const newOnes = fresh.contacts.filter(c => !knownIds.has(c.contact_id));
+    if (newOnes.length) scenario.contacts.push(...newOnes);
+    if (fresh.sensor_outage !== scenario.sensor_outage) {
+      scenario.sensor_outage = fresh.sensor_outage;
+      renderRoeCard();
+    }
+  } catch (e) { /* scenario may have ended server-side; ignore */ }
 }
 
 async function startScenario() {
@@ -144,7 +168,10 @@ function renderRoeCard() {
   if (!scenario || !scenario.roe_card) { el.textContent = 'No ROE card for this scenario.'; return; }
   const roe = scenario.roe_card;
   const zones = (scenario.no_engage_zones || []).map(z => z.name).join(', ') || 'none';
-  el.innerHTML = `<strong>ROE:</strong> warn required before hard-kill unless target is within `
+  const outage = scenario.sensor_outage
+    ? `<strong style="color:#f85149">Sensor outage this scenario: ${scenario.sensor_outage} is jammed/unavailable — cross-cue with the others.</strong> `
+    : '';
+  el.innerHTML = outage + `<strong>ROE:</strong> warn required before hard-kill unless target is within `
     + `${roe.time_critical_override_s}s of impact (self-defense exception). `
     + `Hard-kill max range ${roe.max_hard_kill_range_m}m, soft-kill max range ${roe.max_soft_kill_range_m}m. `
     + `Hard-kill is <strong>prohibited</strong> inside no-engage zones: ${zones} (shown as red dashed circles on the scope).`;
@@ -266,8 +293,14 @@ function renderContactList() {
       <select class="cls" onchange="setClassification('${c.contact_id}', this.value)">
         <option value="">classify...</option>${classOpts}
       </select>
-      <button onclick="requestAiHint('${c.contact_id}')">AI sensor hint</button>
+      <button onclick="requestAiHint('${c.contact_id}')">AI sensor hint (radar)</button>
       <div class="ai-hint" id="hint-${c.contact_id}" style="font-size:12px;color:#8b949e;margin-top:4px;"></div>
+      <div>
+        <button onclick="requestSensorRead('${c.contact_id}', 'eo_ir')">EO/IR</button>
+        <button onclick="requestSensorRead('${c.contact_id}', 'rf')">RF</button>
+        <button onclick="requestSensorRead('${c.contact_id}', 'acoustic')">Acoustic</button>
+      </div>
+      <div class="sensor-read" id="sensor-${c.contact_id}" style="font-size:12px;color:#8b949e;margin-top:4px;"></div>
       <div>
         <button onclick="setEngagement('${c.contact_id}', 'warn')" ${entry && entry.warn_at !== undefined ? 'style=background:#58a6ff' : ''}>Warn</button>
         <button onclick="setEngagement('${c.contact_id}', 'soft_kill')" ${entry && entry.engagement_action === 'soft_kill' ? 'style=background:#d29922' : ''}>Soft-kill (jam/spoof)</button>
@@ -295,6 +328,21 @@ async function requestAiHint(contactId) {
   if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
   log[contactId].ai_hint_requested = true;
   log[contactId].ai_hint_label = out.label;
+}
+
+async function requestSensorRead(contactId, sensor) {
+  if (!scenario) return;
+  const res = await fetch('/api/contact/sensor_read', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed, sensor }),
+  });
+  const out = await res.json();
+  const el = document.getElementById(`sensor-${contactId}`);
+  if (!el) return;
+  if (!out.available) { el.textContent = `${sensor}: ${out.reason}`; return; }
+  if (sensor === 'eo_ir') el.textContent = `EO/IR: ${out.detected ? 'shape=' + out.shape_hint : 'no visual contact'} (confidence ${out.confidence})`;
+  else if (sensor === 'rf') el.textContent = `RF: ${out.note}`;
+  else el.textContent = `Acoustic: ${out.detected ? 'audible' : 'not audible'} (range ${out.range_m}m, effective ${out.effective_range_m}m)`;
 }
 
 async function finishSession() {

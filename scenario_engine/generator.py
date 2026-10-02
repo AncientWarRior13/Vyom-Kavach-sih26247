@@ -116,6 +116,13 @@ class Contact:
     spawn_t: float
     despawn_t: float
     path: list[Waypoint] = field(default_factory=list)
+    # roadmap feature 7 (adaptive red-team tactics) flags — ground truth
+    # only; never sent to the client, consumed by ml_bridge.multi_sensor
+    # (rf_silent) and sanitize_for_client (low_altitude_masked) and purely
+    # informational for feint (the path itself already encodes the turn-away).
+    rf_silent: bool = False
+    low_altitude_masked: bool = False
+    feint: bool = False
 
     def position_at(self, t: float) -> Waypoint | None:
         if t < self.spawn_t or t > self.despawn_t:
@@ -150,6 +157,10 @@ class ScenarioParams:
     # decoys for a trainee whose AAR history shows they're weak on decoys.
     # Keys: "hostile", "decoy", "bird", "friendly". None/missing = 1.0x.
     type_weights: dict | None = field(default=None, compare=False)
+    # roadmap feature 7: feints, swarm splitting, terrain-masked low
+    # approaches, RF-silent drones, decoy saturation. Auto-enabled at
+    # difficulty>=4 if not explicitly set, same pattern as swarm_attack.
+    red_team_tactics: bool | None = None
 
 
 def _make_linear_path(t_offset: float, duration: float, speed: float, start=None, heading=None) -> list[Waypoint]:
@@ -166,7 +177,34 @@ def _make_linear_path(t_offset: float, duration: float, speed: float, start=None
     ]
 
 
-def _spawn_single_contact(contact_type: ContactType, window: tuple[float, float]) -> Contact:
+def _make_feint_path(t_offset: float, duration: float, speed: float) -> list[Waypoint]:
+    """Red-team tactic: approach the defended asset, then turn away before
+    reaching effective engagement range — a fake attack meant to draw an
+    early, wasted response."""
+    start = (random.uniform(-2000, 2000), random.uniform(-2000, 2000), random.uniform(50, 400))
+    heading_in = math.atan2(-start[1], -start[0])  # toward the asset at origin
+    turn_point = 0.6  # fraction of the approach before peeling away
+    steps = max(4, int(duration // 5))
+    pts = []
+    for i in range(steps + 1):
+        frac = i / steps
+        t = t_offset + frac * duration
+        if frac <= turn_point:
+            dist = speed * frac * duration
+            x = start[0] + math.cos(heading_in) * dist
+            y = start[1] + math.sin(heading_in) * dist
+        else:
+            dist_in = speed * turn_point * duration
+            dist_out = speed * (frac - turn_point) * duration
+            x = start[0] + math.cos(heading_in) * dist_in - math.cos(heading_in) * dist_out
+            y = start[1] + math.sin(heading_in) * dist_in - math.sin(heading_in) * dist_out
+        pts.append(Waypoint(t=t, x=x, y=y, z=start[2]))
+    return pts
+
+
+def _spawn_single_contact(contact_type: ContactType, window: tuple[float, float],
+                           rf_silent: bool = False, low_altitude_masked: bool = False,
+                           feint: bool = False) -> Contact:
     spawn_t = random.uniform(*window)
     duration = random.uniform(20, 60)
     speed = {
@@ -176,7 +214,10 @@ def _spawn_single_contact(contact_type: ContactType, window: tuple[float, float]
         ContactType.DECOY: random.uniform(3, 10),
         ContactType.BIRD: random.uniform(2, 8),
     }[contact_type]
-    path = _make_linear_path(spawn_t, duration, speed)
+    path = _make_feint_path(spawn_t, duration, speed) if feint else _make_linear_path(spawn_t, duration, speed)
+    if low_altitude_masked:
+        for w in path:
+            w.z = random.uniform(5, 20)
     return Contact(
         contact_id=str(uuid.uuid4())[:8],
         contact_type=contact_type,
@@ -185,7 +226,34 @@ def _spawn_single_contact(contact_type: ContactType, window: tuple[float, float]
         spawn_t=spawn_t,
         despawn_t=spawn_t + duration,
         path=path,
+        rf_silent=rf_silent,
+        low_altitude_masked=low_altitude_masked,
+        feint=feint,
     )
+
+
+def spawn_live_contact(contact_type_str: str, now_t: float) -> dict:
+    """Roadmap feature 8 (instructor console): spawns a single contact
+    starting right now, for live event injection into an already-running
+    scenario — reuses the same contact generation logic as normal
+    procedural spawning, just with a fixed (not randomized) spawn time.
+    Returns a plain contact dict in the same schema as
+    `generate_scenario`'s `contacts` entries.
+    """
+    contact_type = ContactType(contact_type_str)
+    contact = _spawn_single_contact(contact_type, (now_t, now_t))
+    return {
+        "contact_id": contact.contact_id,
+        "contact_type": contact.contact_type.value,
+        "true_threat_level": contact.true_threat_level.value,
+        "swarm_id": contact.swarm_id,
+        "spawn_t": contact.spawn_t,
+        "despawn_t": contact.despawn_t,
+        "path": [asdict(w) for w in contact.path],
+        "rf_silent": contact.rf_silent,
+        "low_altitude_masked": contact.low_altitude_masked,
+        "feint": contact.feint,
+    }
 
 
 def _spawn_swarm_ares(window: tuple[float, float], size: int, seed: int | None) -> tuple[list[Contact], dict] | None:
@@ -286,6 +354,8 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
     difficulty = max(1, min(5, params.difficulty))
     window = (10, duration_s - 60)
     weights = params.type_weights or {}
+    red_team = params.red_team_tactics if params.red_team_tactics is not None else (difficulty >= 4 and random.random() < 0.5)
+    tactics_used: list[str] = []
 
     contacts: list[Contact] = []
 
@@ -293,9 +363,23 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
     for _ in range(max(0, n_hostile)):
         contacts.append(_spawn_single_contact(ContactType.HOSTILE_DRONE, window))
 
+    if red_team and contacts:
+        if random.random() < 0.5:
+            random.choice(contacts).rf_silent = True
+            tactics_used.append("rf_silent_drone")
+        if random.random() < 0.5:
+            random.choice(contacts).low_altitude_masked = True
+            tactics_used.append("terrain_masked_low_approach")
+        if random.random() < 0.4:
+            contacts.append(_spawn_single_contact(ContactType.HOSTILE_DRONE, window, feint=True))
+            tactics_used.append("feint")
+
     clutter = TERRAIN_EXTRA_CLUTTER.get(params.terrain, 0)
 
-    n_decoys = round((random.randint(0, difficulty) + clutter) * weights.get("decoy", 1.0))
+    decoy_saturation = red_team and difficulty >= 4
+    if decoy_saturation:
+        tactics_used.append("decoy_saturation")
+    n_decoys = round((random.randint(0, difficulty) + clutter) * weights.get("decoy", 1.0) * (1.8 if decoy_saturation else 1.0))
     for _ in range(max(0, n_decoys)):
         contacts.append(_spawn_single_contact(ContactType.DECOY, window))
 
@@ -308,10 +392,25 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
         contacts.append(_spawn_single_contact(ContactType.FRIENDLY_DRONE, window))
 
     swarm_sim_meta = None
+    swarm_sim_meta_2 = None
     if params.swarm_attack or (difficulty >= 3 and random.random() < 0.6):
-        swarm_size = random.randint(3, 3 + difficulty * 2)
-        swarm_contacts, swarm_sim_meta = _spawn_swarm(window, swarm_size, params.seed)
-        contacts.extend(swarm_contacts)
+        if red_team and random.random() < 0.4:
+            # swarm splitting: two independent ares-driven subgroups
+            # converging from different launch points instead of one
+            half = max(2, (3 + difficulty * 2) // 2)
+            group_a, swarm_sim_meta = _spawn_swarm(window, half, params.seed)
+            seed_b = None if params.seed is None else params.seed + 9001
+            group_b, swarm_sim_meta_2 = _spawn_swarm(window, half, seed_b)
+            contacts.extend(group_a)
+            contacts.extend(group_b)
+            tactics_used.append("swarm_splitting")
+        else:
+            swarm_size = random.randint(3, 3 + difficulty * 2)
+            swarm_contacts, swarm_sim_meta = _spawn_swarm(window, swarm_size, params.seed)
+            contacts.extend(swarm_contacts)
+
+    from ml_bridge.multi_sensor import pick_sensor_outage
+    sensor_outage = pick_sensor_outage(difficulty)
 
     scenario_params = asdict(params)
     scenario_params["effective_sensor_degradation"] = effective_degradation(params)
@@ -323,6 +422,8 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
         "defended_asset_position": list(DEFENDED_ASSET_POS),
         "no_engage_zones": _generate_no_engage_zones(difficulty),
         "roe_card": _generate_roe_card(difficulty),
+        "sensor_outage": sensor_outage,
+        "red_team_tactics_used": tactics_used,
         "contacts": [
             {
                 "contact_id": c.contact_id,
@@ -332,12 +433,17 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
                 "spawn_t": c.spawn_t,
                 "despawn_t": c.despawn_t,
                 "path": [asdict(w) for w in c.path],
+                "rf_silent": c.rf_silent,
+                "low_altitude_masked": c.low_altitude_masked,
+                "feint": c.feint,
             }
             for c in contacts
         ],
     }
     if swarm_sim_meta is not None:
         scenario["swarm_sim_meta"] = swarm_sim_meta
+    if swarm_sim_meta_2 is not None:
+        scenario["swarm_sim_meta_2"] = swarm_sim_meta_2
     return scenario
 
 
@@ -350,7 +456,10 @@ def sanitize_for_client(scenario: dict) -> dict:
     degradation = scenario["params"].get("effective_sensor_degradation", scenario["params"].get("sensor_degradation", 0.0))
     out_contacts = []
     for c in scenario["contacts"]:
-        if degradation and random.random() < degradation * 0.15:
+        # terrain-masked low approach (red-team tactic 7): ground clutter
+        # makes a low flyer meaningfully more likely to be missed entirely
+        dropout = degradation * (0.35 if c.get("low_altitude_masked") else 0.15)
+        if degradation and random.random() < dropout:
             continue  # simulate a dropped/undetected contact entirely
         noisy_path = []
         for w in c["path"]:
@@ -366,10 +475,11 @@ def sanitize_for_client(scenario: dict) -> dict:
         "scenario_id": scenario["scenario_id"],
         "params": {k: v for k, v in scenario["params"].items() if k != "seed"},
         "duration_s": scenario["duration_s"],
-        # ROE/zones/asset are information the trainee needs to operate with,
-        # not ground truth about contacts — safe (and necessary) to send as-is.
+        # ROE/zones/asset/sensor-outage are information the trainee needs to
+        # operate with, not ground truth about contacts — safe to send as-is.
         "defended_asset_position": scenario["defended_asset_position"],
         "no_engage_zones": scenario["no_engage_zones"],
         "roe_card": scenario["roe_card"],
+        "sensor_outage": scenario.get("sensor_outage"),
         "contacts": out_contacts,
     }

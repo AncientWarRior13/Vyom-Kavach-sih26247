@@ -169,11 +169,58 @@ All five verified with an 18-case unit-test sweep of every scoring branch
 (ROE violations, time-critical exception, graduated-response correctness
 per threat tier, timeliness scoring, automation-bias categorization) plus
 a full HTTP integration pass and a real-browser click-through of the new
-5-button action ladder. Tier 2/3 of the roadmap (multi-sensor fusion,
-instructor console, AAR replay, certification thresholds, team roles,
-offline/audit mode, spoofed-signature scenarios) and the model
-training-performance section are not yet implemented — each is
-independently large; ask for them specifically when ready.
+5-button action ladder.
+
+## Tier-2 roadmap features
+
+1. **Multi-sensor fusion** (`ml_bridge/multi_sensor.py`) — EO/IR, RF, and
+   acoustic channels alongside radar. Each scenario randomly jams/degrades
+   one non-radar channel for its duration (`scenario["sensor_outage"]`,
+   shown to the trainee), forcing cross-cueing with whichever channels
+   remain. EO/IR degrades at night and in cluttered terrain and can only
+   tell gross shape (bird vs. drone), never intent — a real sensor
+   limitation, not a shortcut. `POST /api/contact/sensor_read` serves all
+   three; radar stays on the existing `/api/contact/classify`.
+2. **Adaptive red-team tactics** (`scenario_engine/generator.py`) — a
+   `red_team_tactics` flag (auto-enabled ~50% of the time at difficulty≥4)
+   layers in feints (approach then peel away before engagement range),
+   swarm splitting (two independent ares-driven subgroups converging from
+   different launch points — each gets its own reactive-engagement replay
+   metadata, verified independently reactive to separate kills), terrain-
+   masked low approaches (very low altitude + higher radar dropout chance),
+   RF-silent drones (invisible to the RF channel specifically), and decoy
+   saturation (+80% decoy count). `scenario["red_team_tactics_used"]`
+   records which fired, for instructor/AAR visibility.
+3. **Instructor console** (`/instructor`, `trainer_frontend/instructor.html`)
+   — lists currently-active trainee scenarios, injects a new threat (any
+   contact type) into a running session at a chosen time, and jams/clears a
+   sensor mid-session. The trainee page polls `GET
+   /api/scenario/{id}/refresh` every 3s to pick up both without a reload.
+4. **AAR replay with ghost track** — sessions now persist the full
+   ground-truth scenario and the trainee's raw action log (not just the
+   score), enabling `GET /api/aar/session/{id}/replay` for timeline/ghost-
+   track playback. The AAR dashboard also shows an **error taxonomy**
+   (counts of each scoring-flag type), a **missed-contact heatmap** (canvas
+   gradient plot of where contacts go undetected), and a **CSV export**;
+   "PDF export" is a print-friendly `/aar/session/{id}/print` page (browser
+   print-to-PDF) rather than a bundled PDF-generation dependency.
+5. **Certification threshold** — `GET /api/aar/certification/{trainee_id}`
+   grades pass/fail readiness (default: avg ≥80 over the last 5 sessions);
+   `GET /api/aar/certification/unit/{unit_id}` rolls that up per-unit. Shown
+   as a badge on the AAR dashboard.
+
+All five verified with a 16-check HTTP integration pass plus real-browser
+click-throughs of the multi-sensor buttons and the updated AAR dashboard
+(certification badges, error taxonomy, report links all confirmed
+populating from live data).
+
+## Not yet implemented
+
+Tier 3 of the roadmap (team roles with comms delay, offline/air-gapped
+audit mode, spoofed-signature scenarios exposing RadarSense's adversarial
+work) and the model training-performance section (CatBoost speed tuning,
+feature caching, background retrain/hot-swap) — each is independently
+large; ask for them specifically when ready.
 
 ## Research-grade additions (`research/PROTOCOLS.md`)
 

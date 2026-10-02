@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Instructor Console</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #05070a; color: #d7dde3; margin: 0; padding: 20px; }
+  select, button, input { background: #0e141c; color: #d7dde3; border: 1px solid #1f2733; border-radius: 4px; padding: 6px 10px; margin-right: 6px; }
+  .card { background: #0e141c; border: 1px solid #1f2733; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { border-bottom: 1px solid #1f2733; padding: 6px 8px; text-align: left; font-size: 13px; }
+  .log { font-size: 12px; color: #8b949e; white-space: pre-wrap; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h1>Instructor Console</h1>
+<p><a href="/" style="color:#58a6ff">&larr; Trainee view</a> &nbsp; <a href="/aar" style="color:#58a6ff">AAR dashboard</a></p>
+
+<div class="card">
+  <h3>Active scenarios</h3>
+  <button onclick="refreshScenarios()">Refresh list</button>
+  <table id="scenarioTable">
+    <thead><tr><th>Scenario ID</th><th>Contacts</th><th>Duration</th><th>Sensor outage</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Live event injection</h3>
+  <label>Target scenario
+    <select id="targetScenario"></select>
+  </label>
+  <br /><br />
+  <label>Spawn threat
+    <select id="injectType">
+      <option value="hostile_drone">Hostile drone</option>
+      <option value="decoy">Decoy</option>
+      <option value="bird">Bird</option>
+      <option value="friendly_drone">Friendly drone</option>
+    </select>
+  </label>
+  <label>At scenario time (s) <input type="number" id="injectTime" value="0" style="width:70px" /></label>
+  <button onclick="injectThreat()">Inject</button>
+
+  <br /><br />
+  <label>Jam sensor
+    <select id="jamSensor">
+      <option value="eo_ir">EO/IR</option>
+      <option value="rf">RF</option>
+      <option value="acoustic">Acoustic</option>
+    </select>
+  </label>
+  <button onclick="jamSensor()">Jam</button>
+  <button onclick="clearJam()">Clear jam</button>
+
+  <div class="log" id="log"></div>
+</div>
+
+<script>
+function logMsg(msg) {
+  document.getElementById('log').textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n` + document.getElementById('log').textContent;
+}
+
+async function refreshScenarios() {
+  const scenarios = await fetch('/api/instructor/active_scenarios').then(r => r.json());
+  const tbody = document.querySelector('#scenarioTable tbody');
+  tbody.innerHTML = '';
+  const sel = document.getElementById('targetScenario');
+  sel.innerHTML = '';
+  for (const s of scenarios) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${s.scenario_id.slice(0,8)}</td><td>${s.contact_count}</td><td>${s.duration_s}s</td><td>${s.sensor_outage || 'none'}</td>`;
+    tbody.appendChild(tr);
+    const opt = document.createElement('option');
+    opt.value = s.scenario_id;
+    opt.textContent = `${s.scenario_id.slice(0,8)} (${s.contact_count} contacts)`;
+    sel.appendChild(opt);
+  }
+  if (!scenarios.length) logMsg('No active scenarios — start one from the trainee view first.');
+}
+
+async function injectThreat() {
+  const scenario_id = document.getElementById('targetScenario').value;
+  if (!scenario_id) { logMsg('No scenario selected.'); return; }
+  const contact_type = document.getElementById('injectType').value;
+  const t = parseFloat(document.getElementById('injectTime').value);
+  const res = await fetch('/api/instructor/inject_threat', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id, contact_type, t }),
+  });
+  const out = await res.json();
+  logMsg(out.injected ? `Injected ${contact_type} (contact ${out.contact.contact_id}) at t=${t}s` : 'Injection failed');
+  refreshScenarios();
+}
+
+async function jamSensor() {
+  const scenario_id = document.getElementById('targetScenario').value;
+  if (!scenario_id) { logMsg('No scenario selected.'); return; }
+  const sensor = document.getElementById('jamSensor').value;
+  const res = await fetch('/api/instructor/jam_sensor', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id, sensor }),
+  });
+  const out = await res.json();
+  logMsg(`Sensor outage set to: ${out.sensor_outage}`);
+  refreshScenarios();
+}
+
+async function clearJam() {
+  const scenario_id = document.getElementById('targetScenario').value;
+  if (!scenario_id) { logMsg('No scenario selected.'); return; }
+  const res = await fetch('/api/instructor/jam_sensor', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ scenario_id, sensor: null }),
+  });
+  await res.json();
+  logMsg('Sensor outage cleared.');
+  refreshScenarios();
+}
+
+refreshScenarios();
+setInterval(refreshScenarios, 5000);
+</script>
+</body>
+</html>

@@ -11,19 +11,22 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from scenario_engine import generate_scenario, list_scripted, load_scripted
+from scenario_engine import generate_scenario, list_scripted, load_scripted, spawn_live_contact
 from scenario_engine.generator import ScenarioParams, sanitize_for_client
 from scoring_engine import score_session
 from aar_dashboard import (
     init_db, save_session, list_sessions, trainee_trend, unit_trend,
     get_or_assign_arm, experiment_results, weakness_profile,
+    get_session_replay, error_taxonomy, missed_positions,
+    certification_status, unit_certification_summary,
 )
 from ml_bridge import classify_contact, generate_swarm_paths
+from ml_bridge.multi_sensor import read_sensor
 from research import next_difficulty
 
 AAR_ABLATION_ARMS = ["aar_shown", "aar_withheld"]
@@ -78,6 +81,7 @@ class NewScenarioRequest(BaseModel):
     swarm_attack: bool = False
     duration_s: int = 300
     seed: int | None = None
+    red_team_tactics: bool | None = None
 
 
 @app.post("/api/scenario/new")
@@ -89,6 +93,7 @@ def new_scenario(req: NewScenarioRequest):
         sensor_degradation=req.sensor_degradation,
         swarm_attack=req.swarm_attack,
         seed=req.seed,
+        red_team_tactics=req.red_team_tactics,
     )
     scenario = generate_scenario(params, duration_s=req.duration_s)
     _ACTIVE_SCENARIOS[scenario["scenario_id"]] = scenario
@@ -104,6 +109,7 @@ class AdaptiveScenarioRequest(BaseModel):
     swarm_attack: bool = False
     duration_s: int = 300
     seed: int | None = None
+    red_team_tactics: bool | None = None
 
 
 @app.post("/api/scenario/adaptive")
@@ -123,6 +129,7 @@ def adaptive_scenario(req: AdaptiveScenarioRequest):
         swarm_attack=req.swarm_attack,
         seed=req.seed,
         type_weights=weights,
+        red_team_tactics=req.red_team_tactics,
     )
     scenario = generate_scenario(params, duration_s=req.duration_s)
     _ACTIVE_SCENARIOS[scenario["scenario_id"]] = scenario
@@ -170,6 +177,37 @@ def classify(req: ClassifyRequest):
     return {"label": result["label"], "probabilities": result["probabilities"], "source": result["source"]}
 
 
+class SensorReadRequest(BaseModel):
+    scenario_id: str
+    contact_id: str
+    t: float
+    sensor: str  # "eo_ir" | "rf" | "acoustic" (radar is /api/contact/classify)
+
+
+@app.post("/api/contact/sensor_read")
+def sensor_read(req: SensorReadRequest):
+    """Roadmap feature 6 (multi-sensor fusion): EO/IR, RF and acoustic
+    channels alongside the radar+ML classifier hint. One channel is jammed
+    for the whole scenario (`scenario["sensor_outage"]`) — the trainee must
+    cross-cue with whichever channels remain.
+    """
+    if req.sensor not in ("eo_ir", "rf", "acoustic"):
+        raise HTTPException(400, "sensor must be one of eo_ir, rf, acoustic")
+    scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+    contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
+    if contact is None:
+        raise HTTPException(404, "unknown contact_id")
+
+    asset_xy = tuple(scenario.get("defended_asset_position", [0.0, 0.0, 0.0])[:2])
+    return read_sensor(
+        req.sensor, contact, req.t,
+        scenario["params"].get("time_of_day", "day"), scenario["params"].get("terrain", "rural"),
+        asset_xy, scenario.get("sensor_outage"),
+    )
+
+
 class EngageRequest(BaseModel):
     scenario_id: str
     contact_id: str
@@ -204,8 +242,16 @@ def engage_contact(req: EngageRequest):
     if req.action not in ("hard_kill", "engage"):
         return {"reactive": False, "contacts": []}
 
-    meta = scenario.get("swarm_sim_meta")
-    if meta is None or req.contact_id not in meta["contact_to_uav"]:
+    # a split-swarm scenario (red-team tactic 7) has two independent swarm
+    # groups, each with its own replay metadata — find whichever one owns
+    # this contact.
+    meta = None
+    for key in ("swarm_sim_meta", "swarm_sim_meta_2"):
+        candidate = scenario.get(key)
+        if candidate is not None and req.contact_id in candidate["contact_to_uav"]:
+            meta = candidate
+            break
+    if meta is None:
         return {"reactive": False, "contacts": []}
 
     uav_id = meta["contact_to_uav"][req.contact_id]
@@ -259,7 +305,8 @@ def submit_session(req: SubmitSessionRequest):
         seq_arm = get_or_assign_arm("sequencing", req.trainee_id, SEQUENCING_ARMS)
 
     save_session(req.trainee_id, req.unit_id, req.difficulty, result,
-                 aar_ablation_arm=aar_arm, sequencing_arm=seq_arm)
+                 aar_ablation_arm=aar_arm, sequencing_arm=seq_arm,
+                 scenario=scenario, trainee_log=req.trainee_log)
     del _ACTIVE_SCENARIOS[req.scenario_id]
 
     if aar_arm == "aar_withheld":
@@ -284,9 +331,160 @@ def aar_trainee_trend(trainee_id: str):
     return trainee_trend(trainee_id)
 
 
+@app.get("/api/aar/session/{session_id}/replay")
+def aar_session_replay(session_id: int):
+    """Roadmap feature 9 (AAR replay with ghost track): full ground-truth
+    scenario + the trainee's raw logged actions, for a timeline-scrubber UI
+    to replay what actually happened contact-by-contact. Only sessions
+    saved after this feature shipped carry replay data."""
+    replay = get_session_replay(session_id)
+    if replay is None:
+        raise HTTPException(404, "unknown session_id")
+    return replay
+
+
+@app.get("/api/aar/error_taxonomy")
+def aar_error_taxonomy(trainee_id: str = "", unit_id: str = ""):
+    """Roadmap feature 9: counts of each scoring-flag type across recent
+    matching sessions — which kinds of mistakes a trainee/unit actually
+    makes, not just an aggregate score."""
+    return error_taxonomy(trainee_id or None, unit_id or None)
+
+
+@app.get("/api/aar/missed_heatmap")
+def aar_missed_heatmap(trainee_id: str = "", unit_id: str = ""):
+    """Roadmap feature 9: (x, y) of every missed contact across recent
+    sessions, for a heatmap of which regions a trainee/unit tends to miss."""
+    return missed_positions(trainee_id or None, unit_id or None)
+
+
+@app.get("/api/aar/export.csv")
+def aar_export_csv(trainee_id: str = "", unit_id: str = ""):
+    """Roadmap feature 9: CSV export of session summaries. (PDF export is
+    the print-friendly /aar/session/{id}/print page below — browser
+    print-to-PDF — rather than a bundled PDF-generation dependency.)"""
+    import csv
+    import io
+    sessions = list_sessions(trainee_id or None, unit_id or None, limit=10_000)
+    buf = io.StringIO()
+    fields = ["id", "created_at", "trainee_id", "unit_id", "difficulty", "overall_score",
+              "detection_score", "classification_score", "engagement_score", "contacts_missed"]
+    writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    for s in sessions:
+        writer.writerow(s)
+    return Response(content=buf.getvalue(), media_type="text/csv",
+                     headers={"Content-Disposition": "attachment; filename=sessions.csv"})
+
+
+@app.get("/aar/session/{session_id}/print")
+def aar_session_print(session_id: int):
+    """A print-friendly single-session report — the practical 'export to
+    PDF' path (browser print-to-PDF) without a bundled PDF-generation
+    dependency."""
+    replay = get_session_replay(session_id)
+    if replay is None:
+        raise HTTPException(404, "unknown session_id")
+    result = replay["result"]
+    rows = "".join(
+        f"<tr><td>{c['contact_id']}</td><td>{c['true_type']}</td><td>{c['contact_score']}</td>"
+        f"<td>{c.get('flag') or ''}</td></tr>"
+        for c in result.get("per_contact", [])
+    )
+    html = f"""<!doctype html><html><head><meta charset="utf-8">
+    <title>Session {session_id} report</title>
+    <style>body{{font-family:system-ui,sans-serif;padding:24px}}table{{border-collapse:collapse;width:100%}}
+    td,th{{border:1px solid #ccc;padding:4px 8px;text-align:left}}</style></head><body>
+    <h1>Session {session_id} — {replay['trainee_id']} / {replay['unit_id']}</h1>
+    <p>Created: {replay['created_at']} | Difficulty: {replay['difficulty']}</p>
+    <p>Overall: {result['overall_score']} | Detection: {result['detection_score']} |
+       Classification: {result['classification_score']} | Engagement: {result['engagement_score']} |
+       Timeliness: {result.get('timeliness_score', '-')}</p>
+    <table><thead><tr><th>Contact</th><th>True type</th><th>Score</th><th>Flag</th></tr></thead>
+    <tbody>{rows}</tbody></table>
+    <p style="margin-top:24px;color:#666">Use your browser's Print &rarr; Save as PDF for a PDF copy.</p>
+    </body></html>"""
+    return Response(content=html, media_type="text/html")
+
+
+@app.get("/api/aar/certification/{trainee_id}")
+def aar_certification(trainee_id: str, threshold: float = 80.0, window: int = 5):
+    """Roadmap feature 10: pass/fail readiness grade."""
+    return certification_status(trainee_id, threshold, window)
+
+
+@app.get("/api/aar/certification/unit/{unit_id}")
+def aar_unit_certification(unit_id: str, threshold: float = 80.0, window: int = 5):
+    return unit_certification_summary(unit_id, threshold, window)
+
+
 @app.get("/api/aar/trend/unit/{unit_id}")
 def aar_unit_trend(unit_id: str):
     return unit_trend(unit_id)
+
+
+# --- Roadmap feature 8: instructor console ---
+
+@app.get("/api/instructor/active_scenarios")
+def instructor_active_scenarios():
+    """What an instructor can currently pick to inject into."""
+    return [
+        {"scenario_id": sid, "duration_s": s["duration_s"], "contact_count": len(s["contacts"]),
+         "sensor_outage": s.get("sensor_outage"), "params": {k: v for k, v in s["params"].items() if k != "seed"}}
+        for sid, s in _ACTIVE_SCENARIOS.items()
+    ]
+
+
+class InjectThreatRequest(BaseModel):
+    scenario_id: str
+    contact_type: str  # one of ContactType's values, e.g. "hostile_drone", "decoy", "bird"
+    t: float
+
+
+@app.post("/api/instructor/inject_threat")
+def instructor_inject_threat(req: InjectThreatRequest):
+    scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+    try:
+        contact = spawn_live_contact(req.contact_type, req.t)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    scenario["contacts"].append(contact)
+    sanitized_contact = sanitize_for_client({**scenario, "contacts": [contact]})["contacts"]
+    return {"injected": True, "contact": sanitized_contact[0] if sanitized_contact else None}
+
+
+class JamSensorRequest(BaseModel):
+    scenario_id: str
+    sensor: str | None  # None clears the outage
+
+
+@app.post("/api/instructor/jam_sensor")
+def instructor_jam_sensor(req: JamSensorRequest):
+    scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+    if req.sensor is not None and req.sensor not in ("eo_ir", "rf", "acoustic"):
+        raise HTTPException(400, "sensor must be eo_ir, rf, acoustic, or null to clear")
+    scenario["sensor_outage"] = req.sensor
+    return {"sensor_outage": scenario["sensor_outage"]}
+
+
+@app.get("/api/scenario/{scenario_id}/refresh")
+def scenario_refresh(scenario_id: str):
+    """Lets the trainee's page pick up instructor-injected threats and
+    sensor-outage changes without a full reload — poll this periodically
+    during a session."""
+    scenario = _ACTIVE_SCENARIOS.get(scenario_id)
+    if scenario is None:
+        raise HTTPException(404, "unknown or expired scenario_id")
+    return sanitize_for_client(scenario)
+
+
+@app.get("/instructor")
+def instructor_page():
+    return FileResponse(BASE_DIR / "trainer_frontend" / "instructor.html")
 
 
 @app.get("/")

@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS sessions (
     result_json TEXT NOT NULL,
     aar_ablation_arm TEXT,
     sequencing_arm TEXT,
-    attempt_number INTEGER
+    attempt_number INTEGER,
+    scenario_json TEXT,
+    trainee_log_json TEXT
 );
 
 CREATE TABLE IF NOT EXISTS experiment_assignments (
@@ -56,10 +58,15 @@ def _conn():
 def init_db() -> None:
     with _conn() as conn:
         conn.executescript(SCHEMA)
+        existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(sessions)").fetchall()}
+        for col in ("scenario_json", "trainee_log_json"):
+            if col not in existing_cols:
+                conn.execute(f"ALTER TABLE sessions ADD COLUMN {col} TEXT")
 
 
 def save_session(trainee_id: str, unit_id: str, difficulty: int, result: dict,
-                  aar_ablation_arm: str | None = None, sequencing_arm: str | None = None) -> int:
+                  aar_ablation_arm: str | None = None, sequencing_arm: str | None = None,
+                  scenario: dict | None = None, trainee_log: list | None = None) -> int:
     with _conn() as conn:
         attempt_number = conn.execute(
             "SELECT COUNT(*) + 1 FROM sessions WHERE trainee_id = ?", (trainee_id,)
@@ -68,14 +75,17 @@ def save_session(trainee_id: str, unit_id: str, difficulty: int, result: dict,
             """INSERT INTO sessions
                (trainee_id, unit_id, scenario_id, difficulty, overall_score,
                 detection_score, classification_score, engagement_score,
-                contacts_missed, result_json, aar_ablation_arm, sequencing_arm, attempt_number)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                contacts_missed, result_json, aar_ablation_arm, sequencing_arm, attempt_number,
+                scenario_json, trainee_log_json)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 trainee_id, unit_id, result["scenario_id"], difficulty,
                 result["overall_score"], result["detection_score"],
                 result["classification_score"], result["engagement_score"],
                 result["contacts_missed"], json.dumps(result),
                 aar_ablation_arm, sequencing_arm, attempt_number,
+                json.dumps(scenario) if scenario is not None else None,
+                json.dumps(trainee_log) if trainee_log is not None else None,
             ),
         )
         return cur.lastrowid
@@ -119,8 +129,15 @@ def experiment_results(experiment_name: str, arm_column: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+_LIST_COLUMNS = """id, trainee_id, unit_id, scenario_id, difficulty, created_at,
+                   overall_score, detection_score, classification_score, engagement_score,
+                   contacts_missed, result_json, aar_ablation_arm, sequencing_arm, attempt_number"""
+
+
 def list_sessions(trainee_id: str | None = None, unit_id: str | None = None, limit: int = 100) -> list[dict]:
-    query = "SELECT * FROM sessions"
+    # excludes scenario_json/trainee_log_json (replay-only payloads) so a
+    # routine AAR list stays small; use get_session_replay for those.
+    query = f"SELECT {_LIST_COLUMNS} FROM sessions"
     clauses, params = [], []
     if trainee_id:
         clauses.append("trainee_id = ?")
@@ -201,3 +218,124 @@ def weakness_profile(trainee_id: str, lookback: int = 10) -> dict:
         # crowd out everything else; no history for a type -> default 1.0
         weights[key] = round(1.0 + (1.0 - avg_score_0_1) * 1.5, 2)
     return weights
+
+
+# roadmap feature 9: AAR replay with ghost track, heatmap, error taxonomy, export
+
+def get_session_replay(session_id: int) -> dict | None:
+    """Full ground-truth scenario + the trainee's raw logged actions for a
+    past session, for timeline/ghost-track replay. Only sessions saved
+    after this feature shipped have scenario_json/trainee_log_json —
+    older rows return those as None, and the caller should say so rather
+    than fabricate a replay for them.
+    """
+    with _conn() as conn:
+        row = conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,)).fetchone()
+    if row is None:
+        return None
+    d = dict(row)
+    d["result"] = json.loads(d.pop("result_json"))
+    d["scenario"] = json.loads(d["scenario_json"]) if d.get("scenario_json") else None
+    d["trainee_log"] = json.loads(d["trainee_log_json"]) if d.get("trainee_log_json") else None
+    d.pop("scenario_json", None)
+    d.pop("trainee_log_json", None)
+    return d
+
+
+def error_taxonomy(trainee_id: str | None = None, unit_id: str | None = None, limit: int = 200) -> dict:
+    """Counts of each scoring flag type across matching sessions (stripping
+    the per-contact/zone-name suffix so e.g. all
+    `roe_violation_no_engage_zone:hospital` entries bucket together)."""
+    clauses, params = [], []
+    if trainee_id:
+        clauses.append("trainee_id = ?")
+        params.append(trainee_id)
+    if unit_id:
+        clauses.append("unit_id = ?")
+        params.append(unit_id)
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    with _conn() as conn:
+        rows = conn.execute(
+            f"SELECT result_json FROM sessions {where} ORDER BY created_at DESC LIMIT ?",
+            (*params, limit),
+        ).fetchall()
+
+    counts: dict[str, int] = {}
+    for row in rows:
+        result = json.loads(row["result_json"])
+        for flag in result.get("flags", []):
+            flag_type = flag.split(":", 1)[-1].split(":")[0] if ":" in flag else flag
+            counts[flag_type] = counts.get(flag_type, 0) + 1
+    return dict(sorted(counts.items(), key=lambda kv: -kv[1]))
+
+
+def missed_positions(trainee_id: str | None = None, unit_id: str | None = None, limit: int = 50) -> list[dict]:
+    """(x, y) of every missed contact at its spawn position, across recent
+    sessions that have scenario_json saved — feeds the AAR heatmap of
+    missed regions."""
+    clauses, params = [], []
+    if trainee_id:
+        clauses.append("trainee_id = ?")
+        params.append(trainee_id)
+    if unit_id:
+        clauses.append("unit_id = ?")
+        params.append(unit_id)
+    clauses.append("scenario_json IS NOT NULL")
+    where = f"WHERE {' AND '.join(clauses)}"
+    with _conn() as conn:
+        rows = conn.execute(
+            f"SELECT result_json, scenario_json FROM sessions {where} ORDER BY created_at DESC LIMIT ?",
+            (*params, limit),
+        ).fetchall()
+
+    points = []
+    for row in rows:
+        result = json.loads(row["result_json"])
+        scenario = json.loads(row["scenario_json"])
+        contacts_by_id = {c["contact_id"]: c for c in scenario.get("contacts", [])}
+        for c in result.get("per_contact", []):
+            if c["detected"]:
+                continue
+            contact = contacts_by_id.get(c["contact_id"])
+            if not contact or not contact.get("path"):
+                continue
+            p = contact["path"][0]
+            points.append({"x": p["x"], "y": p["y"], "true_type": c["true_type"]})
+    return points
+
+
+def certification_status(trainee_id: str, threshold: float = 80.0, window: int = 5) -> dict:
+    """Roadmap feature 10: pass/fail readiness grade — certified if the
+    average overall_score across the trainee's last `window` sessions
+    meets `threshold`."""
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT overall_score FROM sessions WHERE trainee_id = ? ORDER BY created_at DESC LIMIT ?",
+            (trainee_id, window),
+        ).fetchall()
+    scores = [r["overall_score"] for r in rows]
+    avg = round(sum(scores) / len(scores), 1) if scores else None
+    return {
+        "trainee_id": trainee_id,
+        "sessions_counted": len(scores),
+        "window": window,
+        "threshold": threshold,
+        "avg_score": avg,
+        "certified": avg is not None and len(scores) >= window and avg >= threshold,
+    }
+
+
+def unit_certification_summary(unit_id: str, threshold: float = 80.0, window: int = 5) -> dict:
+    with _conn() as conn:
+        trainees = conn.execute(
+            "SELECT DISTINCT trainee_id FROM sessions WHERE unit_id = ?", (unit_id,)
+        ).fetchall()
+    per_trainee = [certification_status(r["trainee_id"], threshold, window) for r in trainees]
+    certified_count = sum(1 for t in per_trainee if t["certified"])
+    return {
+        "unit_id": unit_id,
+        "trainees": per_trainee,
+        "certified_count": certified_count,
+        "total_trainees": len(per_trainee),
+        "certification_rate": round(certified_count / len(per_trainee), 2) if per_trainee else None,
+    }
