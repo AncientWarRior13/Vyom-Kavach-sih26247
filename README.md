@@ -9,10 +9,30 @@ tracking individual/unit performance over repeated sessions.
 
 ## Status: fully built, every problem-statement requirement covered
 
+## Quickstart (one command, does everything)
+
+**Windows:** double-click `start.bat` (or run it from a terminal).
+**Mac/Linux:** run `./start.sh` from a terminal.
+
+Either one creates a virtual environment if needed, installs/updates every
+dependency, picks a free port (8090, falling back to 8099 if that's taken),
+starts the server, and opens the trainer in your browser automatically.
+Nothing else to do first — no manual `pip install`, no activating a venv
+yourself. If something's wrong with your Python install, the script tells
+you exactly what, instead of a raw traceback.
+
+### Manual setup (if you'd rather control each step)
+
 ```bash
+python -m venv .venv
+# Windows:  .venv\Scripts\pip install -r requirements.txt
+# Mac/Linux: .venv/bin/pip install -r requirements.txt
 pip install -r requirements.txt
 uvicorn server:app --reload --port 8090
 ```
+
+Requires **Python 3.10+**. If `pip install` fails partway through, re-run
+it — it's safe to run repeatedly, it just skips what's already installed.
 
 - `http://localhost:8090/` — desktop trainee exercise screen
 - `http://localhost:8090/vr` — WebXR/VR trainee exercise screen (works as a
