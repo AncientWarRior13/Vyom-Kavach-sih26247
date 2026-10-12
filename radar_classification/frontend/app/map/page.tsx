@@ -24,7 +24,7 @@ export default function MapPage() {
             <div>
               <h1 className={`text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r flex items-center gap-2 ${theme === 'dark' ? 'from-zinc-50 via-zinc-100 to-zinc-300' : 'from-zinc-900 via-zinc-800 to-zinc-700'
                 }`}>
-                RadarSense <span className={`font-mono text-xs border px-1.5 py-0.5 rounded ${theme === 'dark' ? 'border-sky-800/40 bg-sky-950/20 text-sky-400' : 'border-sky-200 bg-sky-50 text-sky-600'
+                DroneThreatTrainer <span className="opacity-60 font-normal">· Radar Analytics</span> <span className={`font-mono text-xs border px-1.5 py-0.5 rounded ${theme === 'dark' ? 'border-sky-800/40 bg-sky-950/20 text-sky-400' : 'border-sky-200 bg-sky-50 text-sky-600'
                   }`}>GEO</span>
               </h1>
               <p className={`text-[10px] font-mono uppercase tracking-wider ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'

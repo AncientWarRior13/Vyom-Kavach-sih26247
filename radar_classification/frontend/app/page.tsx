@@ -332,7 +332,7 @@ export default function Home() {
             <div>
               <h1 className={`text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r flex items-center gap-2 ${theme === 'dark' ? 'from-zinc-50 via-zinc-100 to-zinc-300' : 'from-zinc-900 via-zinc-800 to-zinc-700'
                 }`}>
-                RadarSense <span className={`font-mono text-xs border px-1.5 py-0.5 rounded ${theme === 'dark' ? 'border-emerald-800/40 bg-emerald-950/20 text-emerald-400' : 'border-emerald-200 bg-emerald-50 text-emerald-600'
+                DroneThreatTrainer <span className="opacity-60 font-normal">· Radar Analytics</span> <span className={`font-mono text-xs border px-1.5 py-0.5 rounded ${theme === 'dark' ? 'border-emerald-800/40 bg-emerald-950/20 text-emerald-400' : 'border-emerald-200 bg-emerald-50 text-emerald-600'
                   }`}>QT-2.18</span>
               </h1>
               <p className={`text-[10px] font-mono uppercase tracking-wider ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'
@@ -953,7 +953,7 @@ export default function Home() {
 
       <footer className={`text-center py-4 px-6 text-[11px] font-mono border-t transition-colors duration-300 ${theme === 'dark' ? 'border-zinc-900 bg-zinc-950/30 text-zinc-500' : 'border-zinc-200 bg-zinc-100 text-zinc-600'
         }`}>
-        &copy; 2026 RadarSense Simulation Group. Build version 1.2.0. Dynamic WebAssembly ONNX inference engine is enabled.
+        &copy; 2026 DroneThreatTrainer Radar Analytics. Build version 1.2.0. Dynamic WebAssembly ONNX inference engine is enabled.
       </footer>
     </div>
   );

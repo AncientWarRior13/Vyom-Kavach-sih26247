@@ -83,9 +83,19 @@ and were never meant to be:
   calibration dataset at import time) plus a much heavier dependency
   install (qiskit, catboost, xgboost, shap, ~900MB+).
 
-**To run the RadarSense dashboard too (optional, separate from the trainer):**
+**To run the Radar Analytics dashboard too (optional, separate from the trainer):**
+
+**Windows:** double-click `start_radar_analytics.bat`.
+**Mac/Linux:** run `./start_radar_analytics.sh`.
+
+Both scripts set up their own `.venv_radar` + `node_modules`, start the API
+(port 8081, ~60-90s cold start) and the frontend (port 3000) in their own
+windows/processes, and open the dashboard in your browser. The main trainer's
+UI (`http://localhost:8090/`) links to it directly once it's running.
+
+Or run it manually:
 ```bash
-# Terminal 1 — the RadarSense API (takes ~60-90s to finish starting)
+# Terminal 1 — the Radar Analytics API (takes ~60-90s to finish starting)
 cd radar_classification
 pip install -r requirements.txt
 uvicorn api.app:app --port 8081
