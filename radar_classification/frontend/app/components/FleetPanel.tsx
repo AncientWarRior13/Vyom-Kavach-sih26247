@@ -905,7 +905,7 @@ export default function FleetPanel({ theme }: { theme: 'dark' | 'light' }) {
             <div className="flex items-center gap-2">
               <Server className="w-4 h-4 text-emerald-400" />
               <span>Quantum Server Backend (PennyLane VQC):</span>
-              <span className="text-zinc-400">http:
+              <span className="text-zinc-400">{API_BASE}</span>
             </div>
             {quantumServerStatus.online ? (
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">

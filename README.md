@@ -58,8 +58,47 @@ that trainee/unit ID.
 | `ml_bridge/` | Wires the two reused repos' real engines into the live scenario/scoring loop (see below) |
 | `research/` | Research-grade additions grounded in the literature (see `research/PROTOCOLS.md`): two live A/B experiments (AAR-timing, scenario-sequencing) with stable arm assignment and an analysis export endpoint, plus a swarm-density-aware classifier feature |
 | `server.py` | FastAPI app tying everything together + serving all three frontends |
-| `radar_classification/` | Reused from RadarSense: real radar DSP + ML classifier, FastAPI backend, Next.js frontend, trained model artifacts — the ONNX model is loaded live by `ml_bridge` |
+| `radar_classification/` | Reused from RadarSense — **two genuinely separate things**, see the architecture note below: `radarsense/` + `artifacts/` are imported directly by this trainer's `ml_bridge`; `api/` (port 8081) + `frontend/` (port 3000) are RadarSense's own standalone full-stack dashboard, a separate service this trainer doesn't start or depend on |
 | `swarm_simulation/` | Reused from ares-x: multi-UAV swarm simulator (allocator/relay/recovery) — driven live by `ml_bridge` for swarm-attack contacts |
+
+## Architecture note: two separate services, not one app
+
+This matters enough to say plainly, since it's easy to assume the trainer
+and the RadarSense dashboard are one integrated product — they are not,
+and were never meant to be:
+
+- **This trainer** (`server.py`, port 8090) is the actual product — it
+  imports exactly two things from `radar_classification/`: the DSP module
+  (`radarsense/radar_dsp.py`) and the trained model artifacts
+  (`artifacts/onnx/`, `artifacts/models/`). Nothing else in
+  `radar_classification/` is imported by this trainer at all (verified by
+  grep across every file in this repo that could import it).
+- **`radar_classification/api/` + `frontend/`** is RadarSense's own
+  separate, full-stack demo product (a Next.js dashboard talking to its own
+  FastAPI backend on port 8081) — kept in this repo and kept **working**
+  (see below) as a standalone reference, but it is a different service with
+  its own dependency stack, its own ports, and its own `npm`/`pip` install
+  step. `./start.bat`/`./start.sh` do not start it, by design — it's
+  optional, and starting it adds a 60+ second cold-start (it generates a
+  calibration dataset at import time) plus a much heavier dependency
+  install (qiskit, catboost, xgboost, shap, ~900MB+).
+
+**To run the RadarSense dashboard too (optional, separate from the trainer):**
+```bash
+# Terminal 1 — the RadarSense API (takes ~60-90s to finish starting)
+cd radar_classification
+pip install -r requirements.txt
+uvicorn api.app:app --port 8081
+
+# Terminal 2 — its frontend
+cd radar_classification/frontend
+npm install
+npm run dev
+# open http://localhost:3000/
+```
+Verified end-to-end: a real browser loading `localhost:3000/` makes real
+calls to `localhost:8081/predict/31` and gets real 200 responses back — the
+two actually talk to each other correctly once both are running.
 
 ## How day/night, terrain, and sensor degradation actually affect the exercise
 
@@ -440,6 +479,61 @@ cosmetic upgrade not required by the problem statement, to avoid
 integration risk on the now-verified reactive-engagement path above. Happy
 to wire it in on request; flagging the decision here instead of silently
 dropping it.
+
+## Security (fixed after an external code review)
+
+An external review of this project found three real issues, fixed and
+verified below. It also flagged one claim (missing browser ONNX model
+assets) that turned out to be a false positive — the files were already
+present and byte-identical to the model this trainer actually serves,
+confirmed with a direct `diff`.
+
+1. **`POST /api/model/retrain` accepted an arbitrary `script_path` and ran
+   it via `subprocess.run`** — unauthenticated arbitrary code execution for
+   anyone who could reach the endpoint. Fixed: both `script_path` and
+   `new_onnx_path` now must resolve (after `Path.resolve()`, so `../..`
+   traversal doesn't escape it) inside fixed allowlisted directories
+   (`radar_classification/radarsense/` and `radar_classification/artifacts/onnx/`
+   respectively) or the request is rejected with 403. Verified by actually
+   attacking it: path traversal, an absolute path outside the allowlist,
+   and a real file that exists but sits outside the allowlist were all
+   rejected; a legitimate in-allowlist script still runs correctly.
+2. **No access control on any route.** This app binds to `127.0.0.1` only
+   by default (uvicorn's own default when `--host` isn't passed — verified
+   directly, not assumed), which already blocks remote network access out
+   of the box. A narrower gap remained even then: any other page open in
+   the same browser could still `fetch()` this server cross-origin
+   ("localhost CSRF"), since `Host`-only checks don't catch that (`Host`
+   always reflects the request's *target*, not the page that sent it).
+   Fixed: a middleware now checks both `Host` (catches unintended
+   remote/LAN exposure if someone runs with `--host 0.0.0.0`) and `Origin`
+   (catches the same-machine cross-origin case `Host` can't), rejecting
+   anything that doesn't resolve to localhost/127.0.0.1 with 403 — opt-out
+   via `DRONETHREATTRAINER_ALLOW_REMOTE=1` for a deliberate LAN deployment,
+   which still needs its own auth layer in front. Verified: a real
+   cross-origin request (`Origin: http://evil.com`) and a spoofed-remote-host
+   request were both rejected; the actual trainer UI (real browser,
+   full click-through session) was unaffected.
+3. **Scenario refresh was nondeterministic** — `sanitize_for_client()`'s
+   sensor dropout and position noise came from the unseeded global `random`
+   module, re-rolled on every call, including every 3s
+   `/api/scenario/{id}/refresh` poll. A contact could flicker in and out of
+   existence or jitter discontinuously from being asked about again, with
+   no new information — and two team-mode tabs polling independently would
+   see *different* noisy positions for the same ground truth at the same
+   instant. Fixed: dropout and noise are now deterministic functions of
+   `(scenario_id, contact_id[, waypoint index])` via a locally-seeded
+   `random.Random`, never touching global state. Verified: 5 repeated
+   sanitizations of the same scenario produce an identical contact set and
+   identical positions every time, while different contacts still get
+   genuinely different noise (not degenerately collapsed to one value).
+
+Also fixed: the root `requirements.txt`'s `numpy` constraint was unbounded
+while `radar_classification/requirements.txt` pins `numpy<2.0` — installing
+both together could resolve an incompatible version. Aligned to
+`numpy>=1.26,<2.0` and re-verified the real classifier, real swarm sim, and
+full server import all still work correctly under numpy 1.26.4
+specifically (not just assumed from the version bump).
 
 ## Remaining limitation (not fixable from here)
 

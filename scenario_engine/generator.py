@@ -9,6 +9,7 @@ No external deps beyond the stdlib so this runs anywhere.
 """
 from __future__ import annotations
 
+import hashlib
 import math
 import random
 import time
@@ -473,23 +474,51 @@ def generate_scenario(params: ScenarioParams | None = None, duration_s: int = 30
     return scenario
 
 
+def _deterministic_rng(*parts: object) -> random.Random:
+    """A random.Random seeded deterministically from `parts`, independent of
+    the global `random` module's state (and never mutates it). Used so
+    sanitize_for_client()'s dropout/noise is a stable function of
+    (scenario_id, contact_id, ...) rather than re-rolled on every call —
+    see the fix note on sanitize_for_client for why that mattered.
+    """
+    key = "|".join(str(p) for p in parts)
+    seed = int(hashlib.sha256(key.encode()).hexdigest(), 16) % (2**32)
+    return random.Random(seed)
+
+
 def sanitize_for_client(scenario: dict) -> dict:
     """Strip ground-truth fields so the trainee only gets what a sensor
     would show: positions over time, degraded per `sensor_degradation`.
     Classification/threat level must be judged by the trainee, not handed
     to them.
+
+    Fix (external review finding #5): dropout and position noise used to
+    come from the unseeded global `random` module, re-rolled on every call
+    — including every 3s /api/scenario/{id}/refresh poll — so the same
+    contact could flicker in and out of existence and its position could
+    jitter discontinuously purely from being asked about again, with no
+    new information. Both are now deterministic functions of
+    (scenario_id, contact_id[, waypoint index]), so repeated sanitization
+    of the same ground truth is stable: a contact that was visible stays
+    visible (until something real changes it, e.g. an instructor's sensor
+    jam), and its noisy position is a fixed offset from ground truth, not a
+    moving target. This also means two team-mode tabs independently polling
+    see the identical sensor picture for the same contact, as they should.
     """
     degradation = scenario["params"].get("effective_sensor_degradation", scenario["params"].get("sensor_degradation", 0.0))
+    scenario_id = scenario["scenario_id"]
     out_contacts = []
     for c in scenario["contacts"]:
         # terrain-masked low approach (red-team tactic 7): ground clutter
         # makes a low flyer meaningfully more likely to be missed entirely
         dropout = degradation * (0.35 if c.get("low_altitude_masked") else 0.15)
-        if degradation and random.random() < dropout:
-            continue  # simulate a dropped/undetected contact entirely
+        contact_rng = _deterministic_rng(scenario_id, c["contact_id"], "dropout")
+        if degradation and contact_rng.random() < dropout:
+            continue  # simulate a dropped/undetected contact entirely — but consistently so
         noisy_path = []
-        for w in c["path"]:
-            noise = degradation * random.uniform(-40, 40)
+        for i, w in enumerate(c["path"]):
+            wp_rng = _deterministic_rng(scenario_id, c["contact_id"], "noise", i)
+            noise = degradation * wp_rng.uniform(-40, 40)
             noisy_path.append({"t": w["t"], "x": w["x"] + noise, "y": w["y"] + noise, "z": w["z"]})
         out_contacts.append({
             "contact_id": c["contact_id"],

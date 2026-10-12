@@ -11,8 +11,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Response
-from fastapi.responses import FileResponse
+import os
+
+from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -41,6 +43,56 @@ SEQUENCING_ARMS = ["blocked", "randomized"]
 BASE_DIR = Path(__file__).parent
 
 app = FastAPI(title="Drone Threat Trainer")
+
+# Security hardening (external review finding #4): this app ships bound to
+# 127.0.0.1 only by default (uvicorn's own default when --host isn't
+# passed — verified, see README), which already blocks remote network
+# access. Two further gaps remain even then, so this middleware checks two
+# different headers for two different attacks:
+#   - Host: the browser sets this to whatever address/hostname the request
+#     is addressed TO. If someone runs with --host 0.0.0.0 and a remote
+#     client reaches this server by IP/hostname, Host reflects that, not
+#     "localhost" — so this catches unintended remote/LAN exposure.
+#   - Origin: the browser sets this (on fetch/XHR, not on simple page
+#     navigation) to whatever page's JS actually made the request — this is
+#     what stops a malicious page open in another tab from silently
+#     fetching this server cross-origin ("localhost CSRF"). Host alone does
+#     NOT catch this, because Host always reflects the request's target,
+#     never the origin of the page that sent it.
+# Either check failing rejects the request, unless explicitly opted out via
+# DRONETHREATTRAINER_ALLOW_REMOTE=1 (e.g. for a deliberate multi-machine
+# instructor/trainee LAN deployment — which still needs its own auth layer
+# in front; this only restores the "only this machine can talk to it"
+# property that --host 0.0.0.0 would otherwise remove silently).
+_ALLOWED_HOSTS = {"localhost", "127.0.0.1", "[::1]"}
+
+
+def _origin_is_allowed(origin: str) -> bool:
+    # origin looks like "http://localhost:8090" or "http://127.0.0.1:8090"
+    host_part = origin.split("://", 1)[-1].split(":")[0]
+    return host_part in _ALLOWED_HOSTS
+
+
+@app.middleware("http")
+async def _localhost_only_guard(request: Request, call_next):
+    if os.environ.get("DRONETHREATTRAINER_ALLOW_REMOTE") == "1":
+        return await call_next(request)
+
+    host = (request.headers.get("host") or "").split(":")[0]
+    if host not in _ALLOWED_HOSTS:
+        return JSONResponse(status_code=403, content={
+            "detail": "Rejected: this server only accepts requests addressed to localhost. "
+                      "Set DRONETHREATTRAINER_ALLOW_REMOTE=1 if you intentionally need remote/LAN "
+                      "access — but add your own authentication in front first.",
+        })
+
+    origin = request.headers.get("origin")
+    if origin is not None and not _origin_is_allowed(origin):
+        return JSONResponse(status_code=403, content={
+            "detail": f"Rejected: cross-origin request from {origin} is not allowed against this local server.",
+        })
+
+    return await call_next(request)
 
 # full ground-truth scenarios, kept server-side only, keyed by scenario_id
 _ACTIVE_SCENARIOS: dict[str, dict] = {}
@@ -241,6 +293,25 @@ def model_status():
     return get_model_status()
 
 
+# Security fix (external review finding #3): /api/model/retrain used to run
+# ANY script_path the caller supplied via subprocess — unauthenticated
+# arbitrary code execution. Both the script to run and the model file it's
+# allowed to produce are now restricted to resolve inside fixed allowlisted
+# directories; anything that escapes them (including ../.. traversal) is
+# rejected before it ever reaches subprocess.run.
+_ALLOWED_TRAIN_SCRIPT_DIR = (BASE_DIR / "radar_classification" / "radarsense").resolve()
+_ALLOWED_ONNX_OUTPUT_DIR = (BASE_DIR / "radar_classification" / "artifacts" / "onnx").resolve()
+
+
+def _resolve_within(path_str: str, allowed_dir: Path, label: str) -> Path:
+    candidate = (BASE_DIR / path_str).resolve() if not Path(path_str).is_absolute() else Path(path_str).resolve()
+    try:
+        candidate.relative_to(allowed_dir)
+    except ValueError:
+        raise HTTPException(403, f"{label} must resolve inside {allowed_dir} (got {candidate})")
+    return candidate
+
+
 class RetrainRequest(BaseModel):
     script_path: str
     new_onnx_path: str
@@ -257,13 +328,15 @@ def model_retrain(req: RetrainRequest):
     current model throughout, and only hot-swaps if the new one finishes in
     time and loads successfully.
     """
-    if not Path(req.script_path).exists():
-        raise HTTPException(404, f"no such training script: {req.script_path}")
+    script = _resolve_within(req.script_path, _ALLOWED_TRAIN_SCRIPT_DIR, "script_path")
+    new_onnx = _resolve_within(req.new_onnx_path, _ALLOWED_ONNX_OUTPUT_DIR, "new_onnx_path")
+    if not script.exists():
+        raise HTTPException(404, f"no such training script: {script}")
     retrain_async(
-        lambda: train_with_cutoff(req.script_path, budget_s=req.budget_s),
-        req.new_onnx_path, budget_s=req.budget_s + 5.0,
+        lambda: train_with_cutoff(str(script), budget_s=req.budget_s),
+        str(new_onnx), budget_s=req.budget_s + 5.0,
     )
-    return {"started": True, "script_path": req.script_path, "budget_s": req.budget_s}
+    return {"started": True, "script_path": str(script), "budget_s": req.budget_s}
 
 
 class SensorReadRequest(BaseModel):
