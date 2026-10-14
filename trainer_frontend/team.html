@@ -17,7 +17,7 @@
 </head>
 <body>
 <h1>Team Roles (comms-delay pipeline)</h1>
-<p><a href="/" style="color:#58a6ff">&larr; Solo trainer</a></p>
+<p><a href="/trainer" style="color:#58a6ff">&larr; Solo trainer</a></p>
 <p style="color:#8b949e; font-size:13px; max-width:700px;">
   Three separate operators share one scenario: a <strong>detector</strong> spots contacts,
   a <strong>classifier</strong> only learns of a detection after the comms delay and identifies it,
@@ -179,17 +179,45 @@ async function teamAiHint(contactId) {
 }
 
 async function finishSession() {
-  if (!scenario) return;
-  clearInterval(pollHandle);
+  const resultEl = document.getElementById('result');
+  if (!scenario) {
+    if (resultEl) resultEl.innerHTML = `<span style="color:#d29922;">⚠️ No scenario active. Please start a scenario first.</span>`;
+    return;
+  }
+  if (pollHandle) { clearInterval(pollHandle); pollHandle = null; }
   const trainee_id = document.getElementById('traineeId').value || 'team-1';
   const unit_id = document.getElementById('unitId').value || 'unit-A';
   const difficulty = parseInt(document.getElementById('difficulty').value);
-  const res = await fetch('/api/session/submit_team', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ scenario_id: scenario.scenario_id, trainee_id, unit_id, difficulty }),
-  });
-  const result = await res.json();
-  document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+
+  if (resultEl) resultEl.innerHTML = `<span style="color:#58a6ff;">⏳ Submitting and evaluating team session...</span>`;
+
+  try {
+    const res = await fetch('/api/session/submit_team', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ scenario_id: scenario.scenario_id, trainee_id, unit_id, difficulty }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      if (resultEl) resultEl.innerHTML = `<span style="color:#f85149;">❌ Error: ${err.detail || 'Failed to submit'}</span>`;
+      return;
+    }
+    const result = await res.json();
+    const score = result.overall_score || 0;
+    const color = score >= 75 ? '#3fb950' : score >= 50 ? '#d29922' : '#f85149';
+    if (resultEl) {
+      resultEl.innerHTML = `
+        <div style="margin-bottom:10px;">
+          <strong style="font-size:18px; color:${color};">Team Score: ${score.toFixed(1)}%</strong>
+          <span style="font-size:12px; margin-left:12px; color:#8b949e;">Detect: ${result.detection_score}% · Classify: ${result.classification_score}% · Engage: ${result.engagement_score}% · Timeliness: ${result.timeliness_score}%</span>
+        </div>
+        <div style="font-size:12px; color:#8b949e; margin-bottom:8px;">Missed: ${result.contacts_missed} / ${result.contacts_total} contacts</div>
+        ${result.session_id ? `<div style="margin-top:8px;"><a href="/aar/session/${result.session_id}/print" target="_blank" style="color:#58a6ff; font-weight:600;">🖨️ Printable AAR Report &rarr;</a> &nbsp; <a href="/aar" target="_blank" style="color:#3fb950; font-weight:600;">📊 AAR Dashboard &rarr;</a></div>` : ''}
+        <details style="margin-top:10px;"><summary style="cursor:pointer; color:#8b949e; font-size:11px;">Evaluation JSON</summary><pre style="font-size:11px; max-height:160px; overflow:auto; margin-top:4px;">${JSON.stringify(result, null, 2)}</pre></details>
+      `;
+    }
+  } catch (e) {
+    if (resultEl) resultEl.innerHTML = `<span style="color:#f85149;">❌ Network error: ${e.message}</span>`;
+  }
 }
 </script>
 </body>

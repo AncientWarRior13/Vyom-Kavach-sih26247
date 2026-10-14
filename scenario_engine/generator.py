@@ -532,9 +532,13 @@ def sanitize_for_client(scenario: dict) -> dict:
         "duration_s": scenario["duration_s"],
         # ROE/zones/asset/sensor-outage are information the trainee needs to
         # operate with, not ground truth about contacts — safe to send as-is.
-        "defended_asset_position": scenario["defended_asset_position"],
-        "no_engage_zones": scenario["no_engage_zones"],
-        "roe_card": scenario["roe_card"],
+        "defended_asset_position": scenario.get("defended_asset_position", [0.0, 0.0]),
+        "no_engage_zones": scenario.get("no_engage_zones", []),
+        "roe_card": scenario.get("roe_card", {
+            "time_critical_override_s": 15.0,
+            "max_hard_kill_range_m": 2500.0,
+            "max_soft_kill_range_m": 3500.0,
+        }),
         "sensor_outage": scenario.get("sensor_outage"),
         "server_start_epoch_ms": scenario.get("server_start_epoch_ms"),
         "team_comms_delay_s": scenario.get("team_comms_delay_s"),

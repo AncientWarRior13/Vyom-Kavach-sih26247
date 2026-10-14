@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@import "@fontsource/chakra-petch/500.css";
+@import "@fontsource/chakra-petch/600.css";
+@import "@fontsource/chakra-petch/700.css";
+@import "@fontsource-variable/geist";
+@import "@fontsource/geist-mono";
+
+:root {
+  --bg: #05070A;
+  --surface: #0B1015;
+  --border: #16222B;
+  --text: #D7DDE3;
+  --muted: #8A99A6;
+  --faint: #6B7A86;
+  --green: #4DFFA8;
+  --red: #FF5A5A;
+  --amber: #FFB020;
+  --cyan: #4DD8FF;
+  --violet: #B48CFF;
+
+  --font-display: "Chakra Petch", sans-serif;
+  --font-ui: "Geist Variable", sans-serif;
+  --font-data: "Geist Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+code, kbd, samp, pre, .font-data {
+  font-family: var(--font-data);
+}

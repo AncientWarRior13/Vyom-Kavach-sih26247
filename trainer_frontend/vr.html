@@ -19,7 +19,7 @@
 <body>
 
 <div id="topbar">
-  <a href="/" style="color:#58a6ff">&larr; 2D trainer</a>
+  <a href="/trainer" style="color:#58a6ff">&larr; 2D trainer</a>
   <select id="difficulty"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
   <select id="timeOfDay"><option>day</option><option>night</option><option>dusk</option></select>
   <select id="terrain"><option>rural</option><option>urban</option><option>coastal</option><option>mountain</option></select>
@@ -203,17 +203,41 @@ async function startScenario() {
 document.getElementById('newScenarioBtn').onclick = startScenario;
 
 document.getElementById('finishBtn').onclick = async () => {
-  if (!scenario) return;
-  const res = await fetch('/api/session/submit', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      scenario_id: scenario.scenario_id,
-      trainee_id: 'vr-trainee', unit_id: 'vr-unit',
-      difficulty: parseInt(document.getElementById('difficulty').value),
-      trainee_log: Object.values(log),
-    }),
-  });
-  document.getElementById('result').textContent = JSON.stringify(await res.json(), null, 2);
+  const resultEl = document.getElementById('result');
+  if (!scenario) {
+    if (resultEl) resultEl.innerHTML = `<span style="color:#d29922;">⚠️ No scenario active. Click "New procedural scenario" first.</span>`;
+    return;
+  }
+  if (resultEl) resultEl.innerHTML = `<span style="color:#58a6ff;">⏳ Scoring VR session...</span>`;
+  try {
+    const res = await fetch('/api/session/submit', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        scenario_id: scenario.scenario_id,
+        trainee_id: 'vr-trainee', unit_id: 'vr-unit',
+        difficulty: parseInt(document.getElementById('difficulty').value),
+        trainee_log: Object.values(log),
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      if (resultEl) resultEl.innerHTML = `<span style="color:#f85149;">❌ Error: ${err.detail || 'Failed to submit'}</span>`;
+      return;
+    }
+    const result = await res.json();
+    const score = result.overall_score || 0;
+    const color = score >= 75 ? '#3fb950' : score >= 50 ? '#d29922' : '#f85149';
+    if (resultEl) {
+      resultEl.innerHTML = `
+        <div style="font-size:16px; font-weight:bold; color:${color}; margin-bottom:6px;">Overall Score: ${score.toFixed(1)}%</div>
+        <div style="font-size:12px; color:#8b949e;">Detect: ${result.detection_score}% · Classify: ${result.classification_score}% · Engage: ${result.engagement_score}% · Timeliness: ${result.timeliness_score}%</div>
+        <div style="font-size:12px; color:#8b949e; margin-top:4px;">Missed: ${result.contacts_missed} / ${result.contacts_total}</div>
+        ${result.session_id ? `<div style="margin-top:6px;"><a href="/aar/session/${result.session_id}/print" target="_blank" style="color:#58a6ff;">🖨️ View Report</a></div>` : ''}
+      `;
+    }
+  } catch (e) {
+    if (resultEl) resultEl.innerHTML = `<span style="color:#f85149;">❌ Network error: ${e.message}</span>`;
+  }
 };
 
 // pointer/controller selection -> raycast against contact spheres

@@ -34,11 +34,18 @@ uvicorn server:app --reload --port 8090
 Requires **Python 3.10+**. If `pip install` fails partway through, re-run
 it — it's safe to run repeatedly, it just skips what's already installed.
 
-- `http://localhost:8090/` — desktop trainee exercise screen
+- `http://localhost:8090/` — 3D interactive landing page
+- `http://localhost:8090/trainer` — desktop trainee exercise screen
 - `http://localhost:8090/vr` — WebXR/VR trainee exercise screen (works as a
   regular 3D view in any browser; enters headset immersive mode on a
   WebXR-capable browser/device, e.g. Meta Quest Browser)
 - `http://localhost:8090/aar` — after-action-review dashboard
+
+## Landing page
+
+```bash
+cd landing && npm install && npm run build
+```
 
 Flow: pick difficulty/time-of-day/terrain/sensor-degradation and start a
 procedural scenario, **or** load a fixed scripted drill from the dropdown
