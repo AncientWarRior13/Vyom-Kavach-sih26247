@@ -52,13 +52,33 @@ if errorlevel 1 (
     set PORT=8099
 )
 
+where npm >nul 2>nul
+if not errorlevel 1 (
+    if not exist "landing\dist\index.html" (
+        echo [INFO] Building landing page ...
+        pushd landing
+        call npm install -q
+        call npm run build
+        popd
+    )
+    if not exist "app\dist\index.html" (
+        echo [INFO] Building tactical app ...
+        pushd app
+        call npm install -q
+        call npm run build
+        popd
+    )
+)
+
 echo [3/3] Starting the server on http://localhost:!PORT!/ ...
 echo.
-echo   Desktop trainer:  http://localhost:!PORT!/
+echo   Tactical App:     http://localhost:!PORT!/styleguide
+echo   Desktop trainer:  http://localhost:!PORT!/trainer
 echo   VR mode:          http://localhost:!PORT!/vr
 echo   AAR dashboard:    http://localhost:!PORT!/aar
 echo   Instructor:       http://localhost:!PORT!/instructor
 echo   Team roles:       http://localhost:!PORT!/team
+echo   Swarm simulation: http://localhost:!PORT!/swarm
 echo.
 echo Press CTRL+C in this window to stop the server.
 echo ============================================

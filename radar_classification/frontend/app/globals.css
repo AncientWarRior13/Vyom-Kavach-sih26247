@@ -1,42 +1,35 @@
+@import "../../../packages/design-tokens/tokens.css";
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--c-bg-void);
+  --foreground: var(--c-text-high);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--c-bg-void);
+  --color-foreground: var(--c-text-high);
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-mono);
 }
 
 body {
-  background: #07090b;
-  color: #ededed;
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background: var(--c-bg-void);
+  color: var(--c-text-high);
+  font-family: var(--font-ui);
 }
-
 
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #07090b;
+  background: var(--c-bg-void);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
+  background: var(--c-border-base);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+  background: var(--c-accent);
 }

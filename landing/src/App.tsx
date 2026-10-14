@@ -1,560 +1,422 @@
-import { useState, useEffect, useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
+import Lenis from 'lenis'
 import Atmosphere from './world/Atmosphere'
 import Terrain from './world/Terrain'
 import Props from './world/Props'
+import Drone from './world/Drone'
 import { flight } from './lib/flightState'
-
-function RotatingCamera({ mode }: { mode: 'day' | 'dusk' | 'night' }) {
-  const targetP = mode === 'day' ? 0.05 : mode === 'dusk' ? 0.38 : 0.75
-  const angleRef = useRef(0)
-
-  useFrame((state, delta) => {
-    // Smoothly animate flight progress to target time-of-day
-    flight.damped += (targetP - flight.damped) * Math.min(1, delta * 3)
-    flight.progress = flight.damped
-
-    // Subtle gentle camera orbit around city
-    angleRef.current += delta * 0.06
-    const r = 70
-    const x = Math.sin(angleRef.current) * r
-    const z = Math.cos(angleRef.current) * r
-    const y = 35 + Math.sin(angleRef.current * 0.5) * 8
-
-    state.camera.position.set(x, y, z)
-    state.camera.lookAt(0, 10, 0)
-  })
-
-  return null
-}
+import { SECTIONS } from './lib/sections'
+import { BIOME_RANGES, WORLD_LENGTH } from './world/pathCore'
 
 export default function App() {
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [activeSection, setActiveSection] = useState(0)
   const [timeMode, setTimeMode] = useState<'day' | 'dusk' | 'night'>('dusk')
-  const [selectedDrill, setSelectedDrill] = useState('dusk_rural_swarm_raid')
   const [difficulty, setDifficulty] = useState(3)
+  const [selectedDrill, setSelectedDrill] = useState('')
+  const [scriptedDrills, setScriptedDrills] = useState<string[]>([])
   const [serverOnline, setServerOnline] = useState(true)
+  const [hasScrolled, setHasScrolled] = useState(false)
+  const [showDevTelemetry, setShowDevTelemetry] = useState(true)
 
+  // Dev Telemetry Data
+  const [telemetry, setTelemetry] = useState<{
+    fps: number
+    delta: number
+    deltaSpike: boolean
+    pos: THREE.Vector3
+    rotDelta: number
+  }>({
+    fps: 60,
+    delta: 16,
+    deltaSpike: false,
+    pos: new THREE.Vector3(),
+    rotDelta: 0,
+  })
+
+  const lenisRef = useRef<Lenis | null>(null)
+
+  // Fetch scripted scenarios & health
   useEffect(() => {
-    // Initial flight state for dusk mode
-    flight.damped = 0.38
-    flight.progress = 0.38
+    fetch('/api/scenario/scripted')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.scenarios) {
+          setScriptedDrills(data.scenarios)
+          if (data.scenarios.length > 0) setSelectedDrill(data.scenarios[0])
+        }
+      })
+      .catch(() => {})
 
-    // Check backend health
     fetch('/api/model/status')
       .then((r) => setServerOnline(r.ok))
       .catch(() => setServerOnline(false))
   }, [])
 
-  const handleLaunchPreset = (drill: string) => {
-    window.location.href = `/trainer?drill=${encodeURIComponent(drill)}`
+  // Initialize Lenis smooth scroll and connect to flightState
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    })
+    lenisRef.current = lenis
+
+    let rafId: number
+    const onRaf = (time: number) => {
+      lenis.raf(time)
+      rafId = requestAnimationFrame(onRaf)
+    }
+    rafId = requestAnimationFrame(onRaf)
+
+    const onScroll = () => {
+      const totalH = document.documentElement.scrollHeight - window.innerHeight
+      if (totalH <= 0) return
+      const p = Math.max(0, Math.min(1, window.scrollY / totalH))
+
+      // Direct write to flightState so useFrame reads it without React lag
+      flight.progress = p
+      const deltaP = Math.abs(p - flight.damped)
+      flight.speed = Math.min(3.5, deltaP * 40)
+
+      setScrollProgress(p)
+      if (p > 0.015) setHasScrolled(true)
+
+      const secIdx = Math.min(7, Math.floor(p * 8))
+      setActiveSection(secIdx)
+    }
+
+    lenis.on('scroll', onScroll)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      lenis.destroy()
+    }
+  }, [])
+
+  // Click on a dot to scroll to section
+  const scrollToSection = (idx: number) => {
+    const totalH = document.documentElement.scrollHeight - window.innerHeight
+    const targetY = (idx / 7) * totalH
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(targetY, { duration: 1.4 })
+    } else {
+      window.scrollTo({ top: targetY, behavior: 'smooth' })
+    }
   }
 
-  const handleLaunchCustom = () => {
+  // Determine current biome based on drone Z
+  const zPos = -scrollProgress * WORLD_LENGTH
+  let currentBiome = 'URBAN SECTOR'
+  if (zPos < BIOME_RANGES.rural[0]) currentBiome = 'RURAL FARMLAND'
+  else if (zPos < BIOME_RANGES.mountain[0]) currentBiome = 'MOUNTAIN PASS'
+  else if (zPos < BIOME_RANGES.coastal[0]) currentBiome = 'COASTAL DEFENSE'
+
+  const launchCustom = () => {
     window.location.href = `/trainer?difficulty=${difficulty}&timeOfDay=${timeMode}&autostart=1`
   }
 
+  const launchScripted = () => {
+    if (selectedDrill) {
+      window.location.href = `/trainer?drill=${encodeURIComponent(selectedDrill)}&autostart=1`
+    }
+  }
+
+  // Handle telemetry update from Drone
+  const handleTelemetry = useCallback((data: {
+    fps: number
+    delta: number
+    deltaSpike: boolean
+    pos: THREE.Vector3
+    rotDelta: number
+  }) => {
+    setTelemetry(data)
+  }, [])
+
   return (
-    <div style={{ position: 'relative', width: '100%', minHeight: '100vh', background: '#05070A', color: '#D7DDE3', fontFamily: 'var(--font-ui)', overflowX: 'hidden' }}>
-      {/* 3D Background Canvas */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+    <div className="relative w-full bg-[#020508] text-[#c8deef] select-none font-sans">
+      {/* ── Fixed 3D Canvas Scene ── */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <Canvas
-          camera={{ position: [0, 40, 70], fov: 50, near: 0.5, far: 1600 }}
+          camera={{ position: [0, 20, 30], fov: 50, near: 0.5, far: 1800 }}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           dpr={[1, 1.5]}
         >
-          <RotatingCamera mode={timeMode} />
+          <Drone onTelemetryUpdate={handleTelemetry} />
           <Atmosphere />
           <Terrain />
           <Props />
         </Canvas>
       </div>
 
-      {/* Subtle Tactical Grid & Radial Vignette Overlay */}
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 1,
-          pointerEvents: 'none',
-          background: 'radial-gradient(ellipse at 50% 15%, rgba(5,7,10,0.55) 0%, rgba(5,7,10,0.85) 65%, rgba(5,7,10,0.98) 100%)',
-          backgroundImage: 'linear-gradient(to right, rgba(22, 34, 43, 0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(22, 34, 43, 0.15) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
-
-      {/* Main Interactive UI Layer */}
-      <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        
-        {/* Top Tactical Navigation Header */}
-        <header
-          style={{
-            position: 'sticky',
-            top: 0,
-            backdropFilter: 'blur(16px)',
-            background: 'rgba(7, 11, 16, 0.82)',
-            borderBottom: '1px solid rgba(22, 34, 43, 0.8)',
-            padding: '14px 28px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            {/* Tactical Radar Hexagon Icon */}
-            <div style={{
-              width: 38,
-              height: 38,
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, rgba(77, 255, 168, 0.15), rgba(77, 216, 255, 0.25))',
-              border: '1px solid rgba(77, 255, 168, 0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4DFFA8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 2a10 10 0 0 1 10 10"/>
-                <path d="m12 12 5-5"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '17px', letterSpacing: '0.04em', color: '#FFF' }}>
-                DRONE THREAT TRAINER
-              </div>
-              <div style={{ fontSize: '11px', color: '#6B7A86', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-data)' }}>
-                DEFENSE C-UAS SIMULATOR // PS-247
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Nav Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <a href="/trainer" style={{ color: '#D7DDE3', textDecoration: 'none', padding: '6px 12px', fontSize: '13px', borderRadius: 6, transition: 'all 0.2s', border: '1px solid transparent' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(77,255,168,0.3)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-              2D Scope
-            </a>
-            <a href="/vr" style={{ color: '#D7DDE3', textDecoration: 'none', padding: '6px 12px', fontSize: '13px', borderRadius: 6, transition: 'all 0.2s', border: '1px solid transparent' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(77,216,255,0.3)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-              3D VR Dome
-            </a>
-            <a href="/instructor" style={{ color: '#D7DDE3', textDecoration: 'none', padding: '6px 12px', fontSize: '13px', borderRadius: 6, transition: 'all 0.2s', border: '1px solid transparent' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,176,32,0.3)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-              Instructor
-            </a>
-            <a href="/team" style={{ color: '#D7DDE3', textDecoration: 'none', padding: '6px 12px', fontSize: '13px', borderRadius: 6, transition: 'all 0.2s', border: '1px solid transparent' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(180,140,255,0.3)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-              Team Roles
-            </a>
-            <a href="/aar" style={{ color: '#D7DDE3', textDecoration: 'none', padding: '6px 12px', fontSize: '13px', borderRadius: 6, transition: 'all 0.2s', border: '1px solid transparent' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(77,255,168,0.3)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-              AAR Analytics
-            </a>
-          </nav>
-
-          {/* Action Header Button & Health Pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 20, background: 'rgba(11, 16, 21, 0.9)', border: '1px solid #16222B', fontSize: '11px', fontFamily: 'var(--font-data)' }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: serverOnline ? '#4DFFA8' : '#FF5A5A', boxShadow: serverOnline ? '0 0 8px #4DFFA8' : 'none' }}></span>
-              <span style={{ color: serverOnline ? '#4DFFA8' : '#FF5A5A' }}>{serverOnline ? 'SERVER ONLINE' : 'DISCONNECTED'}</span>
-            </div>
-            <a
-              href="/trainer?autostart=1"
-              style={{
-                textDecoration: 'none',
-                background: 'linear-gradient(135deg, #4DFFA8, #36c782)',
-                color: '#05070A',
-                fontWeight: 700,
-                fontSize: '13px',
-                padding: '8px 18px',
-                borderRadius: 6,
-                letterSpacing: '0.02em',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                boxShadow: '0 0 20px rgba(77, 255, 168, 0.25)',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-            >
-              LAUNCH SIMULATOR &rarr;
-            </a>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <div style={{ maxWidth: 1200, width: '100%', margin: '0 auto', padding: '50px 24px 30px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24 }}>
-            <div style={{ flex: '1 1 600px', maxWidth: 760 }}>
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '6px 14px',
-                borderRadius: 20,
-                background: 'rgba(77, 255, 168, 0.08)',
-                border: '1px solid rgba(77, 255, 168, 0.25)',
-                color: '#4DFFA8',
-                fontSize: '12px',
-                fontFamily: 'var(--font-data)',
-                letterSpacing: '0.06em',
-                marginBottom: 16,
-              }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4DFFA8' }}></span>
-                AUTONOMOUS SWARM & MULTI-SENSOR C-UAS SIMULATOR
-              </div>
-
-              <h1 style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(32px, 5vw, 56px)',
-                lineHeight: 1.1,
-                fontWeight: 700,
-                color: '#FFFFFF',
-                letterSpacing: '-0.02em',
-                marginBottom: 16,
-              }}>
-                Train The Critical Air Defense Call <span style={{ color: '#4DFFA8' }}>Before It Counts.</span>
-              </h1>
-
-              <p style={{
-                fontSize: '17px',
-                lineHeight: 1.6,
-                color: '#8A99A6',
-                maxWidth: 680,
-                marginBottom: 28,
-              }}>
-                A desktop- and VR-capable drone & swarm threat recognition training simulator.
-                Features real <strong style={{ color: '#D7DDE3' }}>77GHz FMCW CA-CFAR radar DSP</strong>, multi-sensor interrogation (EO/IR, RF, Acoustic),
-                autonomous swarm divergence, and cryptographic After-Action Review audit chains.
-              </p>
-
-              {/* Primary Launch Action Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <a
-                  href="/trainer?autostart=1"
-                  style={{
-                    textDecoration: 'none',
-                    background: '#4DFFA8',
-                    color: '#05070A',
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 700,
-                    fontSize: '15px',
-                    padding: '12px 26px',
-                    borderRadius: 8,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    boxShadow: '0 0 25px rgba(77, 255, 168, 0.35)',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                  ENTER 2D SCOPE
-                </a>
-
-                <a
-                  href="/vr"
-                  style={{
-                    textDecoration: 'none',
-                    background: 'rgba(77, 216, 255, 0.12)',
-                    color: '#4DD8FF',
-                    border: '1px solid rgba(77, 216, 255, 0.35)',
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 600,
-                    fontSize: '15px',
-                    padding: '12px 22px',
-                    borderRadius: 8,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(77, 216, 255, 0.2)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(77, 216, 255, 0.12)'; e.currentTarget.style.transform = 'none' }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                  LAUNCH 3D VR DOME
-                </a>
-
-                <a
-                  href="/aar"
-                  style={{
-                    textDecoration: 'none',
-                    background: 'rgba(11, 16, 21, 0.85)',
-                    color: '#D7DDE3',
-                    border: '1px solid #16222B',
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 600,
-                    fontSize: '15px',
-                    padding: '12px 20px',
-                    borderRadius: 8,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#4DFFA8'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#16222B'; e.currentTarget.style.transform = 'none' }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-                  AAR DASHBOARD
-                </a>
-              </div>
-            </div>
-
-            {/* Quick Deploy Mission Card */}
-            <div style={{
-              flex: '1 1 340px',
-              maxWidth: 380,
-              background: 'rgba(11, 16, 21, 0.88)',
-              border: '1px solid #16222B',
-              borderRadius: 12,
-              padding: 22,
-              backdropFilter: 'blur(20px)',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <span style={{ fontSize: '11px', fontFamily: 'var(--font-data)', color: '#4DFFA8', letterSpacing: '0.08em' }}>MISSION DEPLOYMENT</span>
-                <span style={{ fontSize: '11px', fontFamily: 'var(--font-data)', color: '#6B7A86' }}>INSTANT LAUNCH</span>
-              </div>
-
-              {/* Scripted Drills Selector */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: '12px', color: '#8A99A6', marginBottom: 6 }}>Select Scripted Drill</label>
-                <select
-                  value={selectedDrill}
-                  onChange={e => setSelectedDrill(e.target.value)}
-                  style={{
-                    width: '100%',
-                    background: '#070B10',
-                    border: '1px solid #16222B',
-                    color: '#FFF',
-                    padding: '8px 10px',
-                    borderRadius: 6,
-                    fontSize: '13px',
-                    outline: 'none',
-                  }}
-                >
-                  <option value="dusk_rural_swarm_raid">Dusk Rural Swarm Raid (12 drones + reactive relay)</option>
-                  <option value="night_urban_single_drone_incursion">Night Urban Incursion (RF-silent glide)</option>
-                  <option value="day_coastal_mixed_decoy_drill">Day Coastal Mixed Decoy (Radar decoys + birds)</option>
-                </select>
-              </div>
-
-              {/* Difficulty Slider */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#8A99A6', marginBottom: 6 }}>
-                  <span>Custom Difficulty Tier</span>
-                  <span style={{ color: '#4DFFA8', fontFamily: 'var(--font-data)' }}>TIER {difficulty}</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={difficulty}
-                  onChange={e => setDifficulty(parseInt(e.target.value))}
-                  style={{ width: '100%', accentColor: '#4DFFA8' }}
-                />
-              </div>
-
-              {/* Environment Lighting Switcher */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: '12px', color: '#8A99A6', marginBottom: 6 }}>3D Lighting Environment</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-                  {(['day', 'dusk', 'night'] as const).map(mode => (
-                    <button
-                      key={mode}
-                      onClick={() => setTimeMode(mode)}
-                      style={{
-                        background: timeMode === mode ? 'rgba(77, 255, 168, 0.15)' : '#070B10',
-                        color: timeMode === mode ? '#4DFFA8' : '#8A99A6',
-                        border: `1px solid ${timeMode === mode ? '#4DFFA8' : '#16222B'}`,
-                        padding: '6px 8px',
-                        borderRadius: 6,
-                        fontSize: '11px',
-                        fontFamily: 'var(--font-data)',
-                        cursor: 'pointer',
-                        textTransform: 'uppercase',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Deploy Buttons */}
-              <button
-                onClick={() => handleLaunchPreset(selectedDrill)}
-                style={{
-                  width: '100%',
-                  background: 'linear-gradient(135deg, #4DFFA8, #3fb950)',
-                  color: '#05070A',
-                  border: 'none',
-                  padding: '10px 14px',
-                  borderRadius: 6,
-                  fontFamily: 'var(--font-display)',
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  marginBottom: 8,
-                  letterSpacing: '0.04em',
-                }}
-              >
-                DEPLOY SELECTED DRILL &rarr;
-              </button>
-
-              <button
-                onClick={handleLaunchCustom}
-                style={{
-                  width: '100%',
-                  background: 'transparent',
-                  color: '#8A99A6',
-                  border: '1px solid #16222B',
-                  padding: '8px 14px',
-                  borderRadius: 6,
-                  fontSize: '12px',
-                  cursor: 'pointer',
-                }}
-              >
-                Launch Procedural Scenario
-              </button>
-            </div>
-          </div>
-
-          {/* Core Capabilities Architecture Grid */}
-          <div style={{ marginTop: 40 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-              <span style={{ width: 8, height: 8, background: '#4DFFA8' }}></span>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '20px', letterSpacing: '0.04em', color: '#FFF' }}>
-                TACTICAL C-UAS SIMULATION CAPABILITIES
-              </h2>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
-              
-              {/* Card 1: Multi-Sensor Fusion */}
-              <div style={{ background: 'rgba(11, 16, 21, 0.75)', border: '1px solid #16222B', borderRadius: 10, padding: 20, backdropFilter: 'blur(12px)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <div style={{ color: '#4DFFA8' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                  </div>
-                  <h3 style={{ fontSize: '16px', color: '#FFF' }}>Multi-Sensor Fusion</h3>
-                </div>
-                <p style={{ fontSize: '13px', color: '#8A99A6', lineHeight: 1.5, marginBottom: 14 }}>
-                  Cross-verify contacts via <strong>EO/IR thermal shape outlines</strong>, <strong>RF emission intercepts</strong>, and <strong>acoustic blade-vibration signatures</strong>. Weather, time-of-day, and urban clutter degrade signals realistically.
-                </p>
-                <a href="/trainer" style={{ fontSize: '12px', color: '#4DFFA8', textDecoration: 'none', fontWeight: 600 }}>Test in 2D Scope &rarr;</a>
-              </div>
-
-              {/* Card 2: RadarSense AI Engine */}
-              <div style={{ background: 'rgba(11, 16, 21, 0.75)', border: '1px solid #16222B', borderRadius: 10, padding: 20, backdropFilter: 'blur(12px)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <div style={{ color: '#4DD8FF' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                  </div>
-                  <h3 style={{ fontSize: '16px', color: '#FFF' }}>RadarSense CA-CFAR DSP</h3>
-                </div>
-                <p style={{ fontSize: '13px', color: '#8A99A6', lineHeight: 1.5, marginBottom: 14 }}>
-                  No hardcoded lookup tables. Contacts synthesize <strong>77GHz FMCW radar I/Q data</strong> through a range-Doppler FFT and CA-CFAR detector into a real <strong>ONNX CatBoost classifier</strong> for live AI guidance hints.
-                </p>
-                <a href="/trainer" style={{ fontSize: '12px', color: '#4DD8FF', textDecoration: 'none', fontWeight: 600 }}>Inspect Model Status &rarr;</a>
-              </div>
-
-              {/* Card 3: Autonomous Swarm Divergence */}
-              <div style={{ background: 'rgba(11, 16, 21, 0.75)', border: '1px solid #16222B', borderRadius: 10, padding: 20, backdropFilter: 'blur(12px)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <div style={{ color: '#FFB020' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg>
-                  </div>
-                  <h3 style={{ fontSize: '16px', color: '#FFF' }}>Reactive Swarm AI</h3>
-                </div>
-                <p style={{ fontSize: '13px', color: '#8A99A6', lineHeight: 1.5, marginBottom: 14 }}>
-                  Multi-UAV swarms driven by <strong>ares-x kinematics</strong> dynamically adapt. Kinetic neutralization of a swarm leader causes surviving drones to immediately break formation, re-route, and maintain distributed relay.
-                </p>
-                <a href="/trainer" style={{ fontSize: '12px', color: '#FFB020', textDecoration: 'none', fontWeight: 600 }}>Load Swarm Drill &rarr;</a>
-              </div>
-
-              {/* Card 4: Graduated ROE Ladder */}
-              <div style={{ background: 'rgba(11, 16, 21, 0.75)', border: '1px solid #16222B', borderRadius: 10, padding: 20, backdropFilter: 'blur(12px)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <div style={{ color: '#FF5A5A' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  </div>
-                  <h3 style={{ fontSize: '16px', color: '#FFF' }}>Graduated ROE Ladder</h3>
-                </div>
-                <p style={{ fontSize: '13px', color: '#8A99A6', lineHeight: 1.5, marginBottom: 14 }}>
-                  Trainees are evaluated against military Rules of Engagement: <strong>Warn</strong> &rarr; <strong>Soft-Kill (RF jamming/spoofing)</strong> &rarr; <strong>Hard-Kill (kinetic)</strong> &rarr; <strong>Monitor</strong> or <strong>Ignore</strong>, with defended zones and civilian safety boundaries.
-                </p>
-                <a href="/trainer" style={{ fontSize: '12px', color: '#FF5A5A', textDecoration: 'none', fontWeight: 600 }}>View ROE Rules &rarr;</a>
-              </div>
-
-              {/* Card 5: Instructor Event Injection */}
-              <div style={{ background: 'rgba(11, 16, 21, 0.75)', border: '1px solid #16222B', borderRadius: 10, padding: 20, backdropFilter: 'blur(12px)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <div style={{ color: '#B48CFF' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-                  </div>
-                  <h3 style={{ fontSize: '16px', color: '#FFF' }}>Instructor Live Console</h3>
-                </div>
-                <p style={{ fontSize: '13px', color: '#8A99A6', lineHeight: 1.5, marginBottom: 14 }}>
-                  Instructors can monitor ongoing drills and execute <strong>live threat injections</strong> (decoys, hostile drones, bird clutter) and <strong>sensor jamming outages</strong> in real-time without interrupting the trainee's stream.
-                </p>
-                <a href="/instructor" style={{ fontSize: '12px', color: '#B48CFF', textDecoration: 'none', fontWeight: 600 }}>Open Console &rarr;</a>
-              </div>
-
-              {/* Card 6: Cryptographic AAR Ledger */}
-              <div style={{ background: 'rgba(11, 16, 21, 0.75)', border: '1px solid #16222B', borderRadius: 10, padding: 20, backdropFilter: 'blur(12px)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <div style={{ color: '#4DFFA8' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  </div>
-                  <h3 style={{ fontSize: '16px', color: '#FFF' }}>SHA-256 Audit Chain</h3>
-                </div>
-                <p style={{ fontSize: '13px', color: '#8A99A6', lineHeight: 1.5, marginBottom: 14 }}>
-                  Every completed drill is cryptographically hashed into an auditable ledger. Includes automated <strong>error taxonomies</strong>, <strong>missed-contact spatial heatmaps</strong>, and <strong>unit readiness certifications</strong>.
-                </p>
-                <a href="/aar" style={{ fontSize: '12px', color: '#4DFFA8', textDecoration: 'none', fontWeight: 600 }}>Verify Audit Chain &rarr;</a>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Bottom Tactical Diagnostics Bar */}
-          <div style={{
-            marginTop: 40,
-            marginBottom: 30,
-            padding: '14px 24px',
-            background: 'rgba(7, 11, 16, 0.9)',
-            border: '1px solid #16222B',
-            borderRadius: 8,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 12,
-            fontFamily: 'var(--font-data)',
-            fontSize: '12px',
-            color: '#6B7A86',
-          }}>
-            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-              <span>RADAR SWEEP: <strong style={{ color: '#4DFFA8' }}>360° FMCW</strong></span>
-              <span>DSP: <strong style={{ color: '#4DD8FF' }}>CA-CFAR ACTIVE</strong></span>
-              <span>CLASSIFIER: <strong style={{ color: '#FFF' }}>ONNX CATBOOST</strong></span>
-              <span>SWARM LOGIC: <strong style={{ color: '#FFB020' }}>ARES-X RELAY</strong></span>
-              <span>AUDIT: <strong style={{ color: '#4DFFA8' }}>SHA-256 SEALED</strong></span>
-            </div>
-            <div style={{ color: '#8A99A6' }}>
-              PORT: <strong>8090</strong> // FASTAPI SERVER
-            </div>
-          </div>
-
+      {/* ── Fixed Tactical HUD Header (Top) ── */}
+      <header className="fixed top-0 left-0 right-0 z-30 px-6 py-4 flex items-center justify-between pointer-events-auto bg-gradient-to-b from-[#020508]/80 to-transparent">
+        <div className="flex items-center gap-3">
+          <span className="w-2.5 h-2.5 bg-[#00e87a] rounded-xs shadow-[0_0_8px_#00e87a]" />
+          <span className="font-['Chakra_Petch'] font-bold text-base tracking-widest text-[#f0f8ff]">
+            PS-247 C-UAS
+          </span>
+          <span className="text-xs font-mono text-[#8aaabf] hidden sm:inline">
+            // TACTICAL DRONE THREAT TRAINER
+          </span>
         </div>
 
+        <div className="flex items-center gap-4 text-xs font-mono">
+          {/* Server Status LED */}
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-[#05070a]/80 border border-[#1e3c64] rounded-xs backdrop-blur-xs">
+            <span className={`w-2 h-2 rounded-full ${serverOnline ? 'bg-[#00e87a] shadow-[0_0_6px_#00e87a]' : 'bg-[#ff3b3b]'}`} />
+            <span className="text-[#8aaabf] hidden md:inline">SYSTEM: {serverOnline ? 'ONLINE' : 'OFFLINE'}</span>
+          </div>
+
+          {/* Dev Telemetry Toggle */}
+          <button
+            onClick={() => setShowDevTelemetry((v) => !v)}
+            className="px-2 py-1 bg-[#05070a]/80 border border-[#1e3c64] hover:border-[#00e87a] text-[11px] text-[#8aaabf] rounded-xs transition-colors cursor-pointer"
+          >
+            {showDevTelemetry ? 'HIDE METRICS' : 'DEV METRICS'}
+          </button>
+
+          {/* Direct App Link */}
+          <a
+            href="/trainer"
+            className="px-3.5 py-1.5 bg-[#00e87a] text-[#020508] font-bold rounded-xs shadow-[0_0_14px_rgba(0,232,122,0.35)] hover:bg-[#00c968] transition-colors uppercase tracking-wider"
+          >
+            Launch Trainer →
+          </a>
+        </div>
+      </header>
+
+      {/* ── Fixed Full-Screen CSS Grid Overlay [180px] [content] [200px] ── */}
+      <div className="fixed inset-0 z-20 pointer-events-none grid grid-cols-1 md:grid-cols-[180px_1fr_200px] items-center px-4 md:px-8">
+        {/* Left Column: Collapsed 8-Dot Progress Rail */}
+        <div className="hidden md:flex flex-col gap-3 pointer-events-auto p-4 bg-[rgba(5,7,10,0.72)] border border-[#1e3c64] rounded-xs backdrop-blur-md shadow-xl w-[170px]">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-[#4e718a] mb-1">
+            FLIGHT SECTORS
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {SECTIONS.map((sec, idx) => {
+              const isActive = activeSection === idx
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => scrollToSection(idx)}
+                  className={`flex items-center gap-2.5 text-left transition-all cursor-pointer group select-none ${
+                    isActive ? 'text-[#00e87a]' : 'text-[#4e718a] hover:text-[#c8deef]'
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      isActive
+                        ? 'bg-[#00e87a] scale-125 shadow-[0_0_8px_#00e87a]'
+                        : 'bg-[#1e3c64] group-hover:bg-[#4e718a]'
+                    }`}
+                  />
+                  {isActive && (
+                    <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#00e87a] truncate animate-in fade-in duration-200">
+                      {sec.eyebrow.replace(/^0\d · /, '')}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Center Column: ONE Active Story Section at a Time */}
+        <div className="w-full flex items-center justify-center relative min-h-[420px] pointer-events-none">
+          {SECTIONS.map((sec, idx) => {
+            // Local section progress (0 to 1 over its 1/8 span)
+            const secSpan = 1 / 8
+            const secStart = idx * secSpan
+            const localT = (scrollProgress - secStart) / secSpan
+
+            // Visibility window: visible only when localT is between -0.05 and 1.05
+            const isVisible = localT >= -0.05 && localT <= 1.05
+
+            if (!isVisible) return null
+
+            // Fade in over first 20%, hold, fade out over last 20%
+            let opacity = 0
+            let translateY = 0
+            if (localT < 0.2) {
+              const f = Math.max(0, localT / 0.2)
+              opacity = f
+              translateY = (1 - f) * 16
+            } else if (localT <= 0.8) {
+              opacity = 1
+              translateY = 0
+            } else {
+              const f = Math.max(0, (1 - localT) / 0.2)
+              opacity = f
+              translateY = -(1 - f) * 16
+            }
+
+            const alignClass =
+              sec.side === 'center'
+                ? 'justify-self-center text-center'
+                : sec.side === 'right'
+                ? 'justify-self-end text-left'
+                : 'justify-self-start text-left'
+
+            return (
+              <div
+                key={sec.id}
+                style={{
+                  opacity,
+                  transform: `translateY(${translateY}px)`,
+                  transition: 'opacity 0.15s ease-out, transform 0.15s ease-out',
+                }}
+                className={`absolute w-full max-w-[560px] p-6 bg-[rgba(5,7,10,0.78)] backdrop-blur-md rounded-xs border border-[#1e3c64] shadow-2xl space-y-4 pointer-events-auto ${alignClass}`}
+              >
+                {/* Eyebrow: at least 12px mono with letter-spacing */}
+                <div className="font-mono text-xs font-bold uppercase tracking-widest text-[#00e87a]">
+                  {sec.eyebrow}
+                </div>
+
+                {/* Headline: clamp(32px, 4.5vw, 64px), text-wrap: balance */}
+                <h2 className="font-['Chakra_Petch'] text-[clamp(28px,4.2vw,54px)] font-extrabold uppercase tracking-wide text-[#f0f8ff] leading-[1.1] [text-wrap:balance]">
+                  {sec.title}
+                </h2>
+
+                {/* Body Text: at least 16px with line-height 1.5, text contrast > 7:1 */}
+                {sec.id === 'hero' && (
+                  <p className="text-base leading-relaxed text-[#c8deef]">
+                    Next-generation counter-UAS training simulator. Practice high-pressure radar classification, sensor cross-cueing, and graduated countermeasures before live operational deployments.
+                  </p>
+                )}
+
+                {sec.id === 'detect' && (
+                  <p className="text-base leading-relaxed text-[#c8deef]">
+                    Multispectral radar sweeps hostile air corridors. Cross-reference micro-doppler blade modulations with transponder telemetry to isolate hostile kamikaze incursions from friendly recon.
+                  </p>
+                )}
+
+                {sec.id === 'respond' && (
+                  <p className="text-base leading-relaxed text-[#c8deef]">
+                    Dynamic Rules of Engagement govern every strike. Enforce weapons-hold discipline, calculate collateral hazard radii, and deploy RF electronic disruption or kinetic interceptors.
+                  </p>
+                )}
+
+                {sec.id === 'swarm' && (
+                  <p className="text-base leading-relaxed text-[#c8deef]">
+                    Hostile autonomous swarms adapt in real time. Severing leader nodes triggers divergence and saturation tactics that demand rapid multi-target prioritization.
+                  </p>
+                )}
+
+                {sec.id === 'sensors' && (
+                  <p className="text-base leading-relaxed text-[#c8deef]">
+                    Adversarial electronic warfare actively jams radar and thermal cameras. Cross-validate tracks using acoustic microphone arrays and frequency-hopping RF scanners.
+                  </p>
+                )}
+
+                {sec.id === 'review' && (
+                  <p className="text-base leading-relaxed text-[#c8deef]">
+                    Complete after-action debriefing. Replay full 3D engagement flights, diagnose classification vulnerabilities with polar heatmaps, and verify cryptographic audit chains.
+                  </p>
+                )}
+
+                {sec.id === 'modes' && (
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                    <a href="/trainer" className="p-3 bg-[#08121e] border border-[#1e3c64] rounded hover:border-[#00e87a] transition-colors block text-center">
+                      <div className="font-mono text-xs font-bold text-[#f0f8ff]">2D SCOPE</div>
+                      <div className="text-[11px] text-[#8aaabf] mt-0.5">Desktop C-UAS</div>
+                    </a>
+                    <a href="/vr" className="p-3 bg-[#08121e] border border-[#1e3c64] rounded hover:border-[#00e87a] transition-colors block text-center">
+                      <div className="font-mono text-xs font-bold text-[#f0f8ff]">VR DOME</div>
+                      <div className="text-[11px] text-[#8aaabf] mt-0.5">Spatial WebXR</div>
+                    </a>
+                    <a href="/instructor" className="p-3 bg-[#08121e] border border-[#1e3c64] rounded hover:border-[#00e87a] transition-colors block text-center">
+                      <div className="font-mono text-xs font-bold text-[#f0f8ff]">COMMAND</div>
+                      <div className="text-[11px] text-[#8aaabf] mt-0.5">Threat Control</div>
+                    </a>
+                  </div>
+                )}
+
+                {sec.id === 'land' && (
+                  <div className="space-y-4 pt-2">
+                    <div className="space-y-2 text-left font-mono text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-[#8aaabf]">THREAT INGRESS LEVEL:</span>
+                        <span className="text-[#00e87a] font-bold">TIER 0{difficulty}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={1}
+                        max={5}
+                        value={difficulty}
+                        onChange={(e) => setDifficulty(Number(e.target.value))}
+                        className="w-full accent-[#00e87a] cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        onClick={launchCustom}
+                        className="flex-1 py-3 px-4 bg-[#00e87a] text-[#020508] font-mono font-bold text-xs rounded uppercase tracking-wider hover:bg-[#00c968] transition-colors shadow-lg cursor-pointer"
+                      >
+                        Start Training Drill →
+                      </button>
+                      <button
+                        onClick={launchScripted}
+                        className="py-3 px-4 bg-[#08121e] border border-[#1e3c64] text-[#f0f8ff] font-mono text-xs rounded hover:border-[#00e87a] transition-colors cursor-pointer"
+                      >
+                        Launch Scripted Drill
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Right Column: HUD Telemetry Panel (Bottom Right) */}
+        <div className="hidden md:flex flex-col gap-2 pointer-events-auto p-4 bg-[rgba(5,7,10,0.72)] border border-[#1e3c64] rounded-xs backdrop-blur-md shadow-xl text-xs font-mono w-[190px] justify-self-end">
+          <div className="text-[10px] uppercase tracking-widest text-[#4e718a] mb-1">
+            SECTOR TELEMETRY
+          </div>
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between">
+              <span className="text-[#4e718a]">BIOME:</span>
+              <span className="text-[#00e87a] font-bold text-right">{currentBiome}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#4e718a]">RANGE:</span>
+              <span className="tabular-nums font-bold text-[#f0f8ff]">{Math.round(scrollProgress * 1600)}M</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#4e718a]">AIRSPEED:</span>
+              <span className="tabular-nums font-bold text-[#f0f8ff]">{(20 + flight.speed * 14).toFixed(1)} M/S</span>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* ── Dev-Only Stability & Jitter Metrics Overlay (Top Left) ── */}
+      {showDevTelemetry && (
+        <div className="fixed top-16 left-6 z-30 p-3 bg-[#020508]/85 border border-[#1e3c64] rounded-xs font-mono text-[11px] text-[#8aaabf] pointer-events-auto shadow-2xl space-y-1">
+          <div className="text-[10px] font-bold text-[#00e87a] uppercase tracking-wider mb-1 flex items-center justify-between">
+            <span>FLIGHT STABILITY METRICS</span>
+            <span className={`w-2 h-2 rounded-full ${telemetry.deltaSpike ? 'bg-[#ff3b3b]' : 'bg-[#00e87a]'}`} />
+          </div>
+          <div>FPS: <strong className={telemetry.fps < 45 ? 'text-[#ffb800]' : 'text-[#00e87a]'}>{telemetry.fps}</strong></div>
+          <div>DELTA: <span className="tabular-nums">{telemetry.delta}ms</span> {telemetry.deltaSpike && <span className="text-[#ff3b3b] font-bold">(SPIKE)</span>}</div>
+          <div>ROT-DELTA: <span className="tabular-nums">{telemetry.rotDelta}°/frame</span></div>
+          <div>DRONE-Z: <span className="tabular-nums">{Math.round(telemetry.pos.z)}</span></div>
+        </div>
+      )}
+
+      {/* ── Scroll Guide Hint (Bottom Center) ── */}
+      {!hasScrolled && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none font-mono text-xs text-[#00e87a] tracking-widest uppercase animate-bounce text-center">
+          ▼ SCROLL DOWN TO PILOT QUADCOPTER THROUGH ALL 8 BIOMES
+        </div>
+      )}
+
+      {/* ── 800vh Virtual Scroll Track for Lenis Smooth Scrolling ── */}
+      <div className="relative w-full h-[800vh] pointer-events-none" />
     </div>
   )
 }

@@ -63,10 +63,11 @@ function Stars() {
 
 export default function Atmosphere() {
   const sunRef = useRef<THREE.DirectionalLight>(null)
+  const moonRef = useRef<THREE.DirectionalLight>(null)
   const hemiRef = useRef<THREE.HemisphereLight>(null)
   const skyMatRef = useRef<THREE.ShaderMaterial | null>(null)
   const { scene } = useThree()
-  const fogRef = useRef<THREE.FogExp2 | null>(null)
+  const fogRef = useRef<THREE.Fog | null>(null)
   const [hasBloom, setHasBloom] = useState(true)
 
   const skyMat = useMemo(() => {
@@ -97,20 +98,23 @@ export default function Atmosphere() {
       sunRef.current.intensity = tod.sunIntensity
     }
 
+    if (moonRef.current) {
+      moonRef.current.intensity = tod.starOpacity * 1.6
+    }
+
     if (hemiRef.current) {
       hemiRef.current.intensity = tod.hemiIntensity
     }
 
-    // FogExp2 tracking
+    // Cut fog density by 70%, fading only the far third of the view (500 to 1600 units)
     if (!fogRef.current) {
-      fogRef.current = new THREE.FogExp2(tod.fog.getHex(), 0.0045)
-      scene.fog = fogRef.current
+      const linearFog = new THREE.Fog(tod.skyBottom.getHex(), 500, 1600)
+      fogRef.current = linearFog
+      scene.fog = linearFog
     } else {
-      fogRef.current.color.copy(tod.fog)
+      fogRef.current.color.copy(tod.skyBottom)
     }
   })
-
-  const tod = sampleTimeOfDay(flight.damped)
 
   return (
     <>
@@ -130,6 +134,14 @@ export default function Atmosphere() {
         position={[-150, 250, -100]}
       />
 
+      {/* Night Moon directional light */}
+      <directionalLight
+        ref={moonRef}
+        color="#c8dcfa"
+        intensity={0}
+        position={[140, 220, 80]}
+      />
+
       {/* Hemisphere light */}
       <hemisphereLight
         ref={hemiRef}
@@ -144,14 +156,15 @@ export default function Atmosphere() {
         <EffectComposer multisampling={0}>
           {hasBloom ? (
             <Bloom
-              luminanceThreshold={0.75}
-              intensity={Math.min(0.5, tod.bloom)}
+              luminanceThreshold={0.7}
+              luminanceSmoothing={0.3}
+              intensity={0.4}
               mipmapBlur
             />
           ) : (
             <></>
           )}
-          <Vignette offset={0.3} darkness={0.5} />
+          <Vignette darkness={0.4} offset={0.3} />
         </EffectComposer>
       </PerformanceMonitor>
     </>

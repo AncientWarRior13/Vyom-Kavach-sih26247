@@ -1,0 +1,184 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PS-247 Drone Threat Trainer — Shared Design Tokens
+   Consumed by: landing/, app/, radar_classification/frontend/
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Base layer (default: dark tactical) ── */
+:root {
+  /* ── SURFACE LAYERS ────────────────────────────────────────────────── */
+  --c-bg-void:     #020508;   /* darkest bg, page background */
+  --c-bg-deep:     #040c14;   /* deep section fill */
+  --c-bg-surface:  #08121e;   /* card / panel bg */
+  --c-bg-raised:   #0d1b2c;   /* raised element, input bg */
+  --c-bg-overlay:  #112236;   /* overlays, hover states */
+  --c-bg-subtle:   #1a3050;   /* subtle highlighted row */
+
+  /* ── BORDER STRENGTHS ──────────────────────────────────────────────── */
+  --c-border-faint:  rgba(30, 60, 100, 0.45);
+  --c-border-base:   rgba(30, 60, 100, 0.75);
+  --c-border-strong: rgba(50, 100, 160, 0.90);
+
+  /* ── TEXT LEVELS ───────────────────────────────────────────────────── */
+  --c-text-max:    #f0f8ff;   /* headings, key numbers */
+  --c-text-high:   #c8deef;   /* primary body */
+  --c-text-mid:    #8aaabf;   /* secondary / labels */
+  --c-text-low:    #4e718a;   /* muted / placeholders */
+  --c-text-ghost:  #2a4258;   /* disabled / decorative */
+
+  /* ── SEMANTIC / CONTACT CLASSIFICATION ────────────────────────────── */
+  --c-hostile:     #ff3b3b;   /* hostile_drone, hostile_swarm_member */
+  --c-hostile-dim: #cc2828;
+  --c-hostile-bg:  rgba(255, 59, 59, 0.10);
+  --c-hostile-glow:rgba(255, 59, 59, 0.30);
+
+  --c-unknown:     #ffb800;   /* unclassified contact */
+  --c-unknown-dim: #cc9400;
+  --c-unknown-bg:  rgba(255, 184, 0, 0.10);
+
+  --c-friendly:    #0a84ff;   /* friendly_drone */
+  --c-friendly-dim:#0066cc;
+  --c-friendly-bg: rgba(10, 132, 255, 0.10);
+
+  --c-decoy:       #bf5af2;   /* decoy */
+  --c-decoy-dim:   #9b44cc;
+  --c-decoy-bg:    rgba(191, 90, 242, 0.10);
+
+  --c-neutral:     #5a9e8a;   /* bird / environmental */
+  --c-neutral-dim: #3e7a68;
+  --c-neutral-bg:  rgba(90, 158, 138, 0.10);
+
+  /* ── OPERATIONAL ACCENT ────────────────────────────────────────────── */
+  --c-accent:      #00e87a;   /* primary interactive accent / radar */
+  --c-accent-dim:  #00bb60;
+  --c-accent-glow: rgba(0, 232, 122, 0.25);
+  --c-accent-bg:   rgba(0, 232, 122, 0.08);
+
+  /* ── SEVERITY SCALE ────────────────────────────────────────────────── */
+  --c-info:     #38bdf8;
+  --c-advisory: #a3e635;
+  --c-warning:  #f59e0b;
+  --c-critical: #ef4444;
+
+  /* ── TYPOGRAPHY ────────────────────────────────────────────────────── */
+  --font-display: 'Chakra Petch', system-ui, sans-serif;  /* headings, big nums */
+  --font-ui:      'Geist', system-ui, sans-serif;          /* all UI chrome */
+  --font-mono:    'Geist Mono', 'JetBrains Mono', monospace; /* data / timestamps */
+
+  /* ── TYPE SCALE (7-step) ───────────────────────────────────────────── */
+  --text-2xs:  10px;
+  --text-xs:   11px;
+  --text-sm:   12px;
+  --text-base: 13px;
+  --text-md:   15px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+
+  /* ── SPACING (4px base) ────────────────────────────────────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* ── RADIUS ────────────────────────────────────────────────────────── */
+  --rad-xs:  3px;
+  --rad-sm:  5px;
+  --rad-md:  8px;
+  --rad-lg:  12px;
+  --rad-xl:  18px;
+  --rad-full: 9999px;
+
+  /* ── SHADOWS / GLOW ────────────────────────────────────────────────── */
+  --shadow-sm:     0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.6);
+  --shadow-lg:     0 16px 48px rgba(0,0,0,0.8);
+  --glow-accent:   0 0 16px var(--c-accent-glow);
+  --glow-hostile:  0 0 16px var(--c-hostile-glow);
+  --glow-friendly: 0 0 12px rgba(10,132,255,0.30);
+
+  /* ── MOTION ────────────────────────────────────────────────────────── */
+  --dur-fast:   80ms;
+  --dur-base:   160ms;
+  --dur-slow:   280ms;
+  --dur-appear: 220ms;
+  --ease-out:   cubic-bezier(0.16, 1, 0.30, 1);
+  --ease-in:    cubic-bezier(0.70, 0, 0.84, 0);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ── Z-INDEX ───────────────────────────────────────────────────────── */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-sticky:  100;
+  --z-overlay: 200;
+  --z-modal:   300;
+  --z-toast:   400;
+  --z-command: 500;
+
+  /* ── COMPONENT DEFAULTS ────────────────────────────────────────────── */
+  --topbar-h:     52px;
+  --sidenav-w:    220px;
+  --sidenav-w-sm: 56px;
+  --scope-size:   min(calc(100vh - var(--topbar-h) - 80px), 100%);
+}
+
+/* ── High-contrast / color-blind-safe mode ── */
+@media (forced-colors: active), (prefers-contrast: more) {
+  :root {
+    --c-hostile:   #ff6060;
+    --c-friendly:  #60b8ff;
+    --c-unknown:   #ffd060;
+    --c-decoy:     #d080ff;
+    --c-accent:    #60ffa0;
+    --c-text-max:  #ffffff;
+    --c-text-high: #eeeeee;
+    --c-border-base: rgba(200, 220, 255, 0.6);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Base resets ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 13px;
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--c-bg-void);
+  color: var(--c-text-high);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border-base) transparent;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--c-border-base); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-border-strong); }
+
+/* Focus rings */
+:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: var(--rad-xs);
+}
+
+/* Selection */
+::selection { background: rgba(0, 232, 122, 0.25); color: var(--c-text-max); }

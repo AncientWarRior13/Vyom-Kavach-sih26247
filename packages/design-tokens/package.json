@@ -1,0 +1,12 @@
+{
+  "name": "@ps247/design-tokens",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./tokens.ts",
+  "types": "./tokens.ts",
+  "exports": {
+    ".": "./tokens.ts",
+    "./tokens.css": "./tokens.css",
+    "./tokens": "./tokens.ts"
+  }
+}

@@ -40,13 +40,26 @@ else
     PORT=8099
 fi
 
+if command -v npm >/dev/null 2>&1; then
+    if [ ! -f "landing/dist/index.html" ]; then
+        echo "[INFO] Building landing page ..."
+        (cd landing && npm install -q && npm run build)
+    fi
+    if [ ! -f "app/dist/index.html" ]; then
+        echo "[INFO] Building tactical app ..."
+        (cd app && npm install -q && npm run build)
+    fi
+fi
+
 echo "[3/3] Starting the server on http://localhost:$PORT/ ..."
 echo
-echo "  Desktop trainer:  http://localhost:$PORT/"
+echo "  Tactical App:     http://localhost:$PORT/styleguide"
+echo "  Desktop trainer:  http://localhost:$PORT/trainer"
 echo "  VR mode:          http://localhost:$PORT/vr"
 echo "  AAR dashboard:    http://localhost:$PORT/aar"
 echo "  Instructor:       http://localhost:$PORT/instructor"
 echo "  Team roles:       http://localhost:$PORT/team"
+echo "  Swarm simulation: http://localhost:$PORT/swarm"
 echo
 echo "Press CTRL+C to stop the server."
 echo "============================================"

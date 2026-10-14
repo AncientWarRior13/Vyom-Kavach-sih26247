@@ -607,11 +607,6 @@ def submit_team_session(req: SubmitTeamSessionRequest):
     return result
 
 
-@app.get("/team")
-def team_page():
-    return FileResponse(BASE_DIR / "trainer_frontend" / "team.html")
-
-
 class SubmitSessionRequest(BaseModel):
     scenario_id: str
     trainee_id: str
@@ -827,14 +822,41 @@ def scenario_refresh(scenario_id: str):
     return sanitize_for_client(scenario)
 
 
+APP_DIST = BASE_DIR / "app" / "dist"
+APP_INDEX = APP_DIST / "index.html"
+
+
+def serve_app_or_fallback(fallback_file: Path):
+    if APP_INDEX.exists():
+        return FileResponse(APP_INDEX)
+    return FileResponse(fallback_file)
+
+
+@app.get("/styleguide")
+def styleguide_page():
+    if APP_INDEX.exists():
+        return FileResponse(APP_INDEX)
+    raise HTTPException(404, "React app not built yet. Run 'npm run build' in app/")
+
+
+@app.get("/swarm")
+def swarm_page():
+    if APP_INDEX.exists():
+        return FileResponse(APP_INDEX)
+    swarm_html = BASE_DIR / "swarm_simulation" / "dashboard" / "index.html"
+    if swarm_html.exists():
+        return FileResponse(swarm_html)
+    raise HTTPException(404, "Swarm dashboard not found")
+
+
 @app.get("/instructor")
 def instructor_page():
-    return FileResponse(BASE_DIR / "trainer_frontend" / "instructor.html")
+    return serve_app_or_fallback(BASE_DIR / "trainer_frontend" / "instructor.html")
 
 
 @app.get("/trainer")
 def index():
-    return FileResponse(BASE_DIR / "trainer_frontend" / "index.html")
+    return serve_app_or_fallback(BASE_DIR / "trainer_frontend" / "index.html")
 
 
 @app.get("/")
@@ -842,23 +864,28 @@ def landing_page():
     landing_index = BASE_DIR / "landing" / "dist" / "index.html"
     if landing_index.exists():
         return FileResponse(landing_index)
+    if APP_INDEX.exists():
+        return FileResponse(APP_INDEX)
     return FileResponse(BASE_DIR / "trainer_frontend" / "index.html")
 
 
 @app.get("/aar")
 def aar_page():
-    return FileResponse(BASE_DIR / "aar_dashboard" / "aar.html")
+    return serve_app_or_fallback(BASE_DIR / "aar_dashboard" / "aar.html")
 
 
 @app.get("/vr")
 def vr_page():
-    return FileResponse(BASE_DIR / "trainer_frontend" / "vr.html")
+    return serve_app_or_fallback(BASE_DIR / "trainer_frontend" / "vr.html")
 
 
 @app.get("/team")
 def team_page():
-    return FileResponse(BASE_DIR / "trainer_frontend" / "team.html")
+    return serve_app_or_fallback(BASE_DIR / "trainer_frontend" / "team.html")
 
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "trainer_frontend"), name="static")
 app.mount("/landing-static", StaticFiles(directory=BASE_DIR / "landing" / "dist", check_dir=False), name="landing-static")
+if (APP_DIST / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=APP_DIST / "assets", check_dir=False), name="app-assets")
+
