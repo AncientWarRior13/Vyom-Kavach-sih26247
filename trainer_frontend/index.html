@@ -2,209 +2,680 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Drone Threat Trainer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PS-247 Drone Threat Trainer</title>
+<meta name="description" content="PS-247 Drone Threat Trainer — tactical radar simulation and threat classification training system" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <style>
-  body { font-family: system-ui, sans-serif; background: #05070a; color: #d7dde3; margin: 0; }
-  header { padding: 12px 20px; border-bottom: 1px solid #1f2733; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-  header select, header button, header input { background: #0e141c; color: #d7dde3; border: 1px solid #1f2733; border-radius: 4px; padding: 6px 10px; }
-  main { display: flex; }
-  #scope { background: radial-gradient(circle, #0a2a12 0%, #04140a 70%, #020a05 100%); border-right: 1px solid #1f2733; }
-  #sidebar { width: 380px; padding: 16px; height: calc(100vh - 80px); overflow-y: auto; box-sizing: border-box; }
-  .contact-row { border: 1px solid #1f2733; border-radius: 6px; padding: 8px; margin-bottom: 8px; background: rgba(14,20,28,0.5); }
-  .contact-row.selected { border-color: #58a6ff; }
-  .contact-row button { margin-right: 4px; margin-top: 6px; }
-  select.cls { width: 100%; margin-top: 4px; }
-  #result { font-size: 13px; background: #0e141c; padding: 12px; border-radius: 6px; border: 1px solid #1f2733; }
-  .blip { fill: #3fb950; }
-  .blip.tagged { fill: #58a6ff; }
-  #timer { font-variant-numeric: tabular-nums; font-size: 18px; }
-  .zone { fill: #f85149; fill-opacity: 0.12; stroke: #f85149; stroke-opacity: 0.6; stroke-dasharray: 10 6; }
-  .asset { fill: #d29922; }
-  #roeCard { font-size: 12px; color: #8b949e; padding: 8px 16px; border-bottom: 1px solid #1f2733; background: #080c12; }
+  :root {
+    --bg-void:    #020508;
+    --bg-deep:    #050a10;
+    --bg-surface: #0a1220;
+    --bg-raised:  #0f1a2a;
+    --bg-panel:   #121f31;
+    --bg-hover:   #1a2d45;
+    --border:     #1e3048;
+    --border-hi:  #2a4060;
+    --green:      #00ff88;
+    --green-dim:  #00cc6a;
+    --green-glow: rgba(0,255,136,0.18);
+    --blue:       #0a84ff;
+    --blue-dim:   #0066cc;
+    --blue-glow:  rgba(10,132,255,0.18);
+    --red:        #ff3b3b;
+    --red-dim:    #cc2a2a;
+    --red-glow:   rgba(255,59,59,0.18);
+    --amber:      #ffb800;
+    --amber-dim:  #cc9400;
+    --purple:     #bf5af2;
+    --text-bright:#e8f4ff;
+    --text-main:  #b0c8e0;
+    --text-muted: #5a7a9a;
+    --text-faint: #304050;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --rad-sm: 6px;
+    --rad-md: 10px;
+    --rad-lg: 16px;
+  }
 
-  #finishBtn {
-    background: linear-gradient(135deg, #238636, #2ea043);
-    color: #fff;
-    font-weight: 700;
-    border: 1px solid #3fb950;
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100vh;
+    overflow: hidden;
+    font-family: var(--sans);
+    background: var(--bg-void);
+    color: var(--text-main);
+  }
+
+  /* ─── LAYOUT ─────────────────────────────── */
+  #app { display: flex; flex-direction: column; height: 100vh; }
+
+  /* ─── TOPBAR ──────────────────────────────── */
+  #topbar {
+    background: linear-gradient(180deg, #0a1520 0%, #071018 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 52px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 100;
+  }
+  #topbar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(0,255,136,0.02) 50%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-right: 16px;
+    border-right: 1px solid var(--border);
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  .brand-icon {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--green) 0%, var(--blue) 100%);
     border-radius: 6px;
-    padding: 7px 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    color: #000;
+    box-shadow: 0 0 12px rgba(0,255,136,0.3);
+  }
+  .brand-name { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: var(--text-bright); }
+  .brand-sub  { font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; }
+
+  /* Controls section */
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    border-right: 1px solid var(--border);
+  }
+  .ctrl-group:last-of-type { border-right: none; }
+
+  .ctrl-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-right: 2px;
+  }
+
+  select, input[type="text"], input[type="number"] {
+    background: var(--bg-surface);
+    color: var(--text-bright);
+    border: 1px solid var(--border);
+    border-radius: var(--rad-sm);
+    padding: 4px 8px;
+    font-family: var(--sans);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select { padding-right: 20px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7a9a'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 6px center; }
+  select:focus, input:focus { border-color: var(--green-dim); box-shadow: 0 0 0 2px rgba(0,204,106,0.15); }
+
+  input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--green); cursor: pointer; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 5px 12px;
+    border-radius: var(--rad-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 0 12px rgba(63, 185, 80, 0.25);
-    transition: all 0.2s;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
   }
-  #finishBtn:hover:not(:disabled) {
-    box-shadow: 0 0 18px rgba(63, 185, 80, 0.45);
-    transform: translateY(-1px);
+  .btn:hover { background: var(--bg-hover); border-color: var(--border-hi); color: var(--text-bright); }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  .btn-green {
+    background: linear-gradient(135deg, #00532a 0%, #006635 100%);
+    border-color: var(--green-dim);
+    color: var(--green);
+    box-shadow: 0 0 12px rgba(0,255,136,0.15);
   }
-  #finishBtn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
+  .btn-green:hover:not(:disabled) { box-shadow: 0 0 20px rgba(0,255,136,0.3); color: #00ff88; }
+
+  .btn-finish {
+    background: linear-gradient(135deg, #003d56 0%, #004d6e 100%);
+    border-color: var(--blue-dim);
+    color: var(--blue);
+    box-shadow: 0 0 10px rgba(10,132,255,0.15);
+    font-size: 12px;
+    padding: 6px 14px;
   }
+  .btn-finish:hover:not(:disabled) { box-shadow: 0 0 20px rgba(10,132,255,0.35); color: #4db8ff; border-color: var(--blue); transform: translateY(-1px); }
+  .btn-finish.pulse { animation: finishPulse 1.5s ease-in-out infinite; }
+  @keyframes finishPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(10,132,255,0.2); }
+    50%       { box-shadow: 0 0 28px rgba(10,132,255,0.6); }
+  }
+
+  #timer {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    padding: 0 10px;
+    text-shadow: 0 0 12px rgba(0,255,136,0.4);
+  }
+
+  .nav-links { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+  .nav-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 9px;
+    border-radius: var(--rad-sm);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .nav-link:hover { background: var(--bg-surface); color: var(--blue); }
+
+  /* ─── ROE BANNER ─────────────────────────── */
+  #roeCard {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--sans);
+    min-height: 28px;
+    flex-shrink: 0;
+  }
+  #roeCard strong { color: var(--amber); }
+
+  /* ─── STATUS BANNER ──────────────────────── */
   #statusBanner {
     display: none;
-    padding: 10px 20px;
-    font-size: 13px;
+    padding: 8px 16px;
+    font-size: 12px;
     font-weight: 500;
-    border-bottom: 1px solid #1f2733;
+    border-bottom: 1px solid;
     align-items: center;
     justify-content: space-between;
+    flex-shrink: 0;
   }
+
+  /* ─── MAIN CONTENT ───────────────────────── */
+  #main { display: flex; flex: 1; overflow: hidden; }
+
+  /* ─── RADAR SCOPE ────────────────────────── */
+  #scopeWrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 50% 50%,
+      #050f08 0%,
+      #030c06 40%,
+      #020608 70%,
+      #020408 100%);
+    overflow: hidden;
+    position: relative;
+  }
+  #scopeWrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      linear-gradient(90deg, rgba(0,0,0,0.3) 0%, transparent 15%),
+      linear-gradient(270deg, rgba(0,0,0,0.3) 0%, transparent 15%),
+      linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 15%),
+      linear-gradient(0deg, rgba(0,0,0,0.3) 0%, transparent 15%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  #scope {
+    width: min(calc(100vh - 130px), 100%);
+    height: min(calc(100vh - 130px), 100%);
+    max-width: 100%;
+    aspect-ratio: 1;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ─── SIDEBAR ────────────────────────────── */
+  #sidebar {
+    width: 360px;
+    flex-shrink: 0;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 12px 16px 8px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sidebar-title::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  #contactList { flex: 1; overflow-y: auto; padding: 8px; }
+  #contactList::-webkit-scrollbar { width: 4px; }
+  #contactList::-webkit-scrollbar-track { background: transparent; }
+  #contactList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .contact-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--rad-md);
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--text-faint);
+    transition: background 0.2s;
+  }
+  .contact-card.active-contact { border-color: var(--border-hi); }
+  .contact-card.active-contact::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .contact-card.hostile-contact::before { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  .contact-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .contact-id { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text-bright); }
+  .contact-time { font-size: 10px; color: var(--text-muted); font-family: var(--mono); }
+
+  .contact-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+  .action-btn {
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.12s;
+    font-family: var(--sans);
+    letter-spacing: 0.03em;
+  }
+  .action-btn:hover { background: var(--bg-hover); color: var(--text-bright); border-color: var(--border-hi); }
+  .action-btn.active { border-color: currentColor; }
+  .action-btn.warn-active  { background: rgba(10,132,255,0.15); color: var(--blue);  border-color: var(--blue-dim); }
+  .action-btn.soft-active  { background: rgba(255,184,0,0.15);  color: var(--amber); border-color: var(--amber-dim); }
+  .action-btn.hard-active  { background: rgba(255,59,59,0.15);  color: var(--red);   border-color: var(--red-dim); }
+  .action-btn.mon-active   { background: rgba(0,255,136,0.12);  color: var(--green); border-color: var(--green-dim); }
+  .action-btn.ign-active   { background: rgba(90,122,154,0.2);  color: var(--text-muted); }
+
+  .contact-select {
+    width: 100%;
+    margin-top: 6px;
+    background: var(--bg-surface);
+    color: var(--text-bright);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 24px 4px 8px;
+    font-size: 11px;
+    font-family: var(--sans);
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7a9a'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+  }
+  .contact-select:focus { border-color: var(--green-dim); }
+
+  .hint-text { font-size: 10px; color: var(--blue); margin-top: 4px; font-family: var(--mono); }
+  .sensor-text { font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: var(--mono); }
+
+  /* ─── RESULT PANEL ───────────────────────── */
+  #resultPanel {
+    border-top: 1px solid var(--border);
+    padding: 10px 12px;
+    min-height: 60px;
+    flex-shrink: 0;
+  }
+  #result { font-size: 12px; color: var(--text-muted); }
+
+  /* ─── SCORE MODAL ────────────────────────── */
   #scoreModal {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(5, 7, 10, 0.85);
-    backdrop-filter: blur(8px);
+    background: rgba(2,5,8,0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 9999;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    box-sizing: border-box;
   }
+
   .score-card {
-    background: #0d1117;
-    border: 1px solid #30363d;
-    border-radius: 12px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--rad-lg);
     width: 100%;
-    max-width: 680px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.85);
+    max-width: 700px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.9), 0 0 60px rgba(0,255,136,0.05);
     overflow: hidden;
-    color: #d7dde3;
+    position: relative;
   }
+  .score-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
+  }
+
   .score-header {
     padding: 16px 24px;
-    background: #161b22;
-    border-bottom: 1px solid #30363d;
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .score-body {
-    padding: 24px;
-    max-height: 80vh;
-    overflow-y: auto;
+  .score-header-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--text-muted); text-transform: uppercase;
   }
-  .metric-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin: 16px 0;
+  .score-header-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .score-body { padding: 24px; max-height: 80vh; overflow-y: auto; }
+  .score-body::-webkit-scrollbar { width: 4px; }
+  .score-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .score-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 22px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--rad-md);
+    margin-bottom: 16px;
   }
-  .metric-item {
-    background: #161b22;
-    border: 1px solid #21262d;
-    border-radius: 8px;
-    padding: 12px 16px;
-  }
-  .metric-val {
-    font-size: 20px;
+  .score-number { font-size: 48px; font-weight: 800; line-height: 1; font-family: var(--mono); }
+  .score-pct { font-size: 24px; font-weight: 400; opacity: 0.7; }
+  .score-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.05em; }
+
+  .grade-badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid;
+    font-size: 12px;
     font-weight: 700;
-    margin-top: 4px;
+    letter-spacing: 0.05em;
+    background: rgba(0,0,0,0.3);
   }
-  .metric-bar-bg {
-    background: #21262d;
-    height: 6px;
-    border-radius: 3px;
-    margin-top: 8px;
-    overflow: hidden;
+
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .metric-item {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--rad-sm);
+    padding: 12px 14px;
   }
-  .metric-bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.6s ease;
+  .metric-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .metric-name { font-size: 11px; color: var(--text-muted); }
+  .metric-val  { font-size: 16px; font-weight: 700; font-family: var(--mono); }
+  .metric-bar  { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+  .metric-fill { height: 100%; border-radius: 2px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+  .flags-panel {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--rad-sm);
+    padding: 12px 14px;
+    margin-bottom: 12px;
   }
+  .flags-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
+  .flag-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    margin: 2px 4px 2px 0;
+    background: rgba(255,59,59,0.12);
+    color: var(--red);
+    border: 1px solid rgba(255,59,59,0.3);
+  }
+
+  .score-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; margin-top: 20px; }
+  .score-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px;
+    border-radius: var(--rad-sm);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .score-btn-primary { background: #003322; color: var(--green); border-color: var(--green-dim); }
+  .score-btn-primary:hover { background: #004433; box-shadow: 0 0 16px rgba(0,255,136,0.25); }
+  .score-btn-sec { background: var(--bg-surface); color: var(--text-main); border-color: var(--border); }
+  .score-btn-sec:hover { background: var(--bg-hover); color: var(--text-bright); }
+  .score-btn-ghost { background: transparent; color: var(--text-muted); border-color: transparent; }
+  .score-btn-ghost:hover { color: var(--text-main); }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    transition: color 0.12s;
+  }
+  .close-btn:hover { color: var(--text-bright); }
+
+  /* ─── SCROLLBARS ─────────────────────────── */
+  * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+  /* ─── ANIMATIONS ─────────────────────────── */
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  .score-card { animation: fadeIn 0.25s ease-out; }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .contact-card { animation: slideIn 0.18s ease-out; }
 </style>
 </head>
 <body>
-<header>
-  <strong>Drone Threat Trainer</strong>
-  <label>Trainee ID <input id="traineeId" value="trainee-1" /></label>
-  <label>Unit ID <input id="unitId" value="unit-A" /></label>
-  <label>Difficulty
-    <select id="difficulty"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
-  </label>
-  <label>Time of day
-    <select id="timeOfDay"><option>day</option><option>night</option><option>dusk</option></select>
-  </label>
-  <label>Terrain
-    <select id="terrain"><option>rural</option><option>urban</option><option>coastal</option><option>mountain</option></select>
-  </label>
-  <label>Sensor degradation
-    <select id="degradation"><option value="0">none</option><option value="0.3">moderate</option><option value="0.6">severe</option></select>
-  </label>
-  <label title="Enrolls you in the AAR-timing and scenario-sequencing studies (see research/PROTOCOLS.md) — your scored sessions get tagged with a study arm for later analysis.">
-    <input type="checkbox" id="participateResearch" /> Participate in research
-  </label>
-  <label title="Feints, swarm splitting, terrain-masked low approaches, RF-silent drones, decoy saturation">
-    <input type="checkbox" id="redTeamTactics" /> Red-team tactics
-  </label>
-  <button onclick="startScenario()" style="border-color:#3fb950;color:#4DFFA8;">New procedural scenario</button>
-  <button onclick="startAdaptive()" title="Weights the scenario toward whatever you've scored worst on in past sessions">Adaptive scenario</button>
-  <label>Scripted drill
-    <select id="scriptedDrill"><option value="">-- select --</option></select>
-  </label>
-  <button onclick="startScripted()">Load drill</button>
-  <span id="timer">00:00</span>
-  <button id="finishBtn" onclick="finishSession()">Finish &amp; score</button>
-  <a href="/vr" style="color:#58a6ff">VR mode →</a>
-  <a href="/instructor" style="color:#58a6ff">Instructor console →</a>
-  <a href="/team" style="color:#58a6ff">Team roles →</a>
-  <a href="/aar" style="color:#58a6ff">AAR dashboard →</a>
-  <a href="http://localhost:3000/" target="_blank" rel="noopener" style="color:#58a6ff" title="Optional separate service — run start_radar_analytics.bat/.sh first">Radar Analytics →</a>
-</header>
-<div id="roeCard">No scenario loaded — ROE card and no-engage zones will appear here.</div>
-<div id="statusBanner"></div>
-<main>
-  <svg id="scope" width="760" height="760" viewBox="-3000 -3000 6000 6000"></svg>
-  <div id="sidebar">
-    <h3>Contacts</h3>
-    <div id="contactList"></div>
-    <h3>Result</h3>
-    <div id="result">No session scored yet.</div>
+<div id="app">
+
+  <!-- ── TOPBAR ── -->
+  <header id="topbar">
+    <div class="brand">
+      <div class="brand-icon">PS</div>
+      <div>
+        <div class="brand-name">PS-247</div>
+        <div class="brand-sub">DRONE THREAT TRAINER</div>
+      </div>
+    </div>
+
+    <!-- Trainee fields -->
+    <div class="ctrl-group">
+      <span class="ctrl-label">ID</span>
+      <input id="traineeId" value="trainee-1" style="width:80px" title="Trainee ID" />
+      <input id="unitId"    value="unit-A"    style="width:60px" title="Unit ID" />
+    </div>
+
+    <!-- Scenario params -->
+    <div class="ctrl-group">
+      <span class="ctrl-label">Diff</span>
+      <select id="difficulty" style="width:44px">
+        <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Time</span>
+      <select id="timeOfDay" style="width:62px"><option>day</option><option>night</option><option>dusk</option></select>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Terrain</span>
+      <select id="terrain" style="width:76px"><option>rural</option><option>urban</option><option>coastal</option><option>mountain</option></select>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Sensor</span>
+      <select id="degradation" style="width:76px">
+        <option value="0">nominal</option>
+        <option value="0.3">moderate</option>
+        <option value="0.6">severe</option>
+      </select>
+    </div>
+
+    <!-- Toggles -->
+    <div class="ctrl-group" style="gap:8px">
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer" title="Enroll in AAR timing &amp; scenario-sequencing research studies">
+        <input type="checkbox" id="participateResearch" /> Research
+      </label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer" title="Feints, swarm splitting, RF-silent drones, decoy saturation">
+        <input type="checkbox" id="redTeamTactics" /> Red-team
+      </label>
+    </div>
+
+    <!-- Actions -->
+    <div class="ctrl-group">
+      <button class="btn btn-green" onclick="startScenario()">⊕ New Scenario</button>
+      <button class="btn" onclick="startAdaptive()" title="Weights toward your weakest skills">⟳ Adaptive</button>
+    </div>
+    <div class="ctrl-group">
+      <select id="scriptedDrill" style="width:130px"><option value="">— Scripted drill —</option></select>
+      <button class="btn" onclick="startScripted()">Load</button>
+    </div>
+
+    <!-- Timer & Finish -->
+    <div style="display:flex;align-items:center;gap:8px;margin-left:4px">
+      <div id="timer">00:00</div>
+      <button class="btn btn-finish" id="finishBtn" onclick="finishSession()">⏎ Finish &amp; Score</button>
+    </div>
+
+    <!-- Nav -->
+    <nav class="nav-links">
+      <a href="/vr"         class="nav-link" title="WebXR VR mode">🥽 VR</a>
+      <a href="/instructor" class="nav-link">⚙ Instructor</a>
+      <a href="/team"       class="nav-link">👥 Team</a>
+      <a href="/aar"        class="nav-link">📊 AAR</a>
+      <a href="http://localhost:3000/" target="_blank" rel="noopener" class="nav-link" title="Radar Analytics (start separately)">📡 Radar</a>
+    </nav>
+  </header>
+
+  <!-- ── ROE CARD ── -->
+  <div id="roeCard">No scenario loaded — ROE card will appear here once a scenario is started.</div>
+
+  <!-- ── STATUS BANNER ── -->
+  <div id="statusBanner"></div>
+
+  <!-- ── MAIN ── -->
+  <div id="main">
+    <!-- Scope -->
+    <div id="scopeWrap">
+      <svg id="scope" viewBox="-3000 -3000 6000 6000" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Live Contacts</div>
+      </div>
+      <div id="contactList"></div>
+      <div id="resultPanel">
+        <div id="result" style="color:var(--text-faint);font-size:11px">No session scored yet.</div>
+      </div>
+    </aside>
   </div>
-</main>
+</div>
+
+<!-- ── SCORE MODAL ── -->
 <div id="scoreModal"></div>
 
 <script>
-let scenario = null;       // sanitized (client) scenario
-let simStart = null;       // Date.now() at scenario start
-let elapsed = 0;
-let tickHandle = null;
+/* ── State ── */
+let scenario  = null;
+let simStart  = null;
+let elapsed   = 0;
+let tickHandle    = null;
 let refreshHandle = null;
-let log = {};              // contact_id -> {detected_at, classification, engagement_action}
-const CLASS_OPTIONS = ["hostile_drone", "hostile_swarm_member", "friendly_drone", "decoy", "bird"];
+let log = {};
+const CLASS_OPTIONS = ["hostile_drone","hostile_swarm_member","friendly_drone","decoy","bird"];
 
 function fmtTime(s) {
-  const m = Math.floor(s / 60).toString().padStart(2, '0');
-  const ss = Math.floor(s % 60).toString().padStart(2, '0');
+  const m  = Math.floor(s / 60).toString().padStart(2,'0');
+  const ss = Math.floor(s % 60).toString().padStart(2,'0');
   return `${m}:${ss}`;
 }
 
 function readScenarioParams() {
   return {
-    difficulty: parseInt(document.getElementById('difficulty').value),
-    time_of_day: document.getElementById('timeOfDay').value,
-    terrain: document.getElementById('terrain').value,
+    difficulty:         parseInt(document.getElementById('difficulty').value),
+    time_of_day:        document.getElementById('timeOfDay').value,
+    terrain:            document.getElementById('terrain').value,
     sensor_degradation: parseFloat(document.getElementById('degradation').value),
-    red_team_tactics: document.getElementById('redTeamTactics').checked ? true : null,
+    red_team_tactics:   document.getElementById('redTeamTactics').checked ? true : null,
   };
 }
 
 function onScenarioStarted(label) {
   log = {};
-  elapsed = 0;
+  elapsed  = 0;
   simStart = Date.now();
   renderContactList();
   renderRoeCard();
-  document.getElementById('result').innerHTML = `<div style="color:#8b949e; padding:6px;">${label}</div>`;
-  const finishBtn = document.getElementById('finishBtn');
-  if (finishBtn) {
-    finishBtn.disabled = false;
-    finishBtn.innerHTML = "Finish &amp; score";
-  }
+  document.getElementById('result').innerHTML = `<span style="color:var(--text-muted);font-size:11px">${label}</span>`;
+  const fb = document.getElementById('finishBtn');
+  if (fb) { fb.disabled = false; fb.classList.remove('pulse'); fb.textContent = '⏎ Finish & Score'; }
   const modal = document.getElementById('scoreModal');
   if (modal) modal.style.display = 'none';
   const banner = document.getElementById('statusBanner');
@@ -215,42 +686,38 @@ function onScenarioStarted(label) {
   refreshHandle = setInterval(pollInstructorUpdates, 3000);
 }
 
-// picks up instructor-injected threats and sensor-outage changes (instructor
-// console, roadmap feature 8) without a full reload
 async function pollInstructorUpdates() {
   if (!scenario) return;
   try {
     const fresh = await fetch(`/api/scenario/${scenario.scenario_id}/refresh`).then(r => r.json());
     const knownIds = new Set(scenario.contacts.map(c => c.contact_id));
-    const newOnes = fresh.contacts.filter(c => !knownIds.has(c.contact_id));
+    const newOnes  = fresh.contacts.filter(c => !knownIds.has(c.contact_id));
     if (newOnes.length) scenario.contacts.push(...newOnes);
     if (fresh.sensor_outage !== scenario.sensor_outage) {
       scenario.sensor_outage = fresh.sensor_outage;
       renderRoeCard();
     }
-  } catch (e) { /* scenario may have ended server-side; ignore */ }
+  } catch(e) { /* scenario ended */ }
 }
 
 async function startScenario() {
   const res = await fetch('/api/scenario/new', {
-    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(readScenarioParams())
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(readScenarioParams())
   });
   scenario = await res.json();
-  onScenarioStarted('Session in progress...');
+  onScenarioStarted('Session in progress…');
 }
 
 async function startAdaptive() {
   const trainee_id = document.getElementById('traineeId').value || 'trainee-1';
-  const body = { trainee_id, ...readScenarioParams() };
   const res = await fetch('/api/scenario/adaptive', {
-    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ trainee_id, ...readScenarioParams() })
   });
   scenario = await res.json();
   const weights = scenario.applied_type_weights || {};
-  const weightText = Object.keys(weights).length
-    ? `Weighted toward your weak spots: ${JSON.stringify(weights)}`
-    : 'No session history yet — same as a normal procedural scenario.';
-  onScenarioStarted(`Adaptive session in progress. ${weightText}`);
+  const wTxt = Object.keys(weights).length ? `Weighted: ${JSON.stringify(weights)}` : 'No history yet — same as normal.';
+  onScenarioStarted(`Adaptive session in progress. ${wTxt}`);
 }
 
 async function loadScriptedList() {
@@ -261,523 +728,454 @@ async function loadScriptedList() {
     opt.value = n; opt.textContent = n;
     sel.appendChild(opt);
   }
-
-  // Parse URL query parameters from landing page
   const params = new URLSearchParams(window.location.search);
   if (params.get('difficulty')) document.getElementById('difficulty').value = params.get('difficulty');
-  if (params.get('timeOfDay')) document.getElementById('timeOfDay').value = params.get('timeOfDay');
-  if (params.get('terrain')) document.getElementById('terrain').value = params.get('terrain');
-
+  if (params.get('timeOfDay'))  document.getElementById('timeOfDay').value  = params.get('timeOfDay');
+  if (params.get('terrain'))    document.getElementById('terrain').value    = params.get('terrain');
   const drillParam = params.get('drill');
-  const normalizedParam = drillParam ? drillParam.trim().replace(/\s+/g, '_') : '';
-  const matched = names.find(n => n === drillParam || n === normalizedParam);
-  if (matched) {
-    sel.value = matched;
-    startScripted();
-  } else if (params.get('autostart') === '1') {
-    startScenario();
-  }
+  const norm = drillParam ? drillParam.trim().replace(/\s+/g,'_') : '';
+  const matched = names.find(n => n === drillParam || n === norm);
+  if (matched) { sel.value = matched; startScripted(); }
+  else if (params.get('autostart') === '1') startScenario();
 }
 loadScriptedList();
 
 async function startScripted() {
   const name = document.getElementById('scriptedDrill').value;
   if (!name) return;
-  const res = await fetch(`/api/scenario/scripted/${encodeURIComponent(name)}`, { method: 'POST' });
+  const res = await fetch(`/api/scenario/scripted/${encodeURIComponent(name)}`, {method:'POST'});
   scenario = await res.json();
-  onScenarioStarted(`Scripted drill "${name}" in progress...`);
+  onScenarioStarted(`Scripted drill "${name}" in progress…`);
 }
 
+/* ── ROE ── */
 function renderRoeCard() {
   const el = document.getElementById('roeCard');
   if (!scenario || !scenario.roe_card) { el.textContent = 'No ROE card for this scenario.'; return; }
-  const roe = scenario.roe_card;
+  const roe   = scenario.roe_card;
   const zones = (scenario.no_engage_zones || []).map(z => z.name).join(', ') || 'none';
   const outage = scenario.sensor_outage
-    ? `<strong style="color:#f85149">Sensor outage this scenario: ${scenario.sensor_outage} is jammed/unavailable — cross-cue with the others.</strong> `
+    ? `<span style="color:var(--red);font-weight:600">⚠ SENSOR OUTAGE: ${scenario.sensor_outage} jammed — cross-cue with other sensors.</span> `
     : '';
-  el.innerHTML = outage + `<strong>ROE:</strong> warn required before hard-kill unless target is within `
-    + `${roe.time_critical_override_s}s of impact (self-defense exception). `
-    + `Hard-kill max range ${roe.max_hard_kill_range_m}m, soft-kill max range ${roe.max_soft_kill_range_m}m. `
-    + `Hard-kill is <strong>prohibited</strong> inside no-engage zones: ${zones} (shown as red dashed circles on the scope).`;
+  el.innerHTML = outage + `<strong>ROE:</strong> Warn required before hard-kill unless within ${roe.time_critical_override_s}s of impact. `
+    + `Hard-kill max ${roe.max_hard_kill_range_m}m, soft-kill max ${roe.max_soft_kill_range_m}m. `
+    + `Hard-kill <strong>prohibited</strong> inside no-engage zones: ${zones}.`;
 }
 
+/* ── TICK ── */
 function tick() {
   elapsed = (Date.now() - simStart) / 1000;
   document.getElementById('timer').textContent = fmtTime(elapsed);
   drawScope();
   if (elapsed >= scenario.duration_s) {
-    if (tickHandle) { clearInterval(tickHandle); tickHandle = null; }
+    if (tickHandle)    { clearInterval(tickHandle);    tickHandle    = null; }
     if (refreshHandle) { clearInterval(refreshHandle); refreshHandle = null; }
-    showBanner(`⏱️ Simulation Time Expired (${scenario.duration_s}s) — All contacts have completed flight paths. Click 'Finish & score' to evaluate your session!`, 'warning');
-    const finishBtn = document.getElementById('finishBtn');
-    if (finishBtn) finishBtn.style.boxShadow = '0 0 20px rgba(63, 185, 80, 0.8)';
+    showBanner(`⏱ Simulation time expired (${scenario.duration_s}s) — click Finish & Score to evaluate.`, 'warning');
+    const fb = document.getElementById('finishBtn');
+    if (fb) fb.classList.add('pulse');
   }
 }
 
+/* ── PATH INTERPOLATION ── */
 function posAt(contact, t) {
   const pts = contact.path;
   if (t <= pts[0].t) return pts[0];
-  if (t >= pts[pts.length - 1].t) return pts[pts.length - 1];
-  for (let i = 0; i < pts.length - 1; i++) {
-    const a = pts[i], b = pts[i + 1];
+  if (t >= pts[pts.length-1].t) return pts[pts.length-1];
+  for (let i = 0; i < pts.length-1; i++) {
+    const a = pts[i], b = pts[i+1];
     if (a.t <= t && t <= b.t) {
       const f = b.t === a.t ? 0 : (t - a.t) / (b.t - a.t);
-      return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+      return { x: a.x + (b.x-a.x)*f, y: a.y + (b.y-a.y)*f };
     }
   }
-  return pts[pts.length - 1];
+  return pts[pts.length-1];
+}
+
+/* ── DRAW SCOPE ── */
+function svgEl(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
 }
 
 function drawScope() {
   const svg = document.getElementById('scope');
   svg.innerHTML = '';
 
-  // Tactical Range Rings (1km, 2km, 3km) & Crosshairs
+  // Range rings
   const rings = [1000, 2000, 2900];
   for (const r of rings) {
-    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    c.setAttribute('cx', 0); c.setAttribute('cy', 0); c.setAttribute('r', r);
-    c.setAttribute('stroke', 'rgba(63, 185, 80, 0.25)');
-    c.setAttribute('stroke-width', '2');
-    c.setAttribute('fill', 'none');
-    c.setAttribute('stroke-dasharray', '6 6');
-    svg.appendChild(c);
-
-    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    txt.setAttribute('x', 15); txt.setAttribute('y', -r + 20);
-    txt.setAttribute('fill', 'rgba(63, 185, 80, 0.5)');
-    txt.setAttribute('font-size', '44');
-    txt.setAttribute('font-family', 'monospace');
+    svg.appendChild(svgEl('circle', { cx:0, cy:0, r, stroke:'rgba(0,255,136,0.12)', 'stroke-width':2, fill:'none', 'stroke-dasharray':'8 8' }));
+    const txt = svgEl('text', { x:12, y:-r+30, fill:'rgba(0,255,136,0.3)', 'font-size':44, 'font-family':'monospace' });
     txt.textContent = `${Math.round(r/1000)}KM`;
     svg.appendChild(txt);
   }
 
   // Crosshairs
-  const hLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  hLine.setAttribute('x1', -3000); hLine.setAttribute('y1', 0); hLine.setAttribute('x2', 3000); hLine.setAttribute('y2', 0);
-  hLine.setAttribute('stroke', 'rgba(63, 185, 80, 0.15)'); hLine.setAttribute('stroke-width', '2');
-  svg.appendChild(hLine);
+  svg.appendChild(svgEl('line', { x1:-3000, y1:0, x2:3000, y2:0, stroke:'rgba(0,255,136,0.08)', 'stroke-width':2 }));
+  svg.appendChild(svgEl('line', { x1:0, y1:-3000, x2:0, y2:3000, stroke:'rgba(0,255,136,0.08)', 'stroke-width':2 }));
 
-  const vLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  vLine.setAttribute('x1', 0); vLine.setAttribute('y1', -3000); vLine.setAttribute('x2', 0); vLine.setAttribute('y2', 3000);
-  vLine.setAttribute('stroke', 'rgba(63, 185, 80, 0.15)'); vLine.setAttribute('stroke-width', '2');
-  svg.appendChild(vLine);
+  // Bearing ticks
+  for (let deg = 0; deg < 360; deg += 30) {
+    const rad = deg * Math.PI / 180;
+    const r1 = 2900, r2 = 2980;
+    svg.appendChild(svgEl('line', {
+      x1: Math.sin(rad)*r1, y1: -Math.cos(rad)*r1,
+      x2: Math.sin(rad)*r2, y2: -Math.cos(rad)*r2,
+      stroke:'rgba(0,255,136,0.3)', 'stroke-width':3
+    }));
+    const rt = 3100;
+    const lbl = svgEl('text', {
+      x: Math.sin(rad)*rt, y: -Math.cos(rad)*rt,
+      'text-anchor':'middle', 'dominant-baseline':'middle',
+      fill:'rgba(0,255,136,0.25)', 'font-size':50, 'font-family':'monospace'
+    });
+    lbl.textContent = String(deg).padStart(3,'0');
+    svg.appendChild(lbl);
+  }
 
-  // Rotating Radar Sweep Beam
-  const sweepAngle = (elapsed * 90) % 360; // 90 deg/sec sweep
-  const rad = (sweepAngle * Math.PI) / 180;
-  const sx = Math.sin(rad) * 3000;
-  const sy = -Math.cos(rad) * 3000;
-  const sweep = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  sweep.setAttribute('x1', 0); sweep.setAttribute('y1', 0); sweep.setAttribute('x2', sx); sweep.setAttribute('y2', sy);
-  sweep.setAttribute('stroke', 'rgba(77, 255, 168, 0.45)'); sweep.setAttribute('stroke-width', '3');
+  // Sweep beam
+  const sweepAngle = (elapsed * 90) % 360;
+  const sweepRad = sweepAngle * Math.PI / 180;
+  const sweep = svgEl('line', {
+    x1:0, y1:0,
+    x2: Math.sin(sweepRad)*3000, y2: -Math.cos(sweepRad)*3000,
+    stroke:'rgba(0,255,136,0.55)', 'stroke-width':4
+  });
   svg.appendChild(sweep);
+  // Afterglow
+  for (let i = 1; i <= 4; i++) {
+    const aRad = (sweepAngle - i*15) * Math.PI / 180;
+    const glow = svgEl('line', {
+      x1:0, y1:0,
+      x2: Math.sin(aRad)*3000, y2: -Math.cos(aRad)*3000,
+      stroke:`rgba(0,255,136,${0.1 - i*0.02})`, 'stroke-width': 4-i
+    });
+    svg.appendChild(glow);
+  }
 
   if (!scenario) {
-    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bg.setAttribute('x', -1400); bg.setAttribute('y', -350);
-    bg.setAttribute('width', 2800); bg.setAttribute('height', 700);
-    bg.setAttribute('fill', 'rgba(14, 20, 28, 0.88)');
-    bg.setAttribute('stroke', '#30363d'); bg.setAttribute('stroke-width', '4');
-    bg.setAttribute('rx', '20');
-    svg.appendChild(bg);
-
-    const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    title.setAttribute('x', 0); title.setAttribute('y', -80);
-    title.setAttribute('text-anchor', 'middle');
-    title.setAttribute('fill', '#4DFFA8');
-    title.setAttribute('font-size', '120');
-    title.setAttribute('font-weight', 'bold');
-    title.setAttribute('font-family', 'system-ui, sans-serif');
-    title.textContent = 'RADAR SYSTEM STANDBY';
-    svg.appendChild(title);
-
-    const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    sub.setAttribute('x', 0); sub.setAttribute('y', 60);
-    sub.setAttribute('text-anchor', 'middle');
-    sub.setAttribute('fill', '#8b949e');
-    sub.setAttribute('font-size', '72');
-    sub.setAttribute('font-family', 'system-ui, sans-serif');
-    sub.textContent = 'Click "New procedural scenario" or select a "Scripted drill"';
-    svg.appendChild(sub);
-
-    const sub2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    sub2.setAttribute('x', 0); sub2.setAttribute('y', 170);
-    sub2.setAttribute('text-anchor', 'middle');
-    sub2.setAttribute('fill', '#58a6ff');
-    sub2.setAttribute('font-size', '70');
-    sub2.setAttribute('font-family', 'system-ui, sans-serif');
-    sub2.textContent = 'in the top bar above to start training';
-    svg.appendChild(sub2);
+    // Standby overlay
+    const panel = svgEl('rect', { x:-1600, y:-280, width:3200, height:560, fill:'rgba(10,18,30,0.9)', stroke:'rgba(0,255,136,0.12)', 'stroke-width':4, rx:24 });
+    svg.appendChild(panel);
+    const t1 = svgEl('text', { x:0, y:-60, 'text-anchor':'middle', fill:'rgba(0,255,136,0.7)', 'font-size':130, 'font-weight':'bold', 'font-family':'monospace', 'letter-spacing':'8' });
+    t1.textContent = 'RADAR STANDBY';
+    svg.appendChild(t1);
+    const t2 = svgEl('text', { x:0, y:80, 'text-anchor':'middle', fill:'rgba(176,200,224,0.5)', 'font-size':68, 'font-family':'system-ui, sans-serif' });
+    t2.textContent = 'Select a scenario above to begin training';
+    svg.appendChild(t2);
     return;
   }
 
+  // No-engage zones
   for (const zone of (scenario.no_engage_zones || [])) {
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', zone.center[0]);
-    circle.setAttribute('cy', zone.center[1]);
-    circle.setAttribute('r', zone.radius_m);
-    circle.setAttribute('class', 'zone');
-    svg.appendChild(circle);
+    const c = svgEl('circle', { cx:zone.center[0], cy:zone.center[1], r:zone.radius_m, fill:'rgba(255,59,59,0.06)', stroke:'rgba(255,59,59,0.5)', 'stroke-width':3, 'stroke-dasharray':'12 8' });
+    svg.appendChild(c);
+    const lbl = svgEl('text', { x:zone.center[0], y:zone.center[1]-zone.radius_m-30, 'text-anchor':'middle', fill:'rgba(255,59,59,0.6)', 'font-size':40, 'font-family':'monospace' });
+    lbl.textContent = zone.name || 'NO-ENGAGE';
+    svg.appendChild(lbl);
   }
 
-  const [ax, ay] = scenario.defended_asset_position || [0, 0];
-  const asset = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  asset.setAttribute('x', ax - 40); asset.setAttribute('y', ay - 40);
-  asset.setAttribute('width', 80); asset.setAttribute('height', 80);
-  asset.setAttribute('class', 'asset');
-  asset.setAttribute('rx', 8);
+  // Defended asset
+  const [ax,ay] = scenario.defended_asset_position || [0,0];
+  const assetGlow = svgEl('circle', { cx:ax, cy:ay, r:100, fill:'rgba(255,184,0,0.06)', stroke:'rgba(255,184,0,0.2)', 'stroke-width':2 });
+  svg.appendChild(assetGlow);
+  const asset = svgEl('rect', { x:ax-45, y:ay-45, width:90, height:90, fill:'rgba(255,184,0,0.7)', stroke:'rgba(255,184,0,1)', 'stroke-width':3, rx:8 });
   svg.appendChild(asset);
+  const assetLbl = svgEl('text', { x:ax, y:ay+90, 'text-anchor':'middle', fill:'rgba(255,184,0,0.7)', 'font-size':36, 'font-family':'monospace' });
+  assetLbl.textContent = 'ASSET';
+  svg.appendChild(assetLbl);
 
+  // Contacts
   for (const c of scenario.contacts) {
     if (elapsed < c.spawn_t || elapsed > c.despawn_t) continue;
     const p = posAt(c, elapsed);
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', p.x);
-    circle.setAttribute('cy', p.y);
-    circle.setAttribute('r', 36);
-    circle.setAttribute('class', 'blip' + (log[c.contact_id] ? ' tagged' : ''));
-    circle.style.cursor = 'pointer';
-    circle.onclick = () => tagDetected(c.contact_id);
-    svg.appendChild(circle);
+    const entry = log[c.contact_id];
+    const tagged = !!entry;
+    const isHostile = entry && (entry.classification === 'hostile_drone' || entry.classification === 'hostile_swarm_member');
+    const color = isHostile ? 'rgba(255,59,59,0.9)' : tagged ? 'rgba(10,132,255,0.9)' : 'rgba(0,255,136,0.85)';
+    const glowColor = isHostile ? 'rgba(255,59,59,0.3)' : tagged ? 'rgba(10,132,255,0.3)' : 'rgba(0,255,136,0.25)';
 
-    // Blip ID label on scope
-    const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    lbl.setAttribute('x', p.x + 45); lbl.setAttribute('y', p.y + 12);
-    lbl.setAttribute('fill', log[c.contact_id] ? '#58a6ff' : '#3fb950');
-    lbl.setAttribute('font-size', '40');
-    lbl.setAttribute('font-family', 'monospace');
+    // Glow halo
+    const halo = svgEl('circle', { cx:p.x, cy:p.y, r:60, fill:glowColor });
+    svg.appendChild(halo);
+
+    // Blip
+    const blip = svgEl('circle', { cx:p.x, cy:p.y, r:32, fill:color });
+    blip.style.cursor = 'pointer';
+    blip.onclick = () => tagDetected(c.contact_id);
+    svg.appendChild(blip);
+
+    // Label
+    const lbl = svgEl('text', { x:p.x+48, y:p.y+14, fill:color, 'font-size':40, 'font-family':'monospace', 'font-weight':600 });
     lbl.textContent = c.contact_id;
     svg.appendChild(lbl);
   }
 }
 
+/* ── TAGGING ── */
 function tagDetected(contactId) {
   if (!log[contactId]) log[contactId] = { contact_id: contactId };
-  if (log[contactId].detected_at === undefined) {
-    log[contactId].detected_at = elapsed;
-  }
+  if (log[contactId].detected_at === undefined) log[contactId].detected_at = elapsed;
   renderContactList();
   drawScope();
 }
-
 function setClassification(contactId, value) {
   if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
   log[contactId].classification = value;
+  drawScope();
 }
-
 async function setEngagement(contactId, action) {
   if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
   const entry = log[contactId];
-
-  if (action === 'warn') {
-    entry.warn_at = elapsed;
-    renderContactList();
-    return;
-  }
-
-  // the graduated-response ladder's decisive step: monitor/ignore/soft_kill/hard_kill
+  if (action === 'warn') { entry.warn_at = elapsed; renderContactList(); return; }
   entry.engagement_action = action;
-  entry.engagement_at = elapsed;
+  entry.engagement_at     = elapsed;
   renderContactList();
-
   if (action !== 'hard_kill' || !scenario) return;
-  // live-reactive swarm: if this is an ares-driven swarm member, the real
-  // recovery/relay logic reacts to the kill right now, not just at scoring time
-  const res = await fetch('/api/contact/engage', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed, action }),
-  });
-  const out = await res.json();
+  const res  = await fetch('/api/contact/engage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ scenario_id:scenario.scenario_id, contact_id:contactId, t:elapsed, action }) });
+  const out  = await res.json();
   if (out.reactive) {
     const byId = Object.fromEntries(scenario.contacts.map(c => [c.contact_id, c]));
-    for (const updated of out.contacts) byId[updated.contact_id] = updated;
+    for (const u of out.contacts) byId[u.contact_id] = u;
     scenario.contacts = Object.values(byId);
   }
 }
 
+/* ── CONTACT LIST ── */
 function renderContactList() {
   const el = document.getElementById('contactList');
   el.innerHTML = '';
   if (!scenario) return;
   for (const c of scenario.contacts) {
     const entry = log[c.contact_id];
-    const div = document.createElement('div');
-    div.className = 'contact-row' + (entry ? ' selected' : '');
-    const classOpts = CLASS_OPTIONS.map(o => `<option value="${o}" ${entry && entry.classification === o ? 'selected' : ''}>${o}</option>`).join('');
-    div.innerHTML = `
-      <div>Contact ${c.contact_id} ${entry ? `(detected @ ${entry.detected_at.toFixed(1)}s)` : '(not yet detected — click blip)'}</div>
-      <select class="cls" onchange="setClassification('${c.contact_id}', this.value)">
-        <option value="">classify...</option>${classOpts}
-      </select>
-      <button onclick="requestAiHint('${c.contact_id}')">AI sensor hint (radar)</button>
-      <div class="ai-hint" id="hint-${c.contact_id}" style="font-size:12px;color:#8b949e;margin-top:4px;"></div>
-      <div>
-        <button onclick="requestSensorRead('${c.contact_id}', 'eo_ir')">EO/IR</button>
-        <button onclick="requestSensorRead('${c.contact_id}', 'rf')">RF</button>
-        <button onclick="requestSensorRead('${c.contact_id}', 'acoustic')">Acoustic</button>
+    const card  = document.createElement('div');
+    const isHostile = entry && (entry.classification === 'hostile_drone' || entry.classification === 'hostile_swarm_member');
+    card.className = 'contact-card' + (entry ? ' active-contact' : '') + (isHostile ? ' hostile-contact' : '');
+
+    const classOpts = CLASS_OPTIONS.map(o => `<option value="${o}" ${entry && entry.classification===o?'selected':''}>${o}</option>`).join('');
+    card.innerHTML = `
+      <div class="contact-header">
+        <span class="contact-id">${c.contact_id}</span>
+        <span class="contact-time">${entry ? `${entry.detected_at.toFixed(1)}s` : 'undetected'}</span>
       </div>
-      <div class="sensor-read" id="sensor-${c.contact_id}" style="font-size:12px;color:#8b949e;margin-top:4px;"></div>
-      <div>
-        <button onclick="setEngagement('${c.contact_id}', 'warn')" ${entry && entry.warn_at !== undefined ? 'style=background:#58a6ff' : ''}>Warn</button>
-        <button onclick="setEngagement('${c.contact_id}', 'soft_kill')" ${entry && entry.engagement_action === 'soft_kill' ? 'style=background:#d29922' : ''}>Soft-kill (jam/spoof)</button>
-        <button onclick="setEngagement('${c.contact_id}', 'hard_kill')" ${entry && entry.engagement_action === 'hard_kill' ? 'style=background:#f85149' : ''}>Hard-kill (kinetic)</button>
-        <button onclick="setEngagement('${c.contact_id}', 'monitor')" ${entry && entry.engagement_action === 'monitor' ? 'style=background:#d29922' : ''}>Monitor</button>
-        <button onclick="setEngagement('${c.contact_id}', 'ignore')" ${entry && entry.engagement_action === 'ignore' ? 'style=background:#3fb950' : ''}>Ignore</button>
+      <select class="contact-select" onchange="setClassification('${c.contact_id}', this.value)">
+        <option value="">classify contact…</option>${classOpts}
+      </select>
+      <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">
+        <button class="action-btn" onclick="requestAiHint('${c.contact_id}')">🤖 AI Hint</button>
+        <button class="action-btn" onclick="requestSensorRead('${c.contact_id}','eo_ir')">👁 EO/IR</button>
+        <button class="action-btn" onclick="requestSensorRead('${c.contact_id}','rf')">📡 RF</button>
+        <button class="action-btn" onclick="requestSensorRead('${c.contact_id}','acoustic')">🔊 Acoustic</button>
+      </div>
+      <div class="hint-text" id="hint-${c.contact_id}"></div>
+      <div class="sensor-text" id="sensor-${c.contact_id}"></div>
+      <div class="contact-actions">
+        <button class="action-btn ${entry&&entry.warn_at!==undefined?'warn-active':''}"  onclick="setEngagement('${c.contact_id}','warn')">⚠ Warn</button>
+        <button class="action-btn ${entry&&entry.engagement_action==='soft_kill'?'soft-active':''}" onclick="setEngagement('${c.contact_id}','soft_kill')">📡 Soft-kill</button>
+        <button class="action-btn ${entry&&entry.engagement_action==='hard_kill'?'hard-active':''}" onclick="setEngagement('${c.contact_id}','hard_kill')">💥 Hard-kill</button>
+        <button class="action-btn ${entry&&entry.engagement_action==='monitor'?'mon-active':''}"    onclick="setEngagement('${c.contact_id}','monitor')">👁 Monitor</button>
+        <button class="action-btn ${entry&&entry.engagement_action==='ignore'?'ign-active':''}"    onclick="setEngagement('${c.contact_id}','ignore')">✕ Ignore</button>
       </div>`;
-    el.appendChild(div);
+    el.appendChild(card);
   }
 }
 
+/* ── AI / SENSOR ── */
 async function requestAiHint(contactId) {
   if (!scenario) return;
-  const res = await fetch('/api/contact/classify', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed }),
-  });
+  const res = await fetch('/api/contact/classify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ scenario_id:scenario.scenario_id, contact_id:contactId, t:elapsed }) });
   const out = await res.json();
-  const el = document.getElementById(`hint-${contactId}`);
-  if (el) el.textContent = `sensor model: ${out.label} (p=${out.probabilities[out.label].toFixed(2)}, ${out.source})`;
-
-  // AI trust calibration (roadmap feature 4): record that a hint was asked
-  // for and what it said, so scoring can tell whether the trainee's final
-  // call followed or overrode it, and whether that was the right call.
-  if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
+  const el  = document.getElementById(`hint-${contactId}`);
+  if (el) el.textContent = `AI: ${out.label} (p=${out.probabilities[out.label].toFixed(2)}, ${out.source})`;
+  if (!log[contactId]) log[contactId] = { contact_id:contactId, detected_at:elapsed };
   log[contactId].ai_hint_requested = true;
   log[contactId].ai_hint_label = out.label;
 }
-
 async function requestSensorRead(contactId, sensor) {
   if (!scenario) return;
-  const res = await fetch('/api/contact/sensor_read', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed, sensor }),
-  });
+  const res = await fetch('/api/contact/sensor_read', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ scenario_id:scenario.scenario_id, contact_id:contactId, t:elapsed, sensor }) });
   const out = await res.json();
-  const el = document.getElementById(`sensor-${contactId}`);
+  const el  = document.getElementById(`sensor-${contactId}`);
   if (!el) return;
   if (!out.available) { el.textContent = `${sensor}: ${out.reason}`; return; }
-  if (sensor === 'eo_ir') el.textContent = `EO/IR: ${out.detected ? 'shape=' + out.shape_hint : 'no visual contact'} (confidence ${out.confidence})`;
-  else if (sensor === 'rf') el.textContent = `RF: ${out.note}`;
-  else el.textContent = `Acoustic: ${out.detected ? 'audible' : 'not audible'} (range ${out.range_m}m, effective ${out.effective_range_m}m)`;
+  if (sensor==='eo_ir')   el.textContent = `EO/IR: ${out.detected ? 'shape='+out.shape_hint : 'no contact'} (${out.confidence})`;
+  else if (sensor==='rf') el.textContent = `RF: ${out.note}`;
+  else                    el.textContent = `Acoustic: ${out.detected ? 'audible' : 'silent'} (range ${out.range_m}m / eff ${out.effective_range_m}m)`;
 }
 
-function showBanner(msg, type = 'info') {
+/* ── BANNER ── */
+function showBanner(msg, type='info') {
   const el = document.getElementById('statusBanner');
   if (!el) return;
-  const bg = type === 'error' ? 'rgba(248, 81, 73, 0.15)' : type === 'warning' ? 'rgba(210, 153, 34, 0.15)' : 'rgba(56, 139, 253, 0.15)';
-  const border = type === 'error' ? '#f85149' : type === 'warning' ? '#d29922' : '#58a6ff';
-  const color = type === 'error' ? '#ff7b72' : type === 'warning' ? '#e3b341' : '#79c0ff';
-  el.style.background = bg;
-  el.style.borderBottom = `1px solid ${border}`;
-  el.style.color = color;
-  el.style.display = 'flex';
-  el.innerHTML = `<span>${msg}</span><button onclick="document.getElementById('statusBanner').style.display='none'" style="background:transparent; border:none; color:${color}; font-size:18px; cursor:pointer; padding:0 8px;">&times;</button>`;
+  const colors = {
+    error:   ['rgba(255,59,59,0.12)',   '#ff5050', '#cc3030'],
+    warning: ['rgba(255,184,0,0.12)',   '#ffcc44', '#cc9400'],
+    info:    ['rgba(10,132,255,0.12)',  '#4db8ff', '#0066cc'],
+  };
+  const [bg, color, border] = colors[type] || colors.info;
+  el.style.cssText = `background:${bg};border-bottom:1px solid ${border};color:${color};display:flex;`;
+  el.innerHTML = `<span style="flex:1">${msg}</span><button onclick="this.parentElement.style.display='none'" style="background:transparent;border:none;color:${color};font-size:20px;cursor:pointer;padding:0 6px">&times;</button>`;
 }
 
-function closeScoreModal() {
-  const modal = document.getElementById('scoreModal');
-  if (modal) modal.style.display = 'none';
-}
+/* ── SCORECARD ── */
+function closeScoreModal() { document.getElementById('scoreModal').style.display='none'; }
 
 function renderScorecard(result) {
-  const modal = document.getElementById('scoreModal');
-  const sidebarResult = document.getElementById('result');
+  const modal    = document.getElementById('scoreModal');
+  const sideEl   = document.getElementById('result');
 
   if (result.aar_withheld) {
-    const withheldHtml = `
+    modal.innerHTML = `
       <div class="score-card">
         <div class="score-header">
-          <strong style="color:#58a6ff; font-size:16px;">Session Recorded</strong>
-          <button onclick="closeScoreModal()" style="background:transparent; border:none; color:#8b949e; font-size:20px; cursor:pointer;">&times;</button>
+          <div class="score-header-title"><span class="score-header-dot" style="background:var(--blue)"></span>SESSION RECORDED</div>
+          <button class="close-btn" onclick="closeScoreModal()">&times;</button>
         </div>
-        <div class="score-body" style="text-align:center; padding:32px;">
-          <p style="font-size:15px; line-height:1.6; color:#d7dde3;">${result.message}</p>
-          <div style="margin-top:24px; display:flex; justify-content:center; gap:12px;">
-            <button onclick="closeScoreModal(); startScenario();" style="background:#238636; color:#fff; border:none; padding:10px 20px; border-radius:6px; font-weight:600; cursor:pointer;">Start Next Scenario</button>
-            <button onclick="closeScoreModal()" style="background:#21262d; color:#c9d1d9; border:1px solid #30363d; padding:10px 20px; border-radius:6px; cursor:pointer;">Close</button>
+        <div class="score-body" style="text-align:center;padding:40px 32px">
+          <p style="font-size:14px;line-height:1.7;color:var(--text-main);max-width:460px;margin:0 auto">${result.message}</p>
+          <div style="display:flex;justify-content:center;gap:10px;margin-top:28px">
+            <button class="score-btn score-btn-primary" onclick="closeScoreModal();startScenario()">⊕ Start Next Scenario</button>
+            <button class="score-btn score-btn-sec" onclick="closeScoreModal()">Close</button>
           </div>
         </div>
       </div>`;
-    if (modal) { modal.innerHTML = withheldHtml; modal.style.display = 'flex'; }
-    if (sidebarResult) sidebarResult.innerHTML = `<div style="color:#58a6ff; padding:8px;">${result.message}</div>`;
+    modal.style.display = 'flex';
+    if (sideEl) sideEl.innerHTML = `<span style="color:var(--blue)">${result.message}</span>`;
     return;
   }
 
-  const score = result.overall_score || 0;
-  const gradeColor = score >= 75 ? '#3fb950' : score >= 50 ? '#d29922' : '#f85149';
-  const gradeLabel = score >= 85 ? 'A · EXCELLENT' : score >= 70 ? 'B · PROFICIENT' : score >= 50 ? 'C · MARGINAL' : 'F · DEFENSE BREACHED';
+  const score      = result.overall_score || 0;
+  const gradeColor = score >= 75 ? '#00cc6a' : score >= 50 ? '#ffb800' : '#ff3b3b';
+  const gradeLabel = score >= 85 ? 'A · EXCELLENT' : score >= 70 ? 'B · PROFICIENT' : score >= 50 ? 'C · MARGINAL' : 'F · BREACHED';
 
-  const criticalFlagsHtml = (result.critical_flags && result.critical_flags.length)
-    ? result.critical_flags.map(f => `<span style="background:rgba(248,81,73,0.15); border:1px solid #f85149; color:#ff7b72; padding:3px 8px; border-radius:4px; font-size:11px; margin-right:6px; display:inline-block; margin-bottom:4px;">⚠️ ${f}</span>`).join('')
-    : '<span style="color:#3fb950; font-weight:600;">✓ Clean ROE Adherence — No Critical Violations</span>';
+  const flags = (result.critical_flags && result.critical_flags.length)
+    ? result.critical_flags.map(f => `<span class="flag-tag">⚠ ${f}</span>`).join('')
+    : `<span style="color:var(--green);font-weight:600">✓ Clean ROE — No Critical Violations</span>`;
 
-  const trustHtml = result.ai_trust && result.ai_trust.hints_requested ? `
-    <div style="margin-top:14px; padding:10px 14px; background:#161b22; border-radius:6px; border:1px solid #21262d; font-size:12px;">
-      <strong style="color:#58a6ff;">AI Sensor Hint Calibration:</strong>
-      ${result.ai_trust.hints_requested} requested ·
-      Followed: correct ${result.ai_trust.hint_correct_followed}, wrong ${result.ai_trust.hint_wrong_followed} ·
-      Overridden: ${result.ai_trust.hint_correct_overridden + result.ai_trust.hint_wrong_overridden}
-      ${result.ai_trust.automation_bias_score !== null ? `· Bias: ${(result.ai_trust.automation_bias_score * 100).toFixed(0)}%` : ''}
+  const trust = result.ai_trust && result.ai_trust.hints_requested ? `
+    <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--rad-sm);padding:12px 14px;margin-bottom:12px;font-size:11px;color:var(--text-muted)">
+      <strong style="color:var(--blue)">AI Calibration</strong> — ${result.ai_trust.hints_requested} hints requested &middot; 
+      Followed correct: ${result.ai_trust.hint_correct_followed} &middot; Overridden: ${result.ai_trust.hint_correct_overridden + result.ai_trust.hint_wrong_overridden}
+      ${result.ai_trust.automation_bias_score !== null ? ` &middot; Bias: ${(result.ai_trust.automation_bias_score*100).toFixed(0)}%` : ''}
     </div>` : '';
 
-  const reportBtn = result.session_id ? `
-    <a href="/aar/session/${result.session_id}/print" target="_blank" style="padding:9px 16px; background:#161b22; color:#58a6ff; text-decoration:none; border-radius:6px; font-weight:600; border:1px solid #30363d; font-size:13px; display:inline-flex; align-items:center; gap:6px;">🖨️ Printable Report</a>` : '';
+  const reportBtn = result.session_id
+    ? `<a href="/aar/session/${result.session_id}/print" target="_blank" class="score-btn score-btn-sec">🖨 Printable Report</a>`
+    : '';
 
-  const modalHtml = `
+  modal.innerHTML = `
     <div class="score-card">
       <div class="score-header">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="width:8px; height:8px; border-radius:50%; background:${gradeColor};"></span>
-          <strong style="font-size:16px; letter-spacing:0.02em;">AFTER-ACTION EVALUATION SCORECARD</strong>
-        </div>
-        <button onclick="closeScoreModal()" style="background:transparent; border:none; color:#8b949e; font-size:22px; cursor:pointer; line-height:1;">&times;</button>
+        <div class="score-header-title"><span class="score-header-dot" style="background:${gradeColor};box-shadow:0 0 8px ${gradeColor}"></span>AFTER-ACTION EVALUATION</div>
+        <button class="close-btn" onclick="closeScoreModal()">&times;</button>
       </div>
       <div class="score-body">
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:#161b22; border:1px solid #30363d; border-radius:10px; margin-bottom:16px;">
+        <div class="score-hero">
           <div>
-            <div style="font-size:12px; color:#8b949e; text-transform:uppercase; letter-spacing:0.05em;">Overall Mission Score</div>
-            <div style="font-size:36px; font-weight:800; color:${gradeColor}; line-height:1.1; margin-top:2px;">
-              ${score.toFixed(1)}<span style="font-size:20px; font-weight:500;">%</span>
-            </div>
+            <div class="score-label">OVERALL MISSION SCORE</div>
+            <div class="score-number" style="color:${gradeColor}">${score.toFixed(1)}<span class="score-pct">%</span></div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${result.contacts_total - result.contacts_missed}/${result.contacts_total} contacts engaged · ${result.contacts_missed} missed</div>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:13px; font-weight:700; color:${gradeColor}; background:${gradeColor}18; border:1px solid ${gradeColor}44; padding:6px 14px; border-radius:20px; display:inline-block;">
-              ${gradeLabel}
-            </div>
-            <div style="font-size:11px; color:#8b949e; margin-top:6px;">Contacts: ${result.contacts_total - result.contacts_missed}/${result.contacts_total} detected (${result.contacts_missed} missed)</div>
-          </div>
+          <div class="grade-badge" style="color:${gradeColor};border-color:${gradeColor}44">${gradeLabel}</div>
         </div>
 
         <div class="metric-grid">
-          <div class="metric-item">
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:#8b949e;">
-              <span>🎯 Detection Speed</span>
-              <span style="font-weight:700; color:#d7dde3;">${result.detection_score}%</span>
-            </div>
-            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${Math.min(100, result.detection_score)}%; background:#3fb950;"></div></div>
-          </div>
-
-          <div class="metric-item">
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:#8b949e;">
-              <span>🔍 Classification</span>
-              <span style="font-weight:700; color:#d7dde3;">${result.classification_score}%</span>
-            </div>
-            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${Math.min(100, result.classification_score)}%; background:#58a6ff;"></div></div>
-          </div>
-
-          <div class="metric-item">
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:#8b949e;">
-              <span>⚡ ROE & Engagement</span>
-              <span style="font-weight:700; color:#d7dde3;">${result.engagement_score}%</span>
-            </div>
-            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${Math.min(100, result.engagement_score)}%; background:#d29922;"></div></div>
-          </div>
-
-          <div class="metric-item">
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:#8b949e;">
-              <span>⏱️ Timeliness Latency</span>
-              <span style="font-weight:700; color:#d7dde3;">${result.timeliness_score}%</span>
-            </div>
-            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${Math.min(100, result.timeliness_score)}%; background:#bc8cff;"></div></div>
-          </div>
+          ${[
+            ['🎯 Detection Speed',  result.detection_score,      '#00cc6a'],
+            ['🔍 Classification',   result.classification_score, '#0a84ff'],
+            ['⚡ ROE & Engagement', result.engagement_score,      '#ffb800'],
+            ['⏱ Timeliness',        result.timeliness_score,     '#bf5af2'],
+          ].map(([name,val,col]) => `
+            <div class="metric-item">
+              <div class="metric-row">
+                <span class="metric-name">${name}</span>
+                <span class="metric-val" style="color:${col}">${val}%</span>
+              </div>
+              <div class="metric-bar"><div class="metric-fill" style="width:${Math.min(100,val)}%;background:${col}"></div></div>
+            </div>`).join('')}
         </div>
 
-        <div style="margin-top:14px; padding:12px 14px; background:#161b22; border-radius:8px; border:1px solid #21262d;">
-          <div style="font-size:12px; font-weight:600; color:#8b949e; margin-bottom:6px;">TACTICAL & ROE FLAGS:</div>
-          <div>${criticalFlagsHtml}</div>
+        <div class="flags-panel">
+          <div class="flags-title">Tactical & ROE Flags</div>
+          <div>${flags}</div>
         </div>
 
-        ${trustHtml}
+        ${trust}
 
-        <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center;">
+        <div class="score-actions">
           ${reportBtn}
-          <a href="/aar" target="_blank" style="padding:9px 18px; background:#238636; color:#fff; text-decoration:none; border-radius:6px; font-weight:700; font-size:13px; display:inline-flex; align-items:center; gap:6px;">📊 Open AAR Dashboard &rarr;</a>
-          <button onclick="closeScoreModal(); startScenario();" style="padding:9px 16px; background:#21262d; color:#c9d1d9; border:1px solid #30363d; border-radius:6px; font-weight:600; font-size:13px; cursor:pointer;">🔄 Next Drill</button>
-          <button onclick="closeScoreModal()" style="padding:9px 14px; background:transparent; color:#8b949e; border:none; cursor:pointer; font-size:13px;">Dismiss</button>
+          <a href="/aar" target="_blank" class="score-btn score-btn-primary">📊 Open AAR Dashboard →</a>
+          <button class="score-btn score-btn-sec" onclick="closeScoreModal();startScenario()">🔄 Next Drill</button>
+          <button class="score-btn score-btn-ghost" onclick="closeScoreModal()">Dismiss</button>
         </div>
       </div>
     </div>`;
+  modal.style.display = 'flex';
 
-  if (modal) {
-    modal.innerHTML = modalHtml;
-    modal.style.display = 'flex';
-  }
-
-  if (sidebarResult) {
-    sidebarResult.innerHTML = `
-      <div style="padding:4px 0;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <strong style="font-size:18px; color:${gradeColor};">Score: ${score.toFixed(1)}%</strong>
-          <span style="font-size:11px; padding:2px 8px; border-radius:10px; background:${gradeColor}22; color:${gradeColor}; border:1px solid ${gradeColor};">${gradeLabel.split(' · ')[0]}</span>
+  if (sideEl) {
+    sideEl.innerHTML = `
+      <div style="padding:4px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:20px;font-weight:800;font-family:var(--mono);color:${gradeColor}">${score.toFixed(1)}%</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${gradeColor}22;color:${gradeColor};border:1px solid ${gradeColor}44">${gradeLabel.split(' · ')[0]}</span>
         </div>
-        <div style="font-size:12px; color:#8b949e; line-height:1.6;">
-          <div>Detection: <strong style="color:#d7dde3;">${result.detection_score}%</strong> · Classify: <strong style="color:#d7dde3;">${result.classification_score}%</strong></div>
-          <div>Engage/ROE: <strong style="color:#d7dde3;">${result.engagement_score}%</strong> · Timeliness: <strong style="color:#d7dde3;">${result.timeliness_score}%</strong></div>
-          <div>Missed: <strong style="color:${result.contacts_missed ? '#f85149' : '#3fb950'};">${result.contacts_missed}</strong> / ${result.contacts_total}</div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.8">
+          Detect: <strong style="color:var(--text-main)">${result.detection_score}%</strong> &middot;
+          Classify: <strong style="color:var(--text-main)">${result.classification_score}%</strong> &middot;
+          Engage: <strong style="color:var(--text-main)">${result.engagement_score}%</strong> &middot;
+          Timeliness: <strong style="color:var(--text-main)">${result.timeliness_score}%</strong>
         </div>
-        <div style="margin-top:10px; display:flex; gap:8px;">
-          <button onclick="document.getElementById('scoreModal').style.display='flex'" style="padding:5px 10px; font-size:12px; background:#21262d; border:1px solid #30363d; border-radius:4px; color:#58a6ff; cursor:pointer;">View Scorecard</button>
-          <a href="/aar" target="_blank" style="padding:5px 10px; font-size:12px; color:#3fb950; text-decoration:none; align-self:center;">AAR Dashboard &rarr;</a>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <button onclick="document.getElementById('scoreModal').style.display='flex'" style="padding:4px 10px;font-size:11px;background:var(--bg-surface);border:1px solid var(--border);border-radius:4px;color:var(--blue);cursor:pointer;font-family:var(--sans)">View Scorecard</button>
+          <a href="/aar" target="_blank" style="font-size:11px;color:var(--green);text-decoration:none;align-self:center">AAR →</a>
         </div>
-        <details style="margin-top:10px;">
-          <summary style="font-size:11px; color:#8b949e; cursor:pointer;">Raw Evaluation JSON</summary>
-          <pre style="font-size:11px; max-height:200px; overflow:auto; background:#05070a; padding:8px; border-radius:4px; margin-top:4px;">${JSON.stringify(result, null, 2)}</pre>
-        </details>
       </div>`;
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.scrollTop = sidebar.scrollHeight;
+    document.getElementById('sidebar').scrollTop = 99999;
   }
 }
 
+/* ── FINISH ── */
 async function finishSession() {
   const finishBtn = document.getElementById('finishBtn');
-  if (!scenario) {
-    showBanner("⚠️ No scenario is currently active. Please click 'New procedural scenario' or choose a 'Scripted drill' first.", "warning");
-    return;
-  }
+  if (!scenario) { showBanner("⚠ No scenario active — start one first.", 'warning'); return; }
 
-  if (tickHandle) { clearInterval(tickHandle); tickHandle = null; }
+  if (tickHandle)    { clearInterval(tickHandle);    tickHandle    = null; }
   if (refreshHandle) { clearInterval(refreshHandle); refreshHandle = null; }
 
-  const origHtml = finishBtn.innerHTML;
   finishBtn.disabled = true;
-  finishBtn.innerHTML = "⏳ Scoring session...";
+  finishBtn.textContent = '⏳ Scoring…';
+  finishBtn.classList.remove('pulse');
 
   const trainee_id = document.getElementById('traineeId').value || 'trainee-1';
-  const unit_id = document.getElementById('unitId').value || 'unit-A';
+  const unit_id    = document.getElementById('unitId').value    || 'unit-A';
   const difficulty = parseInt(document.getElementById('difficulty').value);
   const participate_in_research = document.getElementById('participateResearch').checked;
 
   try {
     const res = await fetch('/api/session/submit', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        scenario_id: scenario.scenario_id, trainee_id, unit_id, difficulty,
-        trainee_log: Object.values(log), participate_in_research,
-      }),
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ scenario_id:scenario.scenario_id, trainee_id, unit_id, difficulty, trainee_log:Object.values(log), participate_in_research }),
     });
-
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: res.statusText }));
-      showBanner(`❌ Scoring Error: ${err.detail || 'Failed to submit session'}`, "error");
+      showBanner(`❌ Scoring error: ${err.detail || 'Failed to submit'}`, 'error');
       finishBtn.disabled = false;
-      finishBtn.innerHTML = origHtml;
+      finishBtn.textContent = '⏎ Finish & Score';
       return;
     }
-
     const result = await res.json();
     finishBtn.disabled = false;
-    finishBtn.innerHTML = "Finish &amp; score";
+    finishBtn.textContent = '⏎ Finish & Score';
     renderScorecard(result);
-  } catch (err) {
-    showBanner(`❌ Network error while scoring: ${err.message}`, "error");
+  } catch(err) {
+    showBanner(`❌ Network error: ${err.message}`, 'error');
     finishBtn.disabled = false;
-    finishBtn.innerHTML = origHtml;
+    finishBtn.textContent = '⏎ Finish & Score';
   }
 }
 
+/* Initial draw */
 drawScope();
 </script>
 </body>

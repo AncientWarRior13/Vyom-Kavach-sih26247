@@ -2,66 +2,309 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Drone Threat Trainer — VR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PS-247 VR Mode — Drone Threat Trainer</title>
+<meta name="description" content="PS-247 Drone Threat Trainer WebXR VR mode — immersive 3D threat detection and classification" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <style>
-  html, body { margin: 0; background: #05070a; color: #d7dde3; font-family: system-ui, sans-serif; }
-  #overlay { position: fixed; top: 0; right: 0; width: 320px; max-height: 100vh; overflow-y: auto;
-             background: rgba(10,14,20,0.85); padding: 12px; box-sizing: border-box; }
-  #overlay.hidden { display: none; }
-  #topbar { position: fixed; top: 0; left: 0; padding: 10px; z-index: 10; background: rgba(10,14,20,0.85); }
-  #topbar select, #topbar button, #topbar input { background: #0e141c; color: #d7dde3; border: 1px solid #1f2733; border-radius: 4px; padding: 6px; margin-right: 6px; }
-  .contact-row { border: 1px solid #1f2733; border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 12px; }
-  .contact-row.selected { border-color: #58a6ff; }
-  .contact-row button, .contact-row select { margin-top: 4px; margin-right: 4px; }
-  #notSupported { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  :root {
+    --bg-void: #020508;
+    --bg-surface: #0a1220;
+    --bg-panel:   rgba(10,18,32,0.92);
+    --bg-raised:  rgba(15,26,42,0.95);
+    --border:     rgba(30,48,72,0.9);
+    --green:      #00ff88;
+    --green-dim:  #00cc6a;
+    --blue:       #0a84ff;
+    --red:        #ff3b3b;
+    --amber:      #ffb800;
+    --text-bright:#e8f4ff;
+    --text-main:  #b0c8e0;
+    --text-muted: #5a7a9a;
+    --text-faint: #304050;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg-void); font-family: var(--sans); color: var(--text-main); overflow: hidden; }
+
+  /* ─── THREE.JS CANVAS ─── */
+  canvas { display: block; position: fixed; inset: 0; z-index: 0; }
+
+  /* ─── HUD TOPBAR ─── */
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0 16px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand { display:flex;align-items:center;gap:8px;padding-right:12px;border-right:1px solid var(--border);flex-shrink:0; }
+  .brand-icon { width:28px;height:28px;background:linear-gradient(135deg,#00ff88,#bf5af2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000;box-shadow:0 0 12px rgba(0,255,136,0.3); }
+  .brand-name { font-size:11px;font-weight:700;letter-spacing:0.06em;color:var(--text-bright); }
+  .brand-sub  { font-size:9px;color:var(--green);letter-spacing:0.08em;text-transform:uppercase; }
+
+  .ctrl-row { display:flex;align-items:center;gap:6px; }
+  .ctrl-label { font-size:9px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap; }
+
+  select {
+    background: var(--bg-surface);
+    color: var(--text-bright);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 20px 4px 8px;
+    font-family: var(--sans);
+    font-size: 11px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%235a7a9a'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    transition: border-color 0.15s;
+  }
+  select:focus { border-color: var(--green-dim); }
+
+  .btn {
+    display:inline-flex;align-items:center;gap:4px;
+    padding:5px 10px;border-radius:5px;
+    border:1px solid var(--border);background:var(--bg-surface);
+    color:var(--text-main);font-family:var(--sans);font-size:11px;
+    font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;
+  }
+  .btn:hover { background:rgba(26,45,69,0.9);border-color:#2a4060;color:var(--text-bright); }
+  .btn-green { background:rgba(0,42,24,0.8);border-color:var(--green-dim);color:var(--green); }
+  .btn-green:hover { box-shadow:0 0 14px rgba(0,255,136,0.25); }
+  .btn-blue  { background:rgba(0,26,48,0.8);border-color:rgba(10,132,255,0.4);color:var(--blue); }
+  .btn-blue:hover  { box-shadow:0 0 12px rgba(10,132,255,0.25); }
+
+  #timer { font-family:var(--mono);font-size:16px;font-weight:600;color:var(--green);letter-spacing:0.08em;text-shadow:0 0 10px rgba(0,255,136,0.4);padding:0 6px; }
+
+  /* VR enter button override */
+  #VRButton { 
+    position: fixed !important;
+    bottom: 24px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 110 !important;
+    background: var(--bg-panel) !important;
+    border: 1px solid var(--green-dim) !important;
+    color: var(--green) !important;
+    font-family: var(--sans) !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    padding: 10px 28px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    box-shadow: 0 0 20px rgba(0,255,136,0.2) !important;
+  }
+
+  /* ─── OVERLAY PANEL ─── */
+  #overlay {
+    position: fixed;
+    top: 60px; right: 0;
+    width: 320px;
+    height: calc(100vh - 60px);
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    z-index: 90;
+    transition: transform 0.25s ease;
+  }
+  #overlay.hidden { transform: translateX(100%); }
+
+  .overlay-head {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .overlay-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .overlay-title::before {
+    content: '';
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: blink 2s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+  #contactList { flex: 1; overflow-y: auto; padding: 8px; }
+  #contactList::-webkit-scrollbar { width: 3px; }
+  #contactList::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .contact-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 11px;
+    margin-bottom: 5px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.15s;
+    font-size: 11px;
+  }
+  .contact-card::before {
+    content: ''; position:absolute; left:0;top:0;bottom:0;width:2px;
+    background: var(--text-faint); transition: background 0.2s;
+  }
+  .contact-card.active::before { background: var(--green-dim); }
+  .contact-card.hostile::before { background: var(--red); }
+
+  .c-id   { font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text-bright);display:block;margin-bottom:5px; }
+  .c-time { font-size:10px;color:var(--text-muted);float:right; }
+
+  .c-select {
+    width:100%;margin-bottom:5px;
+    background:var(--bg-surface);color:var(--text-bright);
+    border:1px solid var(--border);border-radius:4px;
+    padding:4px 22px 4px 7px;font-size:10px;font-family:var(--sans);
+    outline:none;appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%235a7a9a'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 7px center;
+  }
+
+  .c-actions { display:flex;flex-wrap:wrap;gap:3px;margin-top:4px; }
+  .c-btn {
+    padding:3px 7px;border-radius:3px;border:1px solid var(--border);
+    background:var(--bg-surface);color:var(--text-muted);
+    font-size:9px;font-weight:600;cursor:pointer;transition:all 0.12s;
+    font-family:var(--sans);
+  }
+  .c-btn:hover { background:rgba(26,45,69,0.9);color:var(--text-bright);border-color:#2a4060; }
+  .c-btn.det-active { background:rgba(0,255,136,0.12);color:var(--green-dim);border-color:var(--green-dim); }
+  .c-btn.eng-active { background:rgba(255,59,59,0.12);color:var(--red);border-color:rgba(255,59,59,0.4); }
+  .hint-text { font-size:9px;color:var(--blue);margin-top:3px;font-family:var(--mono); }
+
+  /* Result */
+  #resultPanel { border-top:1px solid var(--border);padding:10px 12px;flex-shrink:0; }
+  .result-title { font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px; }
+  #result { font-size:11px;color:var(--text-muted); }
+
+  /* ─── NOT SUPPORTED ─── */
+  #notSupported {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 24px;
+    background: rgba(2,5,8,0.96);
+    z-index: 200;
+  }
+  .not-sup-card {
+    max-width: 480px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 32px;
+  }
+  .not-sup-icon { font-size: 48px; margin-bottom: 16px; }
+  .not-sup-title { font-size: 18px; font-weight: 700; color: var(--text-bright); margin-bottom: 8px; }
+  .not-sup-body  { font-size: 13px; line-height: 1.7; color: var(--text-muted); }
 </style>
 </head>
 <body>
 
+<!-- HUD Topbar -->
 <div id="topbar">
-  <a href="/trainer" style="color:#58a6ff">&larr; 2D trainer</a>
-  <select id="difficulty"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
-  <select id="timeOfDay"><option>day</option><option>night</option><option>dusk</option></select>
-  <select id="terrain"><option>rural</option><option>urban</option><option>coastal</option><option>mountain</option></select>
-  <button id="newScenarioBtn">New scenario</button>
-  <span id="timer">00:00</span>
-  <button id="finishBtn">Finish &amp; score</button>
+  <div class="brand">
+    <div class="brand-icon">PS</div>
+    <div>
+      <div class="brand-name">PS-247</div>
+      <div class="brand-sub">VR Mode</div>
+    </div>
+  </div>
+  <a href="/trainer" style="color:var(--blue);font-size:11px;text-decoration:none">← 2D Trainer</a>
+  <div style="width:1px;height:20px;background:var(--border)"></div>
+  <div class="ctrl-row">
+    <span class="ctrl-label">Diff</span>
+    <select id="difficulty" style="width:44px"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+  </div>
+  <div class="ctrl-row">
+    <span class="ctrl-label">Time</span>
+    <select id="timeOfDay" style="width:58px"><option>day</option><option>night</option><option>dusk</option></select>
+  </div>
+  <div class="ctrl-row">
+    <span class="ctrl-label">Terrain</span>
+    <select id="terrain" style="width:72px"><option>rural</option><option>urban</option><option>coastal</option><option>mountain</option></select>
+  </div>
+  <button class="btn btn-green" id="newScenarioBtn">⊕ New Scenario</button>
+  <div id="timer">00:00</div>
+  <button class="btn btn-blue" id="finishBtn">⏎ Score</button>
+  <button class="btn" onclick="document.getElementById('overlay').classList.toggle('hidden')" style="margin-left:auto">☰ Panel</button>
 </div>
 
+<!-- Contacts Overlay -->
 <div id="overlay">
-  <h3 style="margin-top:0">Contacts</h3>
-  <p style="font-size:12px;color:#8b949e">Look at a sphere and pull the VR controller trigger (or click it on desktop) to mark it detected. Classify/engage here in the overlay panel.</p>
+  <div class="overlay-head">
+    <div class="overlay-title">Live Contacts</div>
+    <div style="font-size:10px;color:var(--text-muted);margin-top:6px;line-height:1.5">
+      Look at a sphere and pull the VR trigger to detect it.<br>Classify and engage in this panel.
+    </div>
+  </div>
   <div id="contactList"></div>
-  <h3>Result</h3>
-  <div id="result" style="white-space:pre-wrap;font-size:11px;background:#0e141c;padding:8px;border-radius:6px;">No session scored yet.</div>
+  <div id="resultPanel">
+    <div class="result-title">Session Result</div>
+    <div id="result">No session scored yet.</div>
+  </div>
 </div>
 
+<!-- No WebXR -->
 <div id="notSupported" class="hidden">
-  WebXR not available in this browser — open this page in a WebXR-capable
-  browser (e.g. the Meta Quest Browser, or Chrome with a WebXR device/emulator)
-  to enter VR. The 3D scope still renders and is mouse/click-controllable here.
+  <div class="not-sup-card">
+    <div class="not-sup-icon">🥽</div>
+    <div class="not-sup-title">WebXR Not Available</div>
+    <div class="not-sup-body">
+      Open this page in a WebXR-capable browser such as the <strong>Meta Quest Browser</strong>, 
+      or Chrome with a WebXR device/emulator enabled.<br><br>
+      The 3D scope still renders and is fully mouse/click-controllable in desktop mode.
+    </div>
+    <button onclick="document.getElementById('notSupported').classList.add('hidden')" style="margin-top:20px;padding:10px 20px;background:rgba(0,42,24,0.8);border:1px solid var(--green-dim);border-radius:8px;color:var(--green);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">
+      Continue in Desktop Mode
+    </button>
+  </div>
 </div>
 
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import * as THREE  from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { VRButton } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/webxr/VRButton.js';
 
-const WORLD_SCALE = 1 / 40; // shrink scenario meters down to a human-scale VR volume
-const CLASS_OPTIONS = ["hostile_drone", "hostile_swarm_member", "friendly_drone", "decoy", "bird"];
+const WORLD_SCALE = 1/40;
+const CLASS_OPTIONS = ["hostile_drone","hostile_swarm_member","friendly_drone","decoy","bird"];
 
 let scenario = null, simStart = null, elapsed = 0, log = {};
 const sphereByContact = {};
 
+/* ── Scene setup ── */
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x030507);
-const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 200);
+scene.background = new THREE.Color(0x020508);
+scene.fog = new THREE.FogExp2(0x020810, 0.04);
+
+const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.05, 200);
 camera.position.set(0, 1.6, 4);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
 renderer.xr.enabled = true;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 document.body.appendChild(renderer.domElement);
 
+/* ── VR Button ── */
 if (navigator.xr) {
   document.body.appendChild(VRButton.createButton(renderer, {
     optionalFeatures: ['dom-overlay'],
@@ -71,29 +314,55 @@ if (navigator.xr) {
   document.getElementById('notSupported').classList.remove('hidden');
 }
 
-scene.add(new THREE.AmbientLight(0x667788, 1.2));
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-dirLight.position.set(2, 4, 2);
-scene.add(dirLight);
+/* ── Lighting ── */
+scene.add(new THREE.AmbientLight(0x446688, 1.5));
+const dir = new THREE.DirectionalLight(0xaaccff, 0.8);
+dir.position.set(2, 6, 3);
+scene.add(dir);
+
+/* ── Grid floor ── */
+const gridHelper = new THREE.GridHelper(20, 40, 0x0a2a1a, 0x061810);
+scene.add(gridHelper);
 
 const floor = new THREE.Mesh(
-  new THREE.CircleGeometry(3, 48),
-  new THREE.MeshBasicMaterial({ color: 0x0a1a12, side: THREE.DoubleSide })
+  new THREE.CircleGeometry(4, 64),
+  new THREE.MeshBasicMaterial({ color: 0x05100a, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
 );
-floor.rotation.x = -Math.PI / 2;
+floor.rotation.x = -Math.PI/2;
 scene.add(floor);
 
+/* ── Origin marker ── */
+const ring = new THREE.Mesh(
+  new THREE.TorusGeometry(0.3, 0.01, 8, 48),
+  new THREE.MeshBasicMaterial({ color: 0x00ff88 })
+);
+ring.rotation.x = -Math.PI/2;
+ring.position.y = 0.01;
+scene.add(ring);
+
+/* ── Spheres ── */
 function colorFor(contact) {
-  return log[contact.contact_id] ? 0x58a6ff : 0x3fb950;
+  const e = log[contact.contact_id];
+  if (!e) return 0x00ff88;
+  const cls = e.classification;
+  if (cls === 'hostile_drone' || cls === 'hostile_swarm_member') return 0xff3b3b;
+  if (cls === 'friendly_drone') return 0x0a84ff;
+  return 0x4db8ff;
 }
 
 function ensureSphere(contact) {
   if (sphereByContact[contact.contact_id]) return sphereByContact[contact.contact_id];
-  const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.05, 16, 16),
-    new THREE.MeshStandardMaterial({ color: colorFor(contact) })
-  );
+  const geo = new THREE.SphereGeometry(0.06, 16, 16);
+  const mat = new THREE.MeshStandardMaterial({ color: colorFor(contact), emissive: colorFor(contact), emissiveIntensity: 0.4 });
+  const mesh = new THREE.Mesh(geo, mat);
   mesh.userData.contactId = contact.contact_id;
+
+  // Glow ring
+  const glowGeo = new THREE.SphereGeometry(0.1, 8, 8);
+  const glowMat = new THREE.MeshBasicMaterial({ color: colorFor(contact), transparent: true, opacity: 0.15 });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  mesh.add(glow);
+
   scene.add(mesh);
   sphereByContact[contact.contact_id] = mesh;
   return mesh;
@@ -102,15 +371,15 @@ function ensureSphere(contact) {
 function posAt(contact, t) {
   const pts = contact.path;
   if (t <= pts[0].t) return pts[0];
-  if (t >= pts[pts.length - 1].t) return pts[pts.length - 1];
-  for (let i = 0; i < pts.length - 1; i++) {
-    const a = pts[i], b = pts[i + 1];
+  if (t >= pts[pts.length-1].t) return pts[pts.length-1];
+  for (let i = 0; i < pts.length-1; i++) {
+    const a = pts[i], b = pts[i+1];
     if (a.t <= t && t <= b.t) {
-      const f = b.t === a.t ? 0 : (t - a.t) / (b.t - a.t);
-      return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: a.z + (b.z - a.z) * f };
+      const f = b.t === a.t ? 0 : (t-a.t)/(b.t-a.t);
+      return { x:a.x+(b.x-a.x)*f, y:a.y+(b.y-a.y)*f, z:(a.z||0)+(((b.z||0)-(a.z||0))*f) };
     }
   }
-  return pts[pts.length - 1];
+  return pts[pts.length-1];
 }
 
 function updateScene() {
@@ -121,67 +390,72 @@ function updateScene() {
     mesh.visible = visible;
     if (visible) {
       const p = posAt(c, elapsed);
-      mesh.position.set(p.x * WORLD_SCALE, 1.5 + p.z * WORLD_SCALE * 0.3, -Math.abs(p.y) * WORLD_SCALE - 1);
-      mesh.material.color.setHex(colorFor(c));
+      mesh.position.set(p.x*WORLD_SCALE, 1.5+(p.z||0)*WORLD_SCALE*0.3, -Math.abs(p.y)*WORLD_SCALE-1);
+      const col = colorFor(c);
+      mesh.material.color.setHex(col);
+      mesh.material.emissive.setHex(col);
+      mesh.children[0] && mesh.children[0].material.color.setHex(col);
     }
   }
 }
 
+/* ── Log helpers ── */
 function tagDetected(contactId) {
   if (!log[contactId]) log[contactId] = { contact_id: contactId };
   if (log[contactId].detected_at === undefined) log[contactId].detected_at = elapsed;
   renderContactList();
 }
 window.tagDetected = tagDetected;
-
 function setClassification(contactId, value) {
-  if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
+  if (!log[contactId]) log[contactId] = { contact_id:contactId, detected_at:elapsed };
   log[contactId].classification = value;
+  renderContactList();
 }
 window.setClassification = setClassification;
-
 function setEngagement(contactId, action) {
-  if (!log[contactId]) log[contactId] = { contact_id: contactId, detected_at: elapsed };
+  if (!log[contactId]) log[contactId] = { contact_id:contactId, detected_at:elapsed };
   log[contactId].engagement_action = action;
   renderContactList();
 }
 window.setEngagement = setEngagement;
-
 async function requestAiHint(contactId) {
   const res = await fetch('/api/contact/classify', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ scenario_id: scenario.scenario_id, contact_id: contactId, t: elapsed }),
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ scenario_id:scenario.scenario_id, contact_id:contactId, t:elapsed }),
   });
   const out = await res.json();
-  const el = document.getElementById(`hint-${contactId}`);
-  if (el) el.textContent = `sensor: ${out.label} (p=${out.probabilities[out.label].toFixed(2)})`;
+  const el  = document.getElementById(`hint-${contactId}`);
+  if (el) el.textContent = `AI: ${out.label} (p=${out.probabilities[out.label].toFixed(2)})`;
 }
 window.requestAiHint = requestAiHint;
 
+/* ── Contact List ── */
 function renderContactList() {
   const el = document.getElementById('contactList');
   el.innerHTML = '';
   if (!scenario) return;
   for (const c of scenario.contacts) {
     const entry = log[c.contact_id];
-    const div = document.createElement('div');
-    div.className = 'contact-row' + (entry ? ' selected' : '');
-    const classOpts = CLASS_OPTIONS.map(o => `<option value="${o}" ${entry && entry.classification === o ? 'selected' : ''}>${o}</option>`).join('');
-    div.innerHTML = `
-      <div>${c.contact_id} ${entry ? `(detected @ ${entry.detected_at.toFixed(1)}s)` : '(not detected)'}</div>
-      <select onchange="setClassification('${c.contact_id}', this.value)"><option value="">classify...</option>${classOpts}</select>
-      <button onclick="tagDetected('${c.contact_id}')">Tag detected</button>
-      <button onclick="requestAiHint('${c.contact_id}')">AI hint</button>
-      <div id="hint-${c.contact_id}" style="color:#8b949e"></div>
-      <div>
-        <button onclick="setEngagement('${c.contact_id}', 'engage')">Engage</button>
-        <button onclick="setEngagement('${c.contact_id}', 'monitor')">Monitor</button>
-        <button onclick="setEngagement('${c.contact_id}', 'ignore')">Ignore</button>
+    const isHostile = entry && (entry.classification==='hostile_drone'||entry.classification==='hostile_swarm_member');
+    const card = document.createElement('div');
+    card.className = 'contact-card' + (entry?' active':'') + (isHostile?' hostile':'');
+    const classOpts = CLASS_OPTIONS.map(o => `<option value="${o}" ${entry&&entry.classification===o?'selected':''}>${o}</option>`).join('');
+    card.innerHTML = `
+      <span class="c-id">${c.contact_id} <span class="c-time">${entry?entry.detected_at.toFixed(1)+'s':''}</span></span>
+      <button class="c-btn det-active" onclick="tagDetected('${c.contact_id}')">${entry?'✓ Detected':'⊕ Tag Detected'}</button>
+      <select class="c-select" onchange="setClassification('${c.contact_id}',this.value)"><option value="">classify…</option>${classOpts}</select>
+      <button class="c-btn" onclick="requestAiHint('${c.contact_id}')">🤖 AI Hint</button>
+      <div class="hint-text" id="hint-${c.contact_id}"></div>
+      <div class="c-actions">
+        <button class="c-btn ${entry&&entry.engagement_action==='engage'?'eng-active':''}" onclick="setEngagement('${c.contact_id}','engage')">Engage</button>
+        <button class="c-btn" onclick="setEngagement('${c.contact_id}','monitor')">Monitor</button>
+        <button class="c-btn" onclick="setEngagement('${c.contact_id}','ignore')">Ignore</button>
       </div>`;
-    el.appendChild(div);
+    el.appendChild(card);
   }
 }
 
+/* ── New scenario ── */
 async function startScenario() {
   const params = {
     difficulty: parseInt(document.getElementById('difficulty').value),
@@ -189,97 +463,90 @@ async function startScenario() {
     terrain: document.getElementById('terrain').value,
     sensor_degradation: 0.1,
   };
-  const res = await fetch('/api/scenario/new', {
-    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(params)
-  });
+  const res = await fetch('/api/scenario/new', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(params) });
   scenario = await res.json();
   log = {};
   for (const id in sphereByContact) { scene.remove(sphereByContact[id]); delete sphereByContact[id]; }
-  elapsed = 0;
+  elapsed  = 0;
   simStart = performance.now();
   renderContactList();
-  document.getElementById('result').textContent = 'Session in progress...';
+  document.getElementById('result').textContent = 'Session in progress…';
 }
 document.getElementById('newScenarioBtn').onclick = startScenario;
 
+/* ── Finish ── */
 document.getElementById('finishBtn').onclick = async () => {
   const resultEl = document.getElementById('result');
-  if (!scenario) {
-    if (resultEl) resultEl.innerHTML = `<span style="color:#d29922;">⚠️ No scenario active. Click "New procedural scenario" first.</span>`;
-    return;
-  }
-  if (resultEl) resultEl.innerHTML = `<span style="color:#58a6ff;">⏳ Scoring VR session...</span>`;
+  if (!scenario) { resultEl.innerHTML = `<span style="color:var(--amber)">⚠ No scenario active.</span>`; return; }
+  resultEl.innerHTML = `<span style="color:var(--blue)">⏳ Scoring…</span>`;
   try {
     const res = await fetch('/api/session/submit', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        scenario_id: scenario.scenario_id,
-        trainee_id: 'vr-trainee', unit_id: 'vr-unit',
-        difficulty: parseInt(document.getElementById('difficulty').value),
-        trainee_log: Object.values(log),
-      }),
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ scenario_id:scenario.scenario_id, trainee_id:'vr-trainee', unit_id:'vr-unit', difficulty:parseInt(document.getElementById('difficulty').value), trainee_log:Object.values(log) }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      if (resultEl) resultEl.innerHTML = `<span style="color:#f85149;">❌ Error: ${err.detail || 'Failed to submit'}</span>`;
+      const err = await res.json().catch(() => ({ detail:res.statusText }));
+      resultEl.innerHTML = `<span style="color:var(--red)">❌ ${err.detail||'Failed'}</span>`;
       return;
     }
     const result = await res.json();
-    const score = result.overall_score || 0;
-    const color = score >= 75 ? '#3fb950' : score >= 50 ? '#d29922' : '#f85149';
-    if (resultEl) {
-      resultEl.innerHTML = `
-        <div style="font-size:16px; font-weight:bold; color:${color}; margin-bottom:6px;">Overall Score: ${score.toFixed(1)}%</div>
-        <div style="font-size:12px; color:#8b949e;">Detect: ${result.detection_score}% · Classify: ${result.classification_score}% · Engage: ${result.engagement_score}% · Timeliness: ${result.timeliness_score}%</div>
-        <div style="font-size:12px; color:#8b949e; margin-top:4px;">Missed: ${result.contacts_missed} / ${result.contacts_total}</div>
-        ${result.session_id ? `<div style="margin-top:6px;"><a href="/aar/session/${result.session_id}/print" target="_blank" style="color:#58a6ff;">🖨️ View Report</a></div>` : ''}
-      `;
-    }
-  } catch (e) {
-    if (resultEl) resultEl.innerHTML = `<span style="color:#f85149;">❌ Network error: ${e.message}</span>`;
+    const score  = result.overall_score || 0;
+    const col    = score >= 75 ? '#00cc6a' : score >= 50 ? '#ffb800' : '#ff3b3b';
+    resultEl.innerHTML = `
+      <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:${col};line-height:1;margin-bottom:6px">${score.toFixed(1)}%</div>
+      <div style="font-size:10px;color:var(--text-muted);line-height:1.8">
+        Det: ${result.detection_score}% · Cls: ${result.classification_score}% · Eng: ${result.engagement_score}% · Time: ${result.timeliness_score}%<br>
+        Missed: ${result.contacts_missed}/${result.contacts_total}
+      </div>
+      ${result.session_id ? `<a href="/aar/session/${result.session_id}/print" target="_blank" style="font-size:10px;color:var(--blue);text-decoration:none;display:block;margin-top:6px">🖨 View Report</a>` : ''}`;
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
   }
 };
 
-// pointer/controller selection -> raycast against contact spheres
+/* ── Controller ray / mouse ── */
 const raycaster = new THREE.Raycaster();
-
-function handleSelect(originMatrix) {
-  const origin = new THREE.Vector3().setFromMatrixPosition(originMatrix);
-  const dir = new THREE.Vector3(0, 0, -1).transformDirection(originMatrix);
+function handleSelect(matrix) {
+  const origin = new THREE.Vector3().setFromMatrixPosition(matrix);
+  const dir    = new THREE.Vector3(0,0,-1).transformDirection(matrix);
   raycaster.set(origin, dir);
   const hits = raycaster.intersectObjects(Object.values(sphereByContact));
   if (hits.length) tagDetected(hits[0].object.userData.contactId);
 }
-
-function setupController(index) {
-  const controller = renderer.xr.getController(index);
-  controller.addEventListener('select', () => handleSelect(controller.matrixWorld));
-  scene.add(controller);
+function setupCtrl(i) {
+  const c = renderer.xr.getController(i);
+  c.addEventListener('select', () => handleSelect(c.matrixWorld));
+  scene.add(c);
 }
-setupController(0);
-setupController(1);
+setupCtrl(0); setupCtrl(1);
 
-// desktop fallback: click on canvas raycasts from camera through mouse
 const mouse = new THREE.Vector2();
-renderer.domElement.addEventListener('click', (ev) => {
-  mouse.x = (ev.clientX / innerWidth) * 2 - 1;
-  mouse.y = -(ev.clientY / innerHeight) * 2 + 1;
+renderer.domElement.addEventListener('click', ev => {
+  mouse.x = (ev.clientX/innerWidth)*2-1;
+  mouse.y = -(ev.clientY/innerHeight)*2+1;
   raycaster.setFromCamera(mouse, camera);
   const hits = raycaster.intersectObjects(Object.values(sphereByContact));
   if (hits.length) tagDetected(hits[0].object.userData.contactId);
 });
 
 window.addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
+  camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
 
+/* ── Render loop ── */
 renderer.setAnimationLoop(() => {
   if (scenario && simStart !== null) {
-    elapsed = (performance.now() - simStart) / 1000;
+    elapsed = (performance.now()-simStart)/1000;
     document.getElementById('timer').textContent =
-      `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(Math.floor(elapsed % 60)).padStart(2, '0')}`;
+      `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(Math.floor(elapsed%60)).padStart(2,'0')}`;
+  }
+  // Orbit camera slowly when no VR
+  if (!renderer.xr.isPresenting) {
+    const t = Date.now()*0.0002;
+    camera.position.x = Math.sin(t)*0.3;
+    camera.position.z = 4 + Math.cos(t*0.7)*0.2;
   }
   updateScene();
   renderer.render(scene, camera);
