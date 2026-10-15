@@ -320,17 +320,17 @@ export default function App() {
           }
 
           // Positioning:
-          // Left-side (including Hero): bottom-left (24px left, 24px bottom), max-w-[360px]
-          // Right-side: right-6, bottom-[calc(var(--telemetry-h)+48px)], max-w-[360px]
+          // Left-side (including Hero): bottom-left (24px left, 72px bottom - shifted up 48px), max-w-[360px]
+          // Right-side: right-6, bottom-[calc(var(--telemetry-h)+96px)] - shifted up 48px, max-w-[360px]
           // Center-side: bottom-[calc(var(--telemetry-h)+36px)], horizontally centered
           // Under 900px: stacked at bottom, full width with 16px margins
           let posClass = ''
           if (sec.side === 'left') {
-            posClass = 'fixed bottom-6 left-6 max-w-[360px] max-[900px]:bottom-4 max-[900px]:left-4 max-[900px]:right-4 max-[900px]:w-[calc(100%-32px)] max-[900px]:max-w-[calc(100%-32px)]'
+            posClass = 'section-panel-left fixed bottom-[72px] left-6 max-w-[360px] max-[900px]:bottom-[64px] max-[900px]:left-4 max-[900px]:right-4 max-[900px]:w-[calc(100%-32px)] max-[900px]:max-w-[calc(100%-32px)]'
           } else if (sec.side === 'right') {
-            posClass = 'fixed bottom-[calc(var(--telemetry-h)+48px)] right-6 max-w-[360px] max-[900px]:bottom-[calc(var(--telemetry-h)+24px)] max-[900px]:left-4 max-[900px]:right-4 max-[900px]:w-[calc(100%-32px)] max-[900px]:max-w-[calc(100%-32px)]'
+            posClass = 'section-panel-right fixed bottom-[calc(var(--telemetry-h)+96px)] right-6 max-w-[360px] max-[900px]:bottom-[calc(var(--telemetry-h)+72px)] max-[900px]:left-4 max-[900px]:right-4 max-[900px]:w-[calc(100%-32px)] max-[900px]:max-w-[calc(100%-32px)]'
           } else {
-            posClass = 'fixed bottom-[calc(var(--telemetry-h)+36px)] left-1/2 -translate-x-1/2 max-w-[460px] max-[900px]:bottom-[calc(var(--telemetry-h)+24px)] max-[900px]:left-4 max-[900px]:right-4 max-[900px]:translate-x-0 max-[900px]:w-[calc(100%-32px)] max-[900px]:max-w-[calc(100%-32px)]'
+            posClass = 'section-panel-center fixed bottom-[calc(var(--telemetry-h)+36px)] left-1/2 max-w-[460px] max-[900px]:bottom-[calc(var(--telemetry-h)+24px)] max-[900px]:left-4 max-[900px]:right-4 max-[900px]:translate-x-0 max-[900px]:w-[calc(100%-32px)] max-[900px]:max-w-[calc(100%-32px)]'
           }
 
           const isActive = activeSection === idx
