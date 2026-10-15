@@ -2,83 +2,345 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Team Roles — Drone Threat Trainer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PS-247 Team Roles — Drone Threat Trainer</title>
+<meta name="description" content="PS-247 multi-operator team training with comms-delay pipeline — Detector, Classifier, Engagement Authority roles" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <style>
-  body { font-family: system-ui, sans-serif; background: #05070a; color: #d7dde3; margin: 0; padding: 20px; }
-  select, button, input { background: #0e141c; color: #d7dde3; border: 1px solid #1f2733; border-radius: 4px; padding: 6px 10px; margin-right: 6px; }
-  .contact-row { border: 1px solid #1f2733; border-radius: 6px; padding: 10px; margin-bottom: 8px; }
-  .contact-row button { margin-right: 4px; margin-top: 6px; }
-  #timer { font-variant-numeric: tabular-nums; font-size: 18px; }
-  #roleBanner { padding: 10px; margin: 12px 0; border-radius: 6px; font-weight: bold; }
-  .role-detector { background: #0d2744; }
-  .role-classifier { background: #2d2410; }
-  .role-engagement_authority { background: #3a0e0e; }
+  :root {
+    --bg-void:    #020508;
+    --bg-deep:    #050a10;
+    --bg-surface: #0a1220;
+    --bg-raised:  #0f1a2a;
+    --bg-panel:   #121f31;
+    --bg-hover:   #1a2d45;
+    --border:     #1e3048;
+    --border-hi:  #2a4060;
+    --green:      #00ff88;
+    --green-dim:  #00cc6a;
+    --blue:       #0a84ff;
+    --blue-dim:   #0066cc;
+    --red:        #ff3b3b;
+    --amber:      #ffb800;
+    --purple:     #bf5af2;
+    --text-bright:#e8f4ff;
+    --text-main:  #b0c8e0;
+    --text-muted: #5a7a9a;
+    --text-faint: #304050;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --rad-sm: 6px; --rad-md: 10px; --rad-lg: 16px;
+    /* Role accent vars (updated by JS) */
+    --role-color: #5a7a9a;
+    --role-bg:    rgba(90,122,154,0.08);
+    --role-border: rgba(90,122,154,0.2);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100vh; font-family: var(--sans); background: var(--bg-void); color: var(--text-main); }
+
+  /* ─── TOPBAR ─── */
+  #topbar {
+    background: linear-gradient(180deg, #0a1520 0%, #071018 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 56px;
+    position: sticky; top: 0; z-index: 100;
+    flex-wrap: wrap;
+  }
+  .brand { display:flex;align-items:center;gap:10px;padding-right:16px;border-right:1px solid var(--border);flex-shrink:0; }
+  .brand-icon { width:32px;height:32px;background:linear-gradient(135deg,#00ff88,#0a84ff);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#000;box-shadow:0 0 14px rgba(0,255,136,0.3); }
+  .brand-name { font-size:13px;font-weight:700;letter-spacing:0.06em;color:var(--text-bright); }
+  .brand-sub  { font-size:10px;color:var(--blue);letter-spacing:0.08em;text-transform:uppercase; }
+
+  .nav-pill { display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--rad-sm);font-size:12px;font-weight:500;color:var(--text-muted);text-decoration:none;transition:all 0.15s;border:1px solid transparent; }
+  .nav-pill:hover { background:var(--bg-surface);color:var(--blue);border-color:var(--border); }
+
+  /* ─── ROLE BANNER ─── */
+  #roleBanner {
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--role-bg);
+    border-bottom-color: var(--role-border);
+    color: var(--role-color);
+    transition: all 0.25s;
+    min-height: 42px;
+  }
+  .role-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--role-color); box-shadow: 0 0 10px var(--role-color); flex-shrink: 0; animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.35} }
+
+  /* ─── CONTROLS ─── */
+  #controls {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .ctrl-group { display:flex;align-items:center;gap:6px; }
+  .ctrl-label { font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted); }
+
+  input[type="text"], select {
+    background: var(--bg-surface); color: var(--text-bright);
+    border: 1px solid var(--border); border-radius: var(--rad-sm);
+    padding: 6px 10px; font-family: var(--sans); font-size: 12px;
+    outline: none; transition: border-color 0.15s;
+    appearance: none; -webkit-appearance: none;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7a9a'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; padding-right:26px; }
+  input:focus, select:focus { border-color: var(--green-dim); }
+
+  .btn {
+    display:inline-flex;align-items:center;gap:5px;
+    padding:7px 14px;border-radius:var(--rad-sm);
+    border:1px solid var(--border);background:var(--bg-surface);
+    color:var(--text-main);font-family:var(--sans);font-size:12px;
+    font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;
+  }
+  .btn:hover { background:var(--bg-hover);border-color:var(--border-hi);color:var(--text-bright); }
+  .btn:active { transform:scale(0.97); }
+  .btn-green { background:linear-gradient(135deg,#002d18,#003d22);border-color:var(--green-dim);color:var(--green); }
+  .btn-green:hover { box-shadow:0 0 14px rgba(0,255,136,0.2); }
+  .btn-blue  { background:rgba(10,132,255,0.12);border-color:rgba(10,132,255,0.3);color:var(--blue); }
+  .btn-blue:hover  { background:rgba(10,132,255,0.2);box-shadow:0 0 12px rgba(10,132,255,0.2); }
+  .btn-finish { background:linear-gradient(135deg,#001a30,#002240);border-color:var(--blue-dim);color:var(--blue);padding:8px 18px;font-size:13px; }
+  .btn-finish:hover { box-shadow:0 0 18px rgba(10,132,255,0.3);color:#4db8ff; }
+
+  #timer { font-family:var(--mono);font-size:20px;font-weight:600;color:var(--green);letter-spacing:0.08em;text-shadow:0 0 12px rgba(0,255,136,0.4);padding:0 8px; }
+
+  /* ─── JOIN SCENARIO BOX ─── */
+  #joinBox {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--rad-md);
+    padding: 8px 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .join-label { font-size:10px;color:var(--text-muted);white-space:nowrap;font-weight:600;letter-spacing:0.06em;text-transform:uppercase; }
+
+  /* ─── CONTENT ─── */
+  #content { max-width: 1100px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+
+  /* ─── CONTACT CARDS ─── */
+  #contactList { display: flex; flex-direction: column; gap: 10px; }
+  .contact-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--rad-md);
+    overflow: hidden;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .contact-card::before {
+    content: ''; position:absolute; left:0;top:0;bottom:0;width:3px;
+    background: var(--text-faint); transition: background 0.2s;
+  }
+  .contact-card.contact-ready::before { background: var(--green-dim); }
+  .contact-card.contact-hostile::before { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  .contact-top { padding: 12px 14px 8px 18px; display:flex; align-items:center; justify-content:space-between; }
+  .contact-id  { font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text-bright); }
+  .contact-meta { font-size:11px;color:var(--text-muted); }
+  .contact-body { padding: 0 14px 12px 18px; }
+
+  .action-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .action-btn {
+    padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--bg-surface); color: var(--text-muted);
+    font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.12s;
+    font-family: var(--sans); letter-spacing: 0.03em;
+  }
+  .action-btn:hover { background:var(--bg-hover);color:var(--text-bright);border-color:var(--border-hi); }
+  .action-btn.active-warn { background:rgba(10,132,255,0.15);color:var(--blue);border-color:var(--blue-dim); }
+  .action-btn.active-soft { background:rgba(255,184,0,0.15);color:var(--amber);border-color:var(--amber-dim,#cc9400); }
+  .action-btn.active-hard { background:rgba(255,59,59,0.15);color:var(--red);border-color:rgba(255,59,59,0.4); }
+  .action-btn.active-mon  { background:rgba(0,255,136,0.1);color:var(--green-dim);border-color:var(--green-dim); }
+  .action-btn.active-ign  { background:rgba(90,122,154,0.15);color:var(--text-muted); }
+
+  .contact-select {
+    width:100%; margin-top:6px;
+    background:var(--bg-surface);color:var(--text-bright);
+    border:1px solid var(--border);border-radius:5px;
+    padding:5px 26px 5px 10px;font-size:11px;font-family:var(--sans);
+    outline:none;appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7a9a'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;
+  }
+  .hint-text { font-size:10px;color:var(--blue);margin-top:4px;font-family:var(--mono); }
+
+  /* ─── RESULT CARD ─── */
+  #resultCard {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--rad-lg);
+    overflow: hidden;
+    align-self: start;
+    position: sticky;
+    top: 80px;
+  }
+  .result-head {
+    padding: 12px 16px;
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  #result { padding: 14px 16px; font-size: 12px; color: var(--text-muted); min-height: 60px; }
+
+  /* ─── HOW-TO BOX ─── */
+  .howto {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--rad-md);
+    padding: 14px 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-top: 14px;
+  }
+  .howto strong { color: var(--text-main); }
+  .role-chip {
+    display: inline-block; padding: 1px 8px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; font-family: var(--mono);
+  }
+  .chip-det { background: rgba(10,132,255,0.15); color: var(--blue); }
+  .chip-cls { background: rgba(255,184,0,0.15);  color: var(--amber); }
+  .chip-eng { background: rgba(255,59,59,0.15);  color: var(--red); }
 </style>
 </head>
 <body>
-<h1>Team Roles (comms-delay pipeline)</h1>
-<p><a href="/" style="color:#58a6ff">&larr; Solo trainer</a></p>
-<p style="color:#8b949e; font-size:13px; max-width:700px;">
-  Three separate operators share one scenario: a <strong>detector</strong> spots contacts,
-  a <strong>classifier</strong> only learns of a detection after the comms delay and identifies it,
-  and the <strong>engagement authority</strong> only learns the classification after a second comms
-  delay and decides the response. Open this page in up to three browser tabs/windows with the same
-  Scenario ID, one per role, to play it as a real team.
-</p>
 
-<div>
-  <label>Trainee/Unit <input id="traineeId" value="team-1" style="width:90px" /> <input id="unitId" value="unit-A" style="width:90px" /></label>
-  <label>Difficulty <select id="difficulty"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
-  <button onclick="startScenario()">New team scenario</button>
-  <label>Scenario ID <input id="joinScenarioId" placeholder="paste to join an existing one" style="width:280px" /></label>
-  <button onclick="joinScenario()">Join</button>
+<header id="topbar">
+  <div class="brand">
+    <div class="brand-icon">PS</div>
+    <div>
+      <div class="brand-name">PS-247</div>
+      <div class="brand-sub">Team Roles</div>
+    </div>
+  </div>
+  <a href="/trainer" class="nav-pill">← Solo Trainer</a>
+  <a href="/instructor" class="nav-pill">⚙ Instructor</a>
+  <a href="/aar"    class="nav-pill">📊 AAR</a>
+
+  <!-- Controls -->
+  <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
+    <div class="ctrl-group">
+      <span class="ctrl-label">ID</span>
+      <input id="traineeId" value="team-1"  style="width:70px" />
+      <input id="unitId"    value="unit-A"  style="width:58px" />
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Diff</span>
+      <select id="difficulty" style="width:44px"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Role</span>
+      <select id="role" onchange="renderRoleBanner()" style="width:160px">
+        <option value="detector">Detector</option>
+        <option value="classifier">Classifier</option>
+        <option value="engagement_authority">Engagement Authority</option>
+      </select>
+    </div>
+    <button class="btn btn-green" onclick="startScenario()">⊕ New Team Scenario</button>
+
+    <div id="joinBox">
+      <span class="join-label">Scenario ID</span>
+      <input id="joinScenarioId" placeholder="paste to join…" style="width:220px" />
+      <button class="btn btn-blue" onclick="joinScenario()">Join</button>
+    </div>
+
+    <div id="timer">00:00</div>
+    <button class="btn btn-finish" onclick="finishSession()">⏎ Finish &amp; Score</button>
+  </div>
+</header>
+
+<!-- Role Banner -->
+<div id="roleBanner">
+  <div class="role-indicator"></div>
+  <span id="roleBannerText">Select your role above</span>
 </div>
 
-<div style="margin-top:12px;">
-  <label>My role
-    <select id="role" onchange="renderRoleBanner()">
-      <option value="detector">Detector</option>
-      <option value="classifier">Classifier</option>
-      <option value="engagement_authority">Engagement authority</option>
-    </select>
-  </label>
-  <span id="timer">00:00</span>
-  <button onclick="finishSession()">Finish &amp; score (any role can do this once)</button>
-</div>
+<div id="content">
+  <div>
+    <div id="contactList">
+      <div style="padding:40px;text-align:center;color:var(--text-faint);font-size:13px">Start or join a scenario to see contacts</div>
+    </div>
+  </div>
 
-<div id="roleBanner"></div>
-<div id="contactList"></div>
-<h3>Result</h3>
-<div id="result" style="white-space:pre-wrap; font-size:13px; background:#0e141c; padding:12px; border-radius:6px;">No session scored yet.</div>
+  <div>
+    <div id="resultCard">
+      <div class="result-head">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--blue);display:inline-block"></span>
+        Session Result
+      </div>
+      <div id="result">No session scored yet.</div>
+    </div>
+
+    <div class="howto">
+      <p><strong>How team roles work:</strong></p>
+      <p style="margin-top:8px">
+        Open this page in <strong>up to 3 browser tabs</strong>, one per role, 
+        using the same Scenario ID.
+      </p>
+      <p style="margin-top:8px">
+        <span class="role-chip chip-det">Detector</span> spots contacts first.
+        After a comms delay, <span class="role-chip chip-cls">Classifier</span> sees them and identifies them.
+        After another delay, <span class="role-chip chip-eng">Engagement Auth</span> sees the classification and decides response.
+      </p>
+      <p style="margin-top:8px">Any role can submit the session once training is complete.</p>
+    </div>
+  </div>
+</div>
 
 <script>
-let scenario = null;
-let elapsed = 0;
-let pollHandle = null;
-const CLASS_OPTIONS = ["hostile_drone", "hostile_swarm_member", "friendly_drone", "decoy", "bird"];
+let scenario    = null;
+let elapsed     = 0;
+let pollHandle  = null;
+const CLASS_OPTIONS = ["hostile_drone","hostile_swarm_member","friendly_drone","decoy","bird"];
 
-function fmtTime(s) {
-  const m = Math.floor(s / 60).toString().padStart(2, '0');
-  const ss = Math.floor(s % 60).toString().padStart(2, '0');
-  return `${m}:${ss}`;
-}
+const ROLE_STYLES = {
+  detector:             { color:'#0a84ff', bg:'rgba(10,132,255,0.06)',   border:'rgba(10,132,255,0.2)',   label:'DETECTOR — Spot and mark contacts as you detect them on radar' },
+  classifier:           { color:'#ffb800', bg:'rgba(255,184,0,0.06)',    border:'rgba(255,184,0,0.2)',    label:'CLASSIFIER — Identify contacts after comms delay from Detector' },
+  engagement_authority: { color:'#ff3b3b', bg:'rgba(255,59,59,0.06)',    border:'rgba(255,59,59,0.2)',    label:'ENGAGEMENT AUTHORITY — Decide response after Classifier report' },
+};
 
 function renderRoleBanner() {
-  const role = document.getElementById('role').value;
-  const el = document.getElementById('roleBanner');
-  el.className = `role-${role}`;
-  const names = { detector: 'DETECTOR — click a contact as soon as you spot it',
-                  classifier: 'CLASSIFIER — you only see contacts once the detector\'s report reaches you',
-                  engagement_authority: 'ENGAGEMENT AUTHORITY — you only see contacts once the classifier\'s report reaches you' };
-  el.textContent = names[role];
+  const role  = document.getElementById('role').value;
+  const style = ROLE_STYLES[role] || ROLE_STYLES.detector;
+  const banner = document.getElementById('roleBanner');
+  banner.style.setProperty('--role-color', style.color);
+  banner.style.setProperty('--role-bg',    style.bg);
+  banner.style.setProperty('--role-border', style.border);
+  banner.style.background = style.bg;
+  banner.style.borderBottomColor = style.border;
+  banner.style.color = style.color;
+  document.getElementById('roleBannerText').textContent = style.label;
+  document.querySelector('.role-indicator').style.cssText = `background:${style.color};box-shadow:0 0 10px ${style.color}`;
 }
 renderRoleBanner();
+
+function fmtTime(s) {
+  return `${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`;
+}
 
 async function startScenario() {
   const difficulty = parseInt(document.getElementById('difficulty').value);
   const res = await fetch('/api/scenario/new', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ difficulty, duration_s: 180 }),
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ difficulty, duration_s:180 }),
   });
   scenario = await res.json();
   document.getElementById('joinScenarioId').value = scenario.scenario_id;
@@ -88,15 +350,13 @@ async function startScenario() {
 async function joinScenario() {
   const id = document.getElementById('joinScenarioId').value.trim();
   if (!id) return;
-  // re-fetch via team state as detector just to recover server_start_epoch_ms isn't directly exposed
-  // here, so we approximate: ask for detector view once to confirm the scenario exists, then poll normally.
   scenario = { scenario_id: id };
   startClock();
 }
 
 function startClock() {
   if (pollHandle) clearInterval(pollHandle);
-  const startedAtLocal = Date.now();
+  elapsed = 0;
   pollHandle = setInterval(async () => {
     elapsed += 0.5;
     document.getElementById('timer').textContent = fmtTime(elapsed);
@@ -104,23 +364,10 @@ function startClock() {
   }, 500);
 }
 
-function posAt(path, t) {
-  if (t <= path[0].t) return path[0];
-  if (t >= path[path.length - 1].t) return path[path.length - 1];
-  for (let i = 0; i < path.length - 1; i++) {
-    const a = path[i], b = path[i + 1];
-    if (a.t <= t && t <= b.t) {
-      const f = b.t === a.t ? 0 : (t - a.t) / (b.t - a.t);
-      return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
-    }
-  }
-  return path[path.length - 1];
-}
-
 async function refreshContacts() {
   if (!scenario) return;
   const role = document.getElementById('role').value;
-  const res = await fetch(`/api/team/state/${scenario.scenario_id}?role=${role}&t=${elapsed}`);
+  const res  = await fetch(`/api/team/state/${scenario.scenario_id}?role=${role}&t=${elapsed}`);
   if (!res.ok) return;
   const state = await res.json();
   renderContacts(state.contacts, role);
@@ -128,41 +375,78 @@ async function refreshContacts() {
 
 function renderContacts(contacts, role) {
   const el = document.getElementById('contactList');
+  if (!contacts || !contacts.length) {
+    el.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-faint);font-size:12px">No contacts visible for your role yet</div>`;
+    return;
+  }
   el.innerHTML = '';
   for (const c of contacts) {
     const entry = c.team || {};
-    const div = document.createElement('div');
-    div.className = 'contact-row';
+    const card  = document.createElement('div');
+    const isHostile = entry.classification === 'hostile_drone' || entry.classification === 'hostile_swarm_member';
+    card.className = 'contact-card' + (entry.detected_at !== null && entry.detected_at !== undefined ? ' contact-ready' : '') + (isHostile ? ' contact-hostile' : '');
+
     if (role === 'detector') {
-      div.innerHTML = `<div>Contact ${c.contact_id} ${entry.detected_at !== null ? `(detected @ ${entry.detected_at?.toFixed(1)}s)` : ''}</div>
-        <button onclick="teamAction('${c.contact_id}', 'detect')" ${entry.detected_at !== null ? 'disabled' : ''}>Detect</button>`;
+      const detected = entry.detected_at !== null && entry.detected_at !== undefined;
+      card.innerHTML = `
+        <div class="contact-top">
+          <span class="contact-id">${c.contact_id}</span>
+          <span class="contact-meta">${detected ? `detected @ ${entry.detected_at.toFixed(1)}s` : 'not detected'}</span>
+        </div>
+        <div class="contact-body">
+          <div class="action-row">
+            <button class="action-btn ${detected?'active-mon':''}" onclick="teamAction('${c.contact_id}','detect')" ${detected?'disabled':''}>
+              ${detected ? '✓ Detected' : '⊕ Mark Detected'}
+            </button>
+          </div>
+        </div>`;
     } else if (role === 'classifier') {
-      const opts = CLASS_OPTIONS.map(o => `<option value="${o}" ${entry.classification === o ? 'selected' : ''}>${o}</option>`).join('');
-      div.innerHTML = `<div>Contact ${c.contact_id} — detected, awaiting your classification</div>
-        <select onchange="teamAction('${c.contact_id}', 'classify', this.value)"><option value="">classify...</option>${opts}</select>
-        <button onclick="teamAiHint('${c.contact_id}')">AI sensor hint</button>
-        <div id="hint-${c.contact_id}" style="font-size:12px;color:#8b949e;margin-top:4px;"></div>`;
+      const opts = CLASS_OPTIONS.map(o => `<option value="${o}" ${entry.classification===o?'selected':''}>${o}</option>`).join('');
+      card.innerHTML = `
+        <div class="contact-top">
+          <span class="contact-id">${c.contact_id}</span>
+          <span class="contact-meta">awaiting classification</span>
+        </div>
+        <div class="contact-body">
+          <select class="contact-select" onchange="teamAction('${c.contact_id}','classify',this.value)">
+            <option value="">classify contact…</option>${opts}
+          </select>
+          <div class="action-row" style="margin-top:6px">
+            <button class="action-btn" onclick="teamAiHint('${c.contact_id}')">🤖 AI Sensor Hint</button>
+          </div>
+          <div class="hint-text" id="hint-${c.contact_id}"></div>
+        </div>`;
     } else {
-      div.innerHTML = `<div>Contact ${c.contact_id} — classified as <strong>${entry.classification}</strong></div>
-        <button onclick="teamAction('${c.contact_id}', 'warn')">Warn</button>
-        <button onclick="teamAction('${c.contact_id}', 'soft_kill')">Soft-kill</button>
-        <button onclick="teamAction('${c.contact_id}', 'hard_kill')">Hard-kill</button>
-        <button onclick="teamAction('${c.contact_id}', 'monitor')">Monitor</button>
-        <button onclick="teamAction('${c.contact_id}', 'ignore')">Ignore</button>`;
+      card.innerHTML = `
+        <div class="contact-top">
+          <span class="contact-id">${c.contact_id}</span>
+          <span class="contact-meta" style="color:${isHostile?'var(--red)':'var(--text-muted)'}">
+            ${entry.classification || 'pending classification'}
+          </span>
+        </div>
+        <div class="contact-body">
+          <div class="action-row">
+            <button class="action-btn" onclick="teamAction('${c.contact_id}','warn')">⚠ Warn</button>
+            <button class="action-btn" onclick="teamAction('${c.contact_id}','soft_kill')">📡 Soft-kill</button>
+            <button class="action-btn" onclick="teamAction('${c.contact_id}','hard_kill')">💥 Hard-kill</button>
+            <button class="action-btn" onclick="teamAction('${c.contact_id}','monitor')">👁 Monitor</button>
+            <button class="action-btn" onclick="teamAction('${c.contact_id}','ignore')">✕ Ignore</button>
+          </div>
+        </div>`;
     }
-    el.appendChild(div);
+    el.appendChild(card);
   }
 }
 
 async function teamAction(contactId, field, value) {
   const role = document.getElementById('role').value;
-  const res = await fetch('/api/team/action', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ scenario_id: scenario.scenario_id, role, contact_id: contactId, t: elapsed, field, value: value || null }),
+  const res  = await fetch('/api/team/action', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ scenario_id:scenario.scenario_id, role, contact_id:contactId, t:elapsed, field, value:value||null }),
   });
   if (!res.ok) {
-    const err = await res.json();
-    alert(err.detail || 'action rejected');
+    const err = await res.json().catch(() => ({}));
+    alert(err.detail || 'Action rejected');
     return;
   }
   refreshContacts();
@@ -170,26 +454,59 @@ async function teamAction(contactId, field, value) {
 
 async function teamAiHint(contactId) {
   const res = await fetch('/api/team/action', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ scenario_id: scenario.scenario_id, role: 'classifier', contact_id: contactId, t: elapsed, field: 'ai_hint' }),
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ scenario_id:scenario.scenario_id, role:'classifier', contact_id:contactId, t:elapsed, field:'ai_hint' }),
   });
   const out = await res.json();
-  const el = document.getElementById(`hint-${contactId}`);
-  if (el && out.hint) el.textContent = `sensor model: ${out.hint.label} (p=${out.hint.probabilities[out.hint.label].toFixed(2)})`;
+  const el  = document.getElementById(`hint-${contactId}`);
+  if (el && out.hint) el.textContent = `AI: ${out.hint.label} (p=${out.hint.probabilities[out.hint.label].toFixed(2)})`;
 }
 
 async function finishSession() {
-  if (!scenario) return;
-  clearInterval(pollHandle);
+  const resultEl = document.getElementById('result');
+  if (!scenario) {
+    resultEl.innerHTML = `<span style="color:var(--amber)">⚠ No scenario active. Start or join one first.</span>`;
+    return;
+  }
+  if (pollHandle) { clearInterval(pollHandle); pollHandle = null; }
   const trainee_id = document.getElementById('traineeId').value || 'team-1';
-  const unit_id = document.getElementById('unitId').value || 'unit-A';
+  const unit_id    = document.getElementById('unitId').value    || 'unit-A';
   const difficulty = parseInt(document.getElementById('difficulty').value);
-  const res = await fetch('/api/session/submit_team', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ scenario_id: scenario.scenario_id, trainee_id, unit_id, difficulty }),
-  });
-  const result = await res.json();
-  document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+
+  resultEl.innerHTML = `<span style="color:var(--blue)">⏳ Evaluating team session…</span>`;
+
+  try {
+    const res = await fetch('/api/session/submit_team', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ scenario_id:scenario.scenario_id, trainee_id, unit_id, difficulty }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail:res.statusText }));
+      resultEl.innerHTML = `<span style="color:var(--red)">❌ Error: ${err.detail || 'Failed to submit'}</span>`;
+      return;
+    }
+    const result = await res.json();
+    const score  = result.overall_score || 0;
+    const col    = score >= 75 ? '#00cc6a' : score >= 50 ? '#ffb800' : '#ff3b3b';
+    resultEl.innerHTML = `
+      <div style="margin-bottom:10px">
+        <div style="font-size:28px;font-weight:800;font-family:var(--mono);color:${col};line-height:1">${score.toFixed(1)}<span style="font-size:14px;font-weight:400">%</span></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.8">
+          Detect: <strong style="color:var(--text-main)">${result.detection_score}%</strong> &middot;
+          Classify: <strong style="color:var(--text-main)">${result.classification_score}%</strong> &middot;
+          Engage: <strong style="color:var(--text-main)">${result.engagement_score}%</strong> &middot;
+          Timeliness: <strong style="color:var(--text-main)">${result.timeliness_score}%</strong>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Missed: ${result.contacts_missed}/${result.contacts_total}</div>
+      </div>
+      ${result.session_id ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="/aar/session/${result.session_id}/print" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">🖨 Printable Report</a>
+        <a href="/aar" target="_blank" style="font-size:11px;color:var(--green-dim);text-decoration:none">📊 AAR →</a>
+      </div>` : ''}
+      <details style="margin-top:10px"><summary style="cursor:pointer;color:var(--text-muted);font-size:10px">Raw JSON</summary><pre style="font-size:10px;max-height:120px;overflow:auto;background:var(--bg-surface);padding:8px;border-radius:4px;margin-top:4px;color:var(--text-muted)">${JSON.stringify(result,null,2)}</pre></details>`;
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:var(--red)">❌ Network error: ${e.message}</span>`;
+  }
 }
 </script>
 </body>

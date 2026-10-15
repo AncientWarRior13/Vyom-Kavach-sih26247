@@ -203,6 +203,17 @@ def list_sessions(trainee_id: str | None = None, unit_id: str | None = None, lim
     return [dict(r) for r in rows]
 
 
+def get_session_by_scenario(scenario_id: str) -> dict | None:
+    with _conn() as conn:
+        row = conn.execute(
+            f"SELECT {_LIST_COLUMNS} FROM sessions WHERE scenario_id = ? ORDER BY id DESC LIMIT 1",
+            (scenario_id,),
+        ).fetchone()
+        if not row:
+            return None
+        return dict(row)
+
+
 def trainee_trend(trainee_id: str) -> list[dict]:
     with _conn() as conn:
         rows = conn.execute(

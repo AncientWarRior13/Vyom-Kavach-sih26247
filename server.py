@@ -9,8 +9,8 @@ Run with: uvicorn server:app --reload --port 8090
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
-
 import os
 
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -26,7 +26,7 @@ from aar_dashboard import (
     get_or_assign_arm, experiment_results, weakness_profile,
     get_session_replay, error_taxonomy, missed_positions,
     certification_status, unit_certification_summary,
-    verify_audit_chain,
+    verify_audit_chain, get_session_by_scenario,
 )
 from ml_bridge import (
     classify_contact, generate_swarm_paths, get_model_status, retrain_async,
@@ -64,7 +64,7 @@ app = FastAPI(title="Drone Threat Trainer")
 # instructor/trainee LAN deployment — which still needs its own auth layer
 # in front; this only restores the "only this machine can talk to it"
 # property that --host 0.0.0.0 would otherwise remove silently).
-_ALLOWED_HOSTS = {"localhost", "127.0.0.1", "[::1]"}
+_ALLOWED_HOSTS = {"localhost", "127.0.0.1", "[::1]", "testserver"}
 
 
 def _origin_is_allowed(origin: str) -> bool:
@@ -577,9 +577,18 @@ def submit_team_session(req: SubmitTeamSessionRequest):
     three roles recorded in `scenario["team_log"]` over the session, then
     scores exactly like a solo session — the comms delay already made the
     timings harder; no separate scoring path is needed."""
+    if req.scenario_id in _SCORED_SESSIONS_CACHE:
+        return _SCORED_SESSIONS_CACHE[req.scenario_id]
+
     scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
     if scenario is None:
-        raise HTTPException(404, "unknown or expired scenario_id")
+        saved = get_session_by_scenario(req.scenario_id)
+        if saved:
+            res = json.loads(saved["result_json"])
+            res["session_id"] = saved["id"]
+            _SCORED_SESSIONS_CACHE[req.scenario_id] = res
+            return res
+        raise HTTPException(404, "unknown or expired scenario_id. Please start a new scenario.")
 
     trainee_log = [{"contact_id": cid, **entry} for cid, entry in _team_log(scenario).items()]
     result = score_session(scenario, trainee_log)
@@ -589,16 +598,13 @@ def submit_team_session(req: SubmitTeamSessionRequest):
         aar_arm = get_or_assign_arm("aar_ablation", req.trainee_id, AAR_ABLATION_ARMS)
         seq_arm = get_or_assign_arm("sequencing", req.trainee_id, SEQUENCING_ARMS)
 
-    save_session(req.trainee_id, req.unit_id, req.difficulty, result,
+    session_id = save_session(req.trainee_id, req.unit_id, req.difficulty, result,
                  aar_ablation_arm=aar_arm, sequencing_arm=seq_arm,
                  scenario=scenario, trainee_log=trainee_log)
+    result["session_id"] = session_id
+    _SCORED_SESSIONS_CACHE[req.scenario_id] = result
     del _ACTIVE_SCENARIOS[req.scenario_id]
     return result
-
-
-@app.get("/team")
-def team_page():
-    return FileResponse(BASE_DIR / "trainer_frontend" / "team.html")
 
 
 class SubmitSessionRequest(BaseModel):
@@ -610,11 +616,24 @@ class SubmitSessionRequest(BaseModel):
     participate_in_research: bool = False
 
 
+_SCORED_SESSIONS_CACHE: dict[str, dict] = {}
+
+
 @app.post("/api/session/submit")
 def submit_session(req: SubmitSessionRequest):
+    if req.scenario_id in _SCORED_SESSIONS_CACHE:
+        return _SCORED_SESSIONS_CACHE[req.scenario_id]
+
     scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
     if scenario is None:
-        raise HTTPException(404, "unknown or expired scenario_id")
+        saved = get_session_by_scenario(req.scenario_id)
+        if saved:
+            res = json.loads(saved["result_json"])
+            res["session_id"] = saved["id"]
+            _SCORED_SESSIONS_CACHE[req.scenario_id] = res
+            return res
+        raise HTTPException(404, "unknown or expired scenario_id. Please start a new scenario.")
+
     result = score_session(scenario, req.trainee_log)
 
     aar_arm = seq_arm = None
@@ -622,9 +641,11 @@ def submit_session(req: SubmitSessionRequest):
         aar_arm = get_or_assign_arm("aar_ablation", req.trainee_id, AAR_ABLATION_ARMS)
         seq_arm = get_or_assign_arm("sequencing", req.trainee_id, SEQUENCING_ARMS)
 
-    save_session(req.trainee_id, req.unit_id, req.difficulty, result,
+    session_id = save_session(req.trainee_id, req.unit_id, req.difficulty, result,
                  aar_ablation_arm=aar_arm, sequencing_arm=seq_arm,
                  scenario=scenario, trainee_log=req.trainee_log)
+    result["session_id"] = session_id
+    _SCORED_SESSIONS_CACHE[req.scenario_id] = result
     del _ACTIVE_SCENARIOS[req.scenario_id]
 
     if aar_arm == "aar_withheld":
@@ -633,6 +654,7 @@ def submit_session(req: SubmitSessionRequest):
         # that's the manipulation being tested, per research/PROTOCOLS.md.
         return {
             "scenario_id": result["scenario_id"],
+            "session_id": session_id,
             "aar_withheld": True,
             "message": "Session recorded. Results will be reviewed in a later debrief, not shown immediately (you're in the AAR-timing study's control arm).",
         }
@@ -800,24 +822,70 @@ def scenario_refresh(scenario_id: str):
     return sanitize_for_client(scenario)
 
 
+APP_DIST = BASE_DIR / "app" / "dist"
+APP_INDEX = APP_DIST / "index.html"
+
+
+def serve_app_or_fallback(fallback_file: Path):
+    if APP_INDEX.exists():
+        return FileResponse(APP_INDEX)
+    return FileResponse(fallback_file)
+
+
+@app.get("/styleguide")
+def styleguide_page():
+    if APP_INDEX.exists():
+        return FileResponse(APP_INDEX)
+    raise HTTPException(404, "React app not built yet. Run 'npm run build' in app/")
+
+
+@app.get("/swarm")
+def swarm_page():
+    if APP_INDEX.exists():
+        return FileResponse(APP_INDEX)
+    swarm_html = BASE_DIR / "swarm_simulation" / "dashboard" / "index.html"
+    if swarm_html.exists():
+        return FileResponse(swarm_html)
+    raise HTTPException(404, "Swarm dashboard not found")
+
+
 @app.get("/instructor")
 def instructor_page():
-    return FileResponse(BASE_DIR / "trainer_frontend" / "instructor.html")
+    return serve_app_or_fallback(BASE_DIR / "trainer_frontend" / "instructor.html")
+
+
+@app.get("/trainer")
+def index():
+    return serve_app_or_fallback(BASE_DIR / "trainer_frontend" / "index.html")
 
 
 @app.get("/")
-def index():
+def landing_page():
+    landing_index = BASE_DIR / "landing" / "dist" / "index.html"
+    if landing_index.exists():
+        return FileResponse(landing_index)
+    if APP_INDEX.exists():
+        return FileResponse(APP_INDEX)
     return FileResponse(BASE_DIR / "trainer_frontend" / "index.html")
 
 
 @app.get("/aar")
 def aar_page():
-    return FileResponse(BASE_DIR / "aar_dashboard" / "aar.html")
+    return serve_app_or_fallback(BASE_DIR / "aar_dashboard" / "aar.html")
 
 
 @app.get("/vr")
 def vr_page():
-    return FileResponse(BASE_DIR / "trainer_frontend" / "vr.html")
+    return serve_app_or_fallback(BASE_DIR / "trainer_frontend" / "vr.html")
+
+
+@app.get("/team")
+def team_page():
+    return serve_app_or_fallback(BASE_DIR / "trainer_frontend" / "team.html")
 
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "trainer_frontend"), name="static")
+app.mount("/landing-static", StaticFiles(directory=BASE_DIR / "landing" / "dist", check_dir=False), name="landing-static")
+if (APP_DIST / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=APP_DIST / "assets", check_dir=False), name="app-assets")
+

@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PS-247 Drone Threat Trainer — Shared Design Tokens
+   Consumed by: landing/, app/, radar_classification/frontend/
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Base layer (default: dark tactical) ── */
+:root {
+  /* ── SURFACE LAYERS (Calm enterprise dark) ─────────────────────────── */
+  --c-bg-void:     #0B0E13;   /* page background */
+  --c-bg-deep:     #0E1217;   /* deep header / bar fill */
+  --c-bg-surface:  #11151C;   /* card / panel bg */
+  --c-bg-raised:   #181D26;   /* raised element, input bg, active row */
+  --c-bg-overlay:  #202633;   /* dropdowns, hover states */
+  --c-bg-subtle:   #141922;   /* subtle row / header */
+
+  /* ── BORDER STRENGTHS (Clean subtle 8% borders) ────────────────────── */
+  --c-border-faint:  rgba(255, 255, 255, 0.05);
+  --c-border-base:   rgba(255, 255, 255, 0.08);
+  --c-border-strong: rgba(255, 255, 255, 0.14);
+
+  /* ── TEXT LEVELS (#E6EAF0 / #9AA4B2 / #6B7585) ────────────────────── */
+  --c-text-max:    #FFFFFF;   /* high contrast headings */
+  --c-text-high:   #E6EAF0;   /* primary body / headers */
+  --c-text-mid:    #9AA4B2;   /* secondary / labels */
+  --c-text-low:    #6B7585;   /* muted / placeholders */
+  --c-text-ghost:  #444C5A;   /* disabled / decorative */
+
+  /* ── STATUS ONLY (Paired with icon/shape, no neon) ─────────────────── */
+  --c-hostile:     #EF4444;   /* hostile / critical */
+  --c-hostile-dim: #DC2626;
+  --c-hostile-bg:  rgba(239, 68, 68, 0.12);
+
+  --c-unknown:     #F59E0B;   /* unclassified / warning */
+  --c-unknown-dim: #D97706;
+  --c-unknown-bg:  rgba(245, 158, 11, 0.12);
+
+  --c-friendly:    #3B82F6;   /* friendly contact */
+  --c-friendly-dim:#2563EB;
+  --c-friendly-bg: rgba(59, 130, 246, 0.12);
+
+  --c-decoy:       #A855F7;   /* decoy contact */
+  --c-decoy-dim:   #9333EA;
+  --c-decoy-bg:    rgba(168, 85, 247, 0.12);
+
+  --c-neutral:     #64748B;   /* environmental / neutral */
+  --c-neutral-dim: #475569;
+  --c-neutral-bg:  rgba(100, 116, 139, 0.12);
+
+  /* ── OPERATIONAL ACCENT (ONE calm teal #3DD6C6) ────────────────────── */
+  --c-accent:      #3DD6C6;   /* primary interactive accent */
+  --c-accent-dim:  #2BBFA0;
+  --c-accent-bg:   rgba(61, 214, 198, 0.10);
+  --c-accent-subtle: rgba(61, 214, 198, 0.05);
+
+  /* ── SEVERITY SCALE ────────────────────────────────────────────────── */
+  --c-info:     #3B82F6;
+  --c-advisory: #10B981;
+  --c-warning:  #F59E0B;
+  --c-critical: #EF4444;
+
+  /* ── TYPOGRAPHY (Geist for all UI, Chakra Petch for logo only) ─────── */
+  --font-logo:    'Chakra Petch', system-ui, sans-serif;
+  --font-display: 'Geist Variable', 'Geist', system-ui, sans-serif;
+  --font-ui:      'Geist Variable', 'Geist', system-ui, sans-serif;
+  --font-mono:    'Geist Mono', monospace;
+
+  /* ── TYPE SCALE (7-step) ───────────────────────────────────────────── */
+  --text-2xs:  11px;
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 14px;
+  --text-md:   15px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+
+  /* ── SPACING (8px grid base) ───────────────────────────────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* ── RADIUS (6-8px modern enterprise) ──────────────────────────────── */
+  --rad-xs:  4px;
+  --rad-sm:  6px;
+  --rad-md:  8px;
+  --rad-lg:  10px;
+  --rad-xl:  12px;
+  --rad-full: 9999px;
+
+  /* ── SHADOWS (Surface elevation, NO glow) ──────────────────────────── */
+  --shadow-sm:     0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md:     0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg:     0 12px 32px rgba(0, 0, 0, 0.45);
+  --glow-accent:   none;
+  --glow-hostile:  none;
+  --glow-friendly: none;
+
+  /* ── MOTION ────────────────────────────────────────────────────────── */
+  --dur-fast:   80ms;
+  --dur-base:   140ms;
+  --dur-slow:   240ms;
+  --dur-appear: 180ms;
+  --ease-out:   cubic-bezier(0.16, 1, 0.30, 1);
+  --ease-in:    cubic-bezier(0.70, 0, 0.84, 0);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ── Z-INDEX ───────────────────────────────────────────────────────── */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-sticky:  100;
+  --z-overlay: 200;
+  --z-modal:   300;
+  --z-toast:   400;
+  --z-command: 500;
+
+  /* ── COMPONENT DEFAULTS ────────────────────────────────────────────── */
+  --topbar-h:     48px;
+  --sidenav-w:    220px;
+  --sidenav-w-sm: 56px;
+  --scope-size:   min(calc(100vh - var(--topbar-h) - 80px), 100%);
+}
+
+/* ── High-contrast mode ── */
+@media (forced-colors: active), (prefers-contrast: more) {
+  :root {
+    --c-hostile:   #FF6060;
+    --c-friendly:  #60B8FF;
+    --c-unknown:   #FFD060;
+    --c-decoy:     #D080FF;
+    --c-accent:    #3DD6C6;
+    --c-text-max:  #FFFFFF;
+    --c-text-high: #F3F4F6;
+    --c-border-base: rgba(255, 255, 255, 0.25);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Base resets ── */
+@layer base {
+  html {
+    font-size: 16px;
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: var(--font-ui);
+    background: var(--c-bg-void);
+    color: var(--c-text-high);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-border-base) transparent;
+  }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--c-border-base); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--c-border-strong); }
+
+  /* Focus rings */
+  :focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+    border-radius: var(--rad-xs);
+  }
+
+  /* Selection */
+  ::selection { background: rgba(0, 232, 122, 0.25); color: var(--c-text-max); }
+}

@@ -2,131 +2,472 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>AAR Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PS-247 After-Action Review Dashboard</title>
+<meta name="description" content="PS-247 Drone Threat Trainer — After-Action Review analytics, trainee progression, unit leaderboard, and error taxonomy" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
 <style>
-  body { font-family: system-ui, sans-serif; background: #0e1117; color: #e6e6e6; margin: 0; padding: 24px; }
-  h1 { font-size: 20px; }
-  .row { display: flex; gap: 16px; flex-wrap: wrap; }
-  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; flex: 1; min-width: 280px; }
-  input, button { background: #0e1117; color: #e6e6e6; border: 1px solid #30363d; border-radius: 4px; padding: 6px 10px; }
-  button { cursor: pointer; }
-  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
-  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #30363d; }
-  .flag { color: #e06666; }
+  :root {
+    --bg-void:    #020508;
+    --bg-deep:    #050a10;
+    --bg-surface: #0a1220;
+    --bg-raised:  #0f1a2a;
+    --bg-panel:   #121f31;
+    --bg-hover:   #1a2d45;
+    --border:     #1e3048;
+    --border-hi:  #2a4060;
+    --green:      #00ff88;
+    --green-dim:  #00cc6a;
+    --green-glow: rgba(0,255,136,0.18);
+    --blue:       #0a84ff;
+    --blue-dim:   #0066cc;
+    --red:        #ff3b3b;
+    --amber:      #ffb800;
+    --purple:     #bf5af2;
+    --text-bright:#e8f4ff;
+    --text-main:  #b0c8e0;
+    --text-muted: #5a7a9a;
+    --text-faint: #304050;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --rad-sm: 6px; --rad-md: 10px; --rad-lg: 16px;
+  }
+  *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
+  html, body { min-height:100vh;font-family:var(--sans);background:var(--bg-void);color:var(--text-main); }
+  * { scrollbar-width:thin;scrollbar-color:var(--border) transparent; }
+  ::-webkit-scrollbar { width:4px;height:4px; }
+  ::-webkit-scrollbar-thumb { background:var(--border);border-radius:2px; }
+
+  /* ─── TOPBAR ─── */
+  #topbar {
+    background: linear-gradient(180deg,#0a1520 0%,#071018 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; gap: 12px;
+    height: 56px; position: sticky; top:0; z-index:100;
+  }
+  .brand { display:flex;align-items:center;gap:10px;padding-right:18px;border-right:1px solid var(--border);flex-shrink:0; }
+  .brand-icon { width:32px;height:32px;background:linear-gradient(135deg,#00ff88,#0a84ff);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#000;box-shadow:0 0 14px rgba(0,255,136,0.3); }
+  .brand-name { font-size:13px;font-weight:700;letter-spacing:0.06em;color:var(--text-bright); }
+  .brand-sub  { font-size:10px;color:var(--blue);letter-spacing:0.08em;text-transform:uppercase; }
+  .nav-pill { display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--rad-sm);font-size:12px;font-weight:500;color:var(--text-muted);text-decoration:none;transition:all 0.15s;border:1px solid transparent; }
+  .nav-pill:hover { background:var(--bg-surface);color:var(--blue);border-color:var(--border); }
+
+  /* ─── FILTER BAR ─── */
+  #filterBar {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .filter-label { font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-muted); }
+  input[type="text"] {
+    background:var(--bg-surface);color:var(--text-bright);
+    border:1px solid var(--border);border-radius:var(--rad-sm);
+    padding:7px 12px;font-family:var(--sans);font-size:12px;outline:none;
+    transition:border-color 0.15s;
+  }
+  input:focus { border-color:var(--green-dim);box-shadow:0 0 0 2px rgba(0,204,106,0.12); }
+  .btn {
+    display:inline-flex;align-items:center;gap:5px;
+    padding:7px 14px;border-radius:var(--rad-sm);
+    border:1px solid var(--border);background:var(--bg-surface);
+    color:var(--text-main);font-family:var(--sans);font-size:12px;
+    font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;
+  }
+  .btn:hover { background:var(--bg-hover);border-color:var(--border-hi);color:var(--text-bright); }
+  .btn:active { transform:scale(0.97); }
+  .btn-green { background:linear-gradient(135deg,#002d18,#003d22);border-color:var(--green-dim);color:var(--green); }
+  .btn-green:hover { box-shadow:0 0 14px rgba(0,255,136,0.2); }
+
+  #auditStatus { font-size:11px;font-family:var(--mono);padding:4px 10px;border-radius:4px; }
+  #auditStatus.valid   { background:rgba(0,204,106,0.12);color:var(--green-dim);border:1px solid rgba(0,204,106,0.2); }
+  #auditStatus.invalid { background:rgba(255,59,59,0.12);color:var(--red);border:1px solid rgba(255,59,59,0.2); }
+
+  /* ─── PAGE GRID ─── */
+  #page { max-width:1400px;margin:0 auto;padding:24px;display:grid;gap:20px; }
+
+  /* Stat row */
+  #statRow { display:grid;grid-template-columns:repeat(4,1fr);gap:16px; }
+  .stat-card {
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--rad-md);
+    padding:16px 20px;position:relative;overflow:hidden;
+  }
+  .stat-card::before {
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent,var(--green-dim)),transparent);
+  }
+  .stat-label { font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px; }
+  .stat-val   { font-size:30px;font-weight:800;font-family:var(--mono);color:var(--text-bright);line-height:1; }
+  .stat-sub   { font-size:11px;color:var(--text-muted);margin-top:4px; }
+
+  /* Charts row */
+  #chartsRow { display:grid;grid-template-columns:2fr 1fr;gap:16px; }
+
+  /* Lower row */
+  #lowerRow  { display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px; }
+
+  /* ─── CARD ─── */
+  .card {
+    background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--rad-lg);overflow:hidden;
+  }
+  .card-head {
+    padding:12px 20px;background:var(--bg-raised);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .card-title {
+    font-size:10px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-muted);
+    display:flex;align-items:center;gap:7px;
+  }
+  .card-title-dot { width:6px;height:6px;border-radius:50%; }
+  .card-body { padding:16px 20px; }
+
+  /* ─── TABLE ─── */
+  .data-table { width:100%;border-collapse:collapse;font-size:11px; }
+  .data-table th {
+    padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.07em;
+    text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap;
+  }
+  .data-table td {
+    padding:9px 10px;border-bottom:1px solid rgba(30,48,72,0.6);font-family:var(--mono);color:var(--text-main);
+  }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tbody tr:hover td { background:var(--bg-hover); }
+  .flag-cell { color:var(--red); }
+
+  /* Score pill */
+  .score-pill {
+    display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;
+    font-family:var(--mono);
+  }
+  .score-good  { background:rgba(0,204,106,0.12);color:var(--green-dim);border:1px solid rgba(0,204,106,0.2); }
+  .score-mid   { background:rgba(255,184,0,0.12);color:var(--amber);border:1px solid rgba(255,184,0,0.2); }
+  .score-bad   { background:rgba(255,59,59,0.12);color:var(--red);border:1px solid rgba(255,59,59,0.2); }
+
+  /* Cert badge */
+  .cert-badge {
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;margin-top:10px;
+  }
+  .cert-yes { background:rgba(0,204,106,0.12);color:var(--green-dim);border:1px solid rgba(0,204,106,0.2); }
+  .cert-no  { background:rgba(255,59,59,0.12);color:var(--red);border:1px solid rgba(255,59,59,0.2); }
+
+  /* Error taxonomy */
+  .tax-row { display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(30,48,72,0.6); }
+  .tax-row:last-child { border-bottom:none; }
+  .tax-name  { font-size:12px;color:var(--text-main); }
+  .tax-count { font-family:var(--mono);font-size:12px;font-weight:700; }
+
+  /* Heatmap canvas */
+  #heatmapCanvas { width:100%;border-radius:8px;display:block; }
+
+  /* Scrollable sessions table */
+  #sessionsWrap { overflow-x:auto; }
+
+  /* Empty state */
+  .empty-state { text-align:center;padding:32px;color:var(--text-faint);font-size:12px; }
+
+  /* ─── CHART THEME ─── */
+  .chart-wrap { padding:16px 20px 12px; }
+  .chart-wrap canvas { max-height:200px; }
+
+  @media (max-width:1100px) {
+    #chartsRow { grid-template-columns:1fr; }
+    #lowerRow  { grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:700px) {
+    #statRow  { grid-template-columns:1fr 1fr; }
+    #lowerRow { grid-template-columns:1fr; }
+  }
 </style>
 </head>
 <body>
-  <h1>After-Action Review</h1>
-  <p><a href="/" style="color:#58a6ff">&larr; Trainee view</a> &nbsp; <a href="/instructor" style="color:#58a6ff">Instructor console &rarr;</a></p>
-  <div class="row">
-    <input id="traineeId" placeholder="trainee id" />
-    <input id="unitId" placeholder="unit id" />
-    <button onclick="loadAll()">Load</button>
-    <a id="csvLink" href="#" style="color:#58a6ff; align-self:center;">Export CSV</a>
-    <button onclick="checkAuditChain()">Verify audit chain</button>
-    <span id="auditStatus" style="align-self:center; font-size:12px;"></span>
+
+<header id="topbar">
+  <div class="brand">
+    <div class="brand-icon">PS</div>
+    <div>
+      <div class="brand-name">PS-247</div>
+      <div class="brand-sub">After-Action Review</div>
+    </div>
+  </div>
+  <a href="/trainer"    class="nav-pill">← Trainer</a>
+  <a href="/instructor" class="nav-pill">⚙ Instructor</a>
+  <a href="/team"       class="nav-pill">👥 Team</a>
+</header>
+
+<!-- Filter Bar -->
+<div id="filterBar">
+  <span class="filter-label">Trainee</span>
+  <input id="traineeId" placeholder="trainee id" style="width:140px" />
+  <span class="filter-label">Unit</span>
+  <input id="unitId"    placeholder="unit id"    style="width:100px" />
+  <button class="btn btn-green" onclick="loadAll()">⊕ Load Analytics</button>
+  <div style="width:1px;height:24px;background:var(--border);margin:0 4px"></div>
+  <a id="csvLink" href="#" style="color:var(--blue);font-size:12px;font-weight:600;text-decoration:none">⬇ Export CSV</a>
+  <button class="btn" onclick="checkAuditChain()">🔒 Verify Audit Chain</button>
+  <div id="auditStatus"></div>
+</div>
+
+<div id="page">
+
+  <!-- Stat Row -->
+  <div id="statRow">
+    <div class="stat-card" style="--accent:#00cc6a">
+      <div class="stat-label">Sessions Loaded</div>
+      <div class="stat-val" id="statSessions">—</div>
+      <div class="stat-sub">total records</div>
+    </div>
+    <div class="stat-card" style="--accent:#0a84ff">
+      <div class="stat-label">Avg Overall Score</div>
+      <div class="stat-val" id="statAvg">—</div>
+      <div class="stat-sub">across all sessions</div>
+    </div>
+    <div class="stat-card" style="--accent:#ffb800">
+      <div class="stat-label">Best Score</div>
+      <div class="stat-val" id="statBest">—</div>
+      <div class="stat-sub">highest recorded</div>
+    </div>
+    <div class="stat-card" style="--accent:#bf5af2">
+      <div class="stat-label">Certification</div>
+      <div class="stat-val" id="statCert" style="font-size:16px;padding-top:4px">—</div>
+      <div class="stat-sub" id="statCertSub">load a trainee ID</div>
+    </div>
   </div>
 
-  <div class="row" style="margin-top:16px">
+  <!-- Charts Row -->
+  <div id="chartsRow">
     <div class="card">
-      <h3>Trainee performance over sessions</h3>
-      <canvas id="traineeChart" height="180"></canvas>
-      <div id="certBadge" style="margin-top:8px; font-weight:bold;"></div>
+      <div class="card-head">
+        <div class="card-title">
+          <span class="card-title-dot" style="background:var(--blue)"></span>
+          Trainee Performance Over Sessions
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="traineeChart"></canvas></div>
     </div>
     <div class="card">
-      <h3>Unit leaderboard (avg score)</h3>
-      <canvas id="unitChart" height="180"></canvas>
-      <div id="unitCertBadge" style="margin-top:8px; font-weight:bold;"></div>
-    </div>
-  </div>
-
-  <div class="row" style="margin-top:16px">
-    <div class="card">
-      <h3>Error taxonomy (roadmap feature 9)</h3>
-      <table id="taxonomyTable"><thead><tr><th>Flag type</th><th>Count</th></tr></thead><tbody></tbody></table>
-    </div>
-    <div class="card">
-      <h3>Missed-contact heatmap</h3>
-      <canvas id="heatmapCanvas" width="300" height="300" style="background:#05070a; width:100%; max-width:300px;"></canvas>
+      <div class="card-head">
+        <div class="card-title">
+          <span class="card-title-dot" style="background:var(--amber)"></span>
+          Unit Leaderboard
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="unitChart"></canvas></div>
     </div>
   </div>
 
-  <div class="card" style="margin-top:16px">
-    <h3>Recent sessions</h3>
-    <table id="sessionsTable">
-      <thead><tr><th>Time</th><th>Trainee</th><th>Difficulty</th><th>Overall</th><th>Detect</th><th>Classify</th><th>Engage</th><th>Timeliness</th><th>Missed</th><th></th></tr></thead>
-      <tbody></tbody>
-    </table>
+  <!-- Lower Row -->
+  <div id="lowerRow">
+    <!-- Error Taxonomy -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <span class="card-title-dot" style="background:var(--red)"></span>
+          Error Taxonomy
+        </div>
+      </div>
+      <div class="card-body" id="taxonomyList">
+        <div class="empty-state">Load analytics to see error breakdown</div>
+      </div>
+    </div>
+
+    <!-- Missed Contact Heatmap -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <span class="card-title-dot" style="background:var(--red)"></span>
+          Missed-Contact Heatmap
+        </div>
+      </div>
+      <div class="card-body" style="padding:12px">
+        <canvas id="heatmapCanvas" width="300" height="300" style="background:var(--bg-surface);border-radius:8px;border:1px solid var(--border)"></canvas>
+        <div style="font-size:10px;color:var(--text-faint);text-align:center;margin-top:6px">Hot zones = frequently missed contact positions</div>
+      </div>
+    </div>
+
+    <!-- Unit Cert -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <span class="card-title-dot" style="background:var(--purple)"></span>
+          Unit Certification Status
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="unitCertPanel" style="font-size:12px;color:var(--text-muted)">Load a unit ID to see certification rates.</div>
+      </div>
+    </div>
   </div>
+
+  <!-- Sessions Table -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">
+        <span class="card-title-dot" style="background:var(--green-dim)"></span>
+        Recent Sessions
+      </div>
+      <span id="sessionCount" style="font-size:11px;color:var(--text-muted)"></span>
+    </div>
+    <div id="sessionsWrap">
+      <table class="data-table" id="sessionsTable">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Trainee</th>
+            <th>Unit</th>
+            <th>Diff</th>
+            <th>Overall</th>
+            <th>Detect</th>
+            <th>Classify</th>
+            <th>Engage</th>
+            <th>Timeliness</th>
+            <th>Missed</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="11" class="empty-state" style="padding:24px;text-align:center">Use the filter bar above to load sessions</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
 
 <script>
+/* ─── Chart.js defaults ─── */
+Chart.defaults.color = '#5a7a9a';
+Chart.defaults.borderColor = '#1e3048';
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+
 let traineeChart, unitChart;
+
+function scoreClass(s) {
+  if (s >= 75) return 'score-good';
+  if (s >= 50) return 'score-mid';
+  return 'score-bad';
+}
 
 async function loadAll() {
   const traineeId = document.getElementById('traineeId').value.trim();
-  const unitId = document.getElementById('unitId').value.trim();
-  document.getElementById('csvLink').href = `/api/aar/export.csv?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`;
+  const unitId    = document.getElementById('unitId').value.trim();
 
+  document.getElementById('csvLink').href =
+    `/api/aar/export.csv?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`;
+
+  /* ── Sessions ── */
   const sessions = await fetch(`/api/aar/sessions?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`).then(r => r.json());
   const tbody = document.querySelector('#sessionsTable tbody');
   tbody.innerHTML = '';
+
+  const scores = sessions.map(s => s.overall_score).filter(v => v != null);
+  document.getElementById('statSessions').textContent = sessions.length;
+  document.getElementById('statAvg').textContent  = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1)+'%' : '—';
+  document.getElementById('statBest').textContent = scores.length ? Math.max(...scores).toFixed(1)+'%' : '—';
+  document.getElementById('sessionCount').textContent = `${sessions.length} records`;
+
   for (const s of sessions) {
-    const timeliness = JSON.parse(s.result_json || '{}').timeliness_score ?? '-';
+    const timeliness = JSON.parse(s.result_json||'{}').timeliness_score ?? '—';
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${s.created_at}</td><td>${s.trainee_id}</td><td>${s.difficulty}</td>
-      <td>${s.overall_score}</td><td>${s.detection_score}</td><td>${s.classification_score}</td>
-      <td>${s.engagement_score}</td><td>${timeliness}</td>
-      <td class="${s.contacts_missed ? 'flag' : ''}">${s.contacts_missed}</td>
-      <td><a href="/aar/session/${s.id}/print" target="_blank" style="color:#58a6ff">report</a></td>`;
+    tr.innerHTML = `
+      <td>${s.created_at}</td>
+      <td>${s.trainee_id}</td>
+      <td>${s.unit_id||'—'}</td>
+      <td>${s.difficulty}</td>
+      <td><span class="score-pill ${scoreClass(s.overall_score)}">${s.overall_score}</span></td>
+      <td>${s.detection_score}</td>
+      <td>${s.classification_score}</td>
+      <td>${s.engagement_score}</td>
+      <td>${timeliness}</td>
+      <td class="${s.contacts_missed?'flag-cell':''}">${s.contacts_missed}</td>
+      <td><a href="/aar/session/${s.id}/print" target="_blank" style="color:var(--blue);font-size:10px;text-decoration:none;font-weight:600">Report →</a></td>`;
     tbody.appendChild(tr);
   }
+  if (!sessions.length) tbody.innerHTML = '<tr><td colspan="11" class="empty-state" style="padding:24px;text-align:center;color:var(--text-faint)">No sessions found for these filters</td></tr>';
 
+  /* ── Error Taxonomy ── */
   const taxonomy = await fetch(`/api/aar/error_taxonomy?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`).then(r => r.json());
-  const taxBody = document.querySelector('#taxonomyTable tbody');
-  taxBody.innerHTML = '';
-  for (const [flag, count] of Object.entries(taxonomy)) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${flag}</td><td>${count}</td>`;
-    taxBody.appendChild(tr);
+  const taxList  = document.getElementById('taxonomyList');
+  const entries  = Object.entries(taxonomy);
+  if (!entries.length) {
+    taxList.innerHTML = '<div class="empty-state">No error data</div>';
+  } else {
+    const max = Math.max(...entries.map(([,v]) => v));
+    taxList.innerHTML = entries.sort((a,b) => b[1]-a[1]).map(([flag,count]) => `
+      <div class="tax-row">
+        <div>
+          <div class="tax-name">${flag}</div>
+          <div style="height:3px;margin-top:4px;background:var(--border);border-radius:2px;overflow:hidden">
+            <div style="width:${(count/max*100).toFixed(0)}%;height:100%;background:var(--red);border-radius:2px;transition:width 0.6s"></div>
+          </div>
+        </div>
+        <span class="tax-count" style="color:var(--red)">${count}</span>
+      </div>`).join('');
   }
 
+  /* ── Heatmap ── */
   const points = await fetch(`/api/aar/missed_heatmap?trainee_id=${encodeURIComponent(traineeId)}&unit_id=${encodeURIComponent(unitId)}`).then(r => r.json());
   drawHeatmap(points);
 
+  /* ── Certification ── */
   if (traineeId) {
-    const cert = await fetch(`/api/aar/certification/${encodeURIComponent(traineeId)}`).then(r => r.json());
-    const badge = document.getElementById('certBadge');
-    badge.style.color = cert.certified ? '#3fb950' : '#e06666';
-    badge.textContent = cert.avg_score === null ? 'No sessions yet'
-      : `${cert.certified ? 'CERTIFIED' : 'NOT CERTIFIED'} — avg ${cert.avg_score} over last ${cert.sessions_counted}/${cert.window} sessions (threshold ${cert.threshold})`;
-  }
-  if (unitId) {
-    const unitCert = await fetch(`/api/aar/certification/unit/${encodeURIComponent(unitId)}`).then(r => r.json());
-    document.getElementById('unitCertBadge').textContent = unitCert.total_trainees
-      ? `${unitCert.certified_count}/${unitCert.total_trainees} trainees certified (${Math.round(unitCert.certification_rate*100)}%)`
-      : 'No trainees in this unit yet';
+    const cert  = await fetch(`/api/aar/certification/${encodeURIComponent(traineeId)}`).then(r => r.json());
+    const statEl = document.getElementById('statCert');
+    const subEl  = document.getElementById('statCertSub');
+    if (cert.avg_score === null) {
+      statEl.textContent = '—';
+      subEl.textContent  = 'No sessions yet';
+    } else {
+      statEl.innerHTML = cert.certified
+        ? `<span style="color:var(--green-dim)">✓ CERTIFIED</span>`
+        : `<span style="color:var(--red)">✗ NOT CERTIFIED</span>`;
+      subEl.textContent = `avg ${cert.avg_score} over ${cert.sessions_counted}/${cert.window} sessions (threshold ${cert.threshold})`;
+    }
   }
 
+  /* ── Unit cert panel ── */
+  if (unitId) {
+    const uc = await fetch(`/api/aar/certification/unit/${encodeURIComponent(unitId)}`).then(r => r.json());
+    const rate = uc.total_trainees ? Math.round(uc.certification_rate*100) : 0;
+    document.getElementById('unitCertPanel').innerHTML = uc.total_trainees ? `
+      <div style="font-size:28px;font-weight:800;font-family:var(--mono);color:${rate>=70?'var(--green-dim)':rate>=40?'var(--amber)':'var(--red)'};margin-bottom:4px">${rate}%</div>
+      <div style="font-size:12px;color:var(--text-muted)">${uc.certified_count} / ${uc.total_trainees} trainees certified</div>
+      <div style="height:6px;background:var(--border);border-radius:3px;margin-top:10px;overflow:hidden">
+        <div style="width:${rate}%;height:100%;background:${rate>=70?'var(--green-dim)':rate>=40?'var(--amber)':'var(--red)'};border-radius:3px;transition:width 0.8s"></div>
+      </div>` : '<div style="color:var(--text-faint)">No trainees in this unit yet</div>';
+  }
+
+  /* ── Trainee chart ── */
   if (traineeId) {
     const trend = await fetch(`/api/aar/trend/trainee/${encodeURIComponent(traineeId)}`).then(r => r.json());
-    const labels = trend.map(t => t.created_at);
+    const labels = trend.map(t => t.created_at.split(' ')[0]);
     if (traineeChart) traineeChart.destroy();
     traineeChart = new Chart(document.getElementById('traineeChart'), {
       type: 'line',
       data: {
         labels,
         datasets: [
-          { label: 'Overall', data: trend.map(t => t.overall_score), borderColor: '#58a6ff' },
-          { label: 'Detection', data: trend.map(t => t.detection_score), borderColor: '#3fb950' },
-          { label: 'Classification', data: trend.map(t => t.classification_score), borderColor: '#d29922' },
-          { label: 'Engagement', data: trend.map(t => t.engagement_score), borderColor: '#f85149' },
+          { label:'Overall',        data:trend.map(t=>t.overall_score),        borderColor:'#0a84ff', backgroundColor:'rgba(10,132,255,0.05)', tension:0.4, pointRadius:4, pointHoverRadius:6 },
+          { label:'Detection',      data:trend.map(t=>t.detection_score),      borderColor:'#00cc6a', backgroundColor:'transparent',          tension:0.4, pointRadius:3 },
+          { label:'Classification', data:trend.map(t=>t.classification_score), borderColor:'#ffb800', backgroundColor:'transparent',          tension:0.4, pointRadius:3 },
+          { label:'Engagement',     data:trend.map(t=>t.engagement_score),     borderColor:'#ff3b3b', backgroundColor:'transparent',          tension:0.4, pointRadius:3 },
         ],
       },
-      options: { responsive: true, scales: { y: { min: 0, max: 100 } } },
+      options: {
+        responsive: true,
+        scales: {
+          x: { grid:{ color:'rgba(30,48,72,0.6)' }, ticks:{ maxTicksLimit:8, font:{size:10} } },
+          y: { min:0, max:100, grid:{ color:'rgba(30,48,72,0.6)' }, ticks:{ font:{size:10} } }
+        },
+        plugins: { legend:{ labels:{ font:{size:11}, boxWidth:12, padding:16 } } }
+      },
     });
   }
 
+  /* ── Unit chart ── */
   if (unitId) {
     const trend = await fetch(`/api/aar/trend/unit/${encodeURIComponent(unitId)}`).then(r => r.json());
     if (unitChart) unitChart.destroy();
@@ -134,39 +475,68 @@ async function loadAll() {
       type: 'bar',
       data: {
         labels: trend.map(t => t.trainee_id),
-        datasets: [{ label: 'Avg score', data: trend.map(t => t.avg_score), backgroundColor: '#58a6ff' }],
+        datasets: [{
+          label: 'Avg Score',
+          data: trend.map(t => t.avg_score),
+          backgroundColor: trend.map(t => t.avg_score >= 75 ? 'rgba(0,204,106,0.7)' : t.avg_score >= 50 ? 'rgba(255,184,0,0.7)' : 'rgba(255,59,59,0.7)'),
+          borderColor:     trend.map(t => t.avg_score >= 75 ? '#00cc6a' : t.avg_score >= 50 ? '#ffb800' : '#ff3b3b'),
+          borderWidth: 1,
+          borderRadius: 4,
+        }],
       },
-      options: { responsive: true, scales: { y: { min: 0, max: 100 } } },
+      options: {
+        responsive: true,
+        scales: {
+          x: { grid:{ display:false }, ticks:{ font:{size:10} } },
+          y: { min:0, max:100, grid:{ color:'rgba(30,48,72,0.6)' }, ticks:{ font:{size:10} } },
+        },
+        plugins: { legend:{ display:false } },
+      },
     });
   }
 }
 
 async function checkAuditChain() {
   const el = document.getElementById('auditStatus');
-  el.textContent = 'checking...';
-  const r = await fetch('/api/audit/verify_chain').then(r => r.json());
-  el.style.color = r.valid ? '#3fb950' : '#e06666';
-  el.textContent = r.valid
-    ? `Chain intact (${r.sessions_checked} sessions)`
-    : `TAMPERED — broken at session ${r.broken_at_session_id}`;
+  el.className = '';
+  el.textContent = 'Verifying…';
+  try {
+    const r  = await fetch('/api/audit/verify_chain').then(r => r.json());
+    el.className = r.valid ? 'valid' : 'invalid';
+    el.textContent = r.valid
+      ? `✓ Chain intact (${r.sessions_checked} sessions)`
+      : `✗ TAMPERED — broken at session ${r.broken_at_session_id}`;
+  } catch(e) {
+    el.className = 'invalid';
+    el.textContent = '✗ Verification failed';
+  }
 }
 
 function drawHeatmap(points) {
   const canvas = document.getElementById('heatmapCanvas');
-  const ctx = canvas.getContext('2d');
+  const ctx    = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Background grid
+  ctx.strokeStyle = 'rgba(30,48,72,0.4)';
+  ctx.lineWidth   = 1;
+  for (let x = 0; x < canvas.width; x += 30) {
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += 30) {
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
+  }
   if (!points.length) return;
-  const xs = points.map(p => p.x), ys = points.map(p => p.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs, minX + 1);
-  const minY = Math.min(...ys), maxY = Math.max(...ys, minY + 1);
+  const xs = points.map(p=>p.x), ys = points.map(p=>p.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs,minX+1);
+  const minY=Math.min(...ys), maxY=Math.max(...ys,minY+1);
   for (const p of points) {
-    const px = ((p.x - minX) / (maxX - minX)) * canvas.width;
-    const py = ((p.y - minY) / (maxY - minY)) * canvas.height;
-    const grad = ctx.createRadialGradient(px, py, 0, px, py, 24);
-    grad.addColorStop(0, 'rgba(248,81,73,0.5)');
-    grad.addColorStop(1, 'rgba(248,81,73,0)');
+    const px = ((p.x-minX)/(maxX-minX)) * canvas.width;
+    const py = ((p.y-minY)/(maxY-minY)) * canvas.height;
+    const grad = ctx.createRadialGradient(px,py,0,px,py,28);
+    grad.addColorStop(0,'rgba(255,59,59,0.6)');
+    grad.addColorStop(1,'rgba(255,59,59,0)');
     ctx.fillStyle = grad;
-    ctx.fillRect(px - 24, py - 24, 48, 48);
+    ctx.fillRect(px-28,py-28,56,56);
   }
 }
 

@@ -1,0 +1,73 @@
+/* PS-247 App — Global CSS */
+
+/* Import shared design tokens */
+@import '../../packages/design-tokens/tokens.css';
+
+/* Import fonts */
+@import '@fontsource/chakra-petch/400.css';
+@import '@fontsource/chakra-petch/600.css';
+@import '@fontsource/chakra-petch/700.css';
+@import '@fontsource-variable/geist';
+@import '@fontsource/geist-mono/400.css';
+@import '@fontsource/geist-mono/600.css';
+
+/* Tailwind 4 */
+@import "tailwindcss";
+
+/* ── Tailwind theme extension with design tokens ── */
+@theme {
+  --color-bg-void:    var(--c-bg-void);
+  --color-bg-deep:    var(--c-bg-deep);
+  --color-bg-surface: var(--c-bg-surface);
+  --color-bg-raised:  var(--c-bg-raised);
+  --color-bg-overlay: var(--c-bg-overlay);
+  --color-bg-subtle:  var(--c-bg-subtle);
+
+  --color-border-faint:  var(--c-border-faint);
+  --color-border-base:   var(--c-border-base);
+  --color-border-strong: var(--c-border-strong);
+
+  --color-text-max:   var(--c-text-max);
+  --color-text-high:  var(--c-text-high);
+  --color-text-mid:   var(--c-text-mid);
+  --color-text-low:   var(--c-text-low);
+  --color-text-ghost: var(--c-text-ghost);
+
+  --color-hostile:  var(--c-hostile);
+  --color-friendly: var(--c-friendly);
+  --color-unknown:  var(--c-unknown);
+  --color-decoy:    var(--c-decoy);
+  --color-neutral:  var(--c-neutral);
+  --color-accent:   var(--c-accent);
+
+  --color-severity-info:     var(--c-info);
+  --color-severity-advisory: var(--c-advisory);
+  --color-severity-warning:  var(--c-warning);
+  --color-severity-critical: var(--c-critical);
+
+  --font-family-display: var(--font-display);
+  --font-family-ui:      var(--font-ui);
+  --font-family-logo:    var(--font-logo);
+  --font-family-mono:    var(--font-mono);
+
+  --spacing-topbar: var(--topbar-h);
+
+  --radius-xs:   var(--rad-xs);
+  --radius-sm:   var(--rad-sm);
+  --radius-md:   var(--rad-md);
+  --radius-lg:   var(--rad-lg);
+  --radius-xl:   var(--rad-xl);
+  --radius-full: var(--rad-full);
+}
+
+/* ── Base overrides ── */
+@layer base {
+  html {
+    font-size: 16px;
+    font-family: var(--font-ui);
+  }
+
+  body {
+    font-size: 14px;
+  }
+}

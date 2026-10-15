@@ -28,4 +28,11 @@ def load_scripted(name: str) -> dict:
         raise FileNotFoundError(f"no scripted scenario named {name!r}")
     scenario = json.loads(path.read_text())
     scenario["scenario_id"] = str(uuid.uuid4())  # fresh session id per load; content stays fixed
+    scenario.setdefault("defended_asset_position", [0.0, 0.0])
+    scenario.setdefault("no_engage_zones", [])
+    scenario.setdefault("roe_card", {
+        "time_critical_override_s": 15.0,
+        "max_hard_kill_range_m": 2500.0,
+        "max_soft_kill_range_m": 3500.0,
+    })
     return scenario
