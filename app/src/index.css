@@ -47,6 +47,7 @@
 
   --font-family-display: var(--font-display);
   --font-family-ui:      var(--font-ui);
+  --font-family-logo:    var(--font-logo);
   --font-family-mono:    var(--font-mono);
 
   --spacing-topbar: var(--topbar-h);
@@ -60,4 +61,13 @@
 }
 
 /* ── Base overrides ── */
-html { font-family: var(--font-ui); }
+@layer base {
+  html {
+    font-size: 16px;
+    font-family: var(--font-ui);
+  }
+
+  body {
+    font-size: 14px;
+  }
+}

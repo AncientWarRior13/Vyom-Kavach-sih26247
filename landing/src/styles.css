@@ -19,34 +19,53 @@
   --cyan: #4DD8FF;
   --violet: #B48CFF;
 
+  --header-h: 56px;
+  --rail-w: 200px;
+  --gutter: 24px;
+  --telemetry-w: 260px;
+  --telemetry-h: 120px;
+
   --font-display: "Chakra Petch", sans-serif;
   --font-ui: "Geist Variable", sans-serif;
   --font-data: "Geist Mono", monospace;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  html {
+    font-size: 16px;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  code, kbd, samp, pre, .font-data {
+    font-family: var(--font-data);
+  }
+
+  @media (max-height: 720px) {
+    .section-headline {
+      font-size: clamp(22px, min(3vw, 4.8vh), 32px) !important;
+      line-height: 1.1 !important;
+    }
+    .section-body {
+      font-size: 14px !important;
+      line-height: 1.4 !important;
+    }
+  }
 }
 
-body {
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: 16px;
-  line-height: 1.6;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-code, kbd, samp, pre, .font-data {
-  font-family: var(--font-data);
-}

@@ -18,10 +18,10 @@ export const SensorHealthChips: React.FC<{
   className = '',
 }) => {
   const defaultSensors: SensorStatus[] = [
-    { type: 'radar', label: 'RADAR X-BAND', online: sensorOutage !== 'radar', jammed: sensorOutage === 'radar', snr: '24dB' },
+    { type: 'radar', label: 'Radar X-band', online: sensorOutage !== 'radar', jammed: sensorOutage === 'radar', snr: '24 dB' },
     { type: 'eo_ir', label: 'EO/IR MWIR', online: sensorOutage !== 'eo_ir', jammed: sensorOutage === 'eo_ir', snr: '98%' },
-    { type: 'rf', label: 'RF SPECTRUM', online: sensorOutage !== 'rf', jammed: sensorOutage === 'rf', snr: '-78dBm' },
-    { type: 'acoustic', label: 'ACOUSTIC ARRAY', online: sensorOutage !== 'acoustic', jammed: sensorOutage === 'acoustic', snr: '18dB' },
+    { type: 'rf', label: 'RF spectrum', online: sensorOutage !== 'rf', jammed: sensorOutage === 'rf', snr: '-78 dBm' },
+    { type: 'acoustic', label: 'Acoustic array', online: sensorOutage !== 'acoustic', jammed: sensorOutage === 'acoustic', snr: '18 dB' },
   ];
 
   return (
@@ -31,22 +31,22 @@ export const SensorHealthChips: React.FC<{
         return (
           <div
             key={s.type}
-            className={`flex items-center gap-2 px-2.5 py-1 rounded-sm border text-[11px] font-mono transition-colors ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-xs font-ui transition-colors ${
               isDegraded
-                ? 'bg-[var(--c-hostile-bg)] border-[var(--c-hostile)]/60 text-[var(--c-hostile)]'
+                ? 'bg-[var(--c-hostile-bg)] border-[var(--c-hostile)]/30 text-[var(--c-hostile)]'
                 : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] text-[var(--c-text-high)]'
             }`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
+              className={`w-2 h-2 rounded-full shrink-0 ${
                 isDegraded
-                  ? 'bg-[var(--c-hostile)] shadow-[0_0_6px_var(--c-hostile)] animate-pulse'
-                  : 'bg-[var(--c-accent)] shadow-[0_0_6px_var(--c-accent)]'
+                  ? 'bg-[var(--c-hostile)]'
+                  : 'bg-[var(--c-advisory)]'
               }`}
             />
-            <span className="font-semibold">{s.label}</span>
-            <span className="text-[10px] text-[var(--c-text-low)] border-l border-[var(--c-border-faint)] pl-1.5">
-              {isDegraded ? 'JAMMED / OFFLINE' : s.snr}
+            <span className="font-medium">{s.label}</span>
+            <span className="text-[11px] font-mono text-[var(--c-text-low)] border-l border-[var(--c-border-base)] pl-2">
+              {isDegraded ? 'Offline' : s.snr}
             </span>
           </div>
         );
@@ -68,33 +68,26 @@ export const EventLog: React.FC<{
   maxHeight?: string;
   className?: string;
 }> = ({ events, maxHeight = 'h-48', className = '' }) => {
-  const levelColors = {
-    info: 'text-[var(--c-info)] border-[var(--c-info)]',
-    warning: 'text-[var(--c-warning)] border-[var(--c-warning)]',
-    critical: 'text-[var(--c-critical)] border-[var(--c-critical)]',
-    success: 'text-[var(--c-accent)] border-[var(--c-accent)]',
-  };
-
   return (
-    <div className={`overflow-y-auto space-y-1.5 font-mono text-xs pr-1 ${maxHeight} ${className}`}>
+    <div className={`overflow-y-auto space-y-1.5 text-xs font-ui pr-1 ${maxHeight} ${className}`}>
       {events.length === 0 ? (
-        <div className="text-[var(--c-text-low)] text-center py-4">NO TELEMETRY EVENTS</div>
+        <div className="text-[var(--c-text-low)] text-center py-4">No events logged</div>
       ) : (
         events.map((ev) => (
           <div
             key={ev.id}
-            className="flex items-start gap-2 py-1 px-1.5 rounded-xs bg-[var(--c-bg-deep)]/40 border-l-2 hover:bg-[var(--c-bg-overlay)] transition-colors"
-            style={{ borderLeftColor: `var(--c-${ev.level === 'success' ? 'accent' : ev.level})` }}
+            className="flex items-start gap-2 py-1.5 px-2 rounded-md bg-[var(--c-bg-deep)]/60 border-l-2 hover:bg-[var(--c-bg-raised)] transition-colors"
+            style={{ borderLeftColor: `var(--c-${ev.level === 'success' ? 'advisory' : ev.level === 'critical' ? 'hostile' : ev.level})` }}
           >
-            <span className="text-[10px] text-[var(--c-text-low)] shrink-0 tabular-nums">
+            <span className="text-[11px] font-mono text-[var(--c-text-low)] shrink-0 tabular-nums">
               {ev.timestamp}
             </span>
             {ev.source && (
-              <span className="text-[10px] px-1 bg-[var(--c-bg-raised)] rounded text-[var(--c-text-mid)] font-semibold uppercase">
+              <span className="text-[10px] font-mono px-1.5 py-0.2 bg-[var(--c-bg-raised)] rounded text-[var(--c-text-mid)] font-medium">
                 {ev.source}
               </span>
             )}
-            <span className="text-[var(--c-text-high)] flex-1">{ev.message}</span>
+            <span className="text-[var(--c-text-high)] flex-1 leading-normal">{ev.message}</span>
           </div>
         ))
       )}
@@ -110,16 +103,16 @@ export const ServerStatusLED: React.FC<{
   const isHealthy = status === 'ok' || status === 'ONLINE';
 
   return (
-    <div className={`inline-flex items-center gap-2 px-2 py-1 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-xs font-mono text-xs ${className}`}>
+    <div className={`inline-flex items-center gap-2 px-2.5 py-1 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-md font-ui text-xs ${className}`}>
       <span
-        className={`w-2 h-2 rounded-full ${
+        className={`w-2 h-2 rounded-full shrink-0 ${
           isHealthy
-            ? 'bg-[var(--c-accent)] shadow-[0_0_8px_var(--c-accent)]'
-            : 'bg-[var(--c-critical)] shadow-[0_0_8px_var(--c-critical)] animate-pulse'
+            ? 'bg-[var(--c-advisory)]'
+            : 'bg-[var(--c-critical)]'
         }`}
       />
-      <span className="text-[var(--c-text-high)] font-semibold uppercase">{status}</span>
-      <span className="text-[10px] text-[var(--c-text-low)] tabular-nums">{latencyMs}ms</span>
+      <span className="text-[var(--c-text-high)] font-medium">{status === 'ONLINE' ? 'Online' : status}</span>
+      <span className="text-xs font-mono text-[var(--c-text-low)] tabular-nums">{latencyMs}ms</span>
     </div>
   );
 };

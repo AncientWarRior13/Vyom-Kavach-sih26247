@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Command,
   HelpCircle,
-  Eye,
 } from 'lucide-react';
 import { CommandPalette, ShortcutCheatSheet } from './CommandPalette';
 import { useModelStatus } from '../api/hooks';
@@ -21,22 +20,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [colorBlindMode, setColorBlindMode] = useState(false);
-  const [timeStr, setTimeStr] = useState('');
   const location = useLocation();
 
   const { data: modelStatus } = useModelStatus();
-
-  // Zulu Clock
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTimeStr(now.toUTCString().slice(17, 25) + 'Z');
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Global keybindings (Ctrl+K, ?)
   useEffect(() => {
@@ -53,151 +39,153 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const navItems = [
-    { to: '/trainer', label: 'Trainer Scope', icon: Crosshair },
-    { to: '/vr', label: 'VR Dome', icon: Glasses },
-    { to: '/instructor', label: 'Instructor', icon: GraduationCap },
-    { to: '/team', label: 'Team Roles', icon: Users },
-    { to: '/aar', label: 'AAR Telemetry', icon: BarChart3 },
-    { to: '/swarm', label: 'Swarm Sim', icon: Boxes },
-    { to: '/styleguide', label: 'Styleguide', icon: Palette },
+  const navGroups = [
+    {
+      title: 'Training',
+      items: [
+        { to: '/trainer', label: 'Trainer Scope', icon: Crosshair },
+        { to: '/vr', label: 'VR Dome', icon: Glasses },
+        { to: '/team', label: 'Team Roles', icon: Users },
+      ],
+    },
+    {
+      title: 'Monitoring',
+      items: [
+        { to: '/aar', label: 'AAR Telemetry', icon: BarChart3 },
+        { to: '/swarm', label: 'Swarm Sim', icon: Boxes },
+        { to: '/instructor', label: 'Instructor', icon: GraduationCap },
+      ],
+    },
+    {
+      title: 'Tools',
+      items: [
+        { to: '/styleguide', label: 'Styleguide', icon: Palette },
+      ],
+    },
   ];
 
-  const toggleColorBlind = () => {
-    setColorBlindMode((prev) => {
-      const next = !prev;
-      if (next) {
-        document.documentElement.classList.add('high-contrast');
-      } else {
-        document.documentElement.classList.remove('high-contrast');
-      }
-      return next;
-    });
+  // Route label lookup for top breadcrumb
+  const routeTitles: Record<string, string> = {
+    '/trainer': 'Trainer Scope',
+    '/vr': 'VR Dome',
+    '/team': 'Team Roles',
+    '/aar': 'AAR Telemetry',
+    '/swarm': 'Swarm Simulation',
+    '/instructor': 'Instructor Console',
+    '/styleguide': 'Design System',
   };
+
+  const currentTitle = routeTitles[location.pathname] || 'Operations';
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[var(--c-bg-void)] text-[var(--c-text-high)] font-ui select-none">
-      {/* ── Top Bar ── */}
+      {/* ── Top Bar (48px) ── */}
       <header className="fixed top-0 left-0 right-0 h-[var(--topbar-h)] z-40 bg-[var(--c-bg-deep)] border-b border-[var(--c-border-base)] flex items-center justify-between px-4">
         {/* Left: Branding & Breadcrumb */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 bg-[var(--c-accent)] rounded-xs shadow-[0_0_8px_var(--c-accent)]" />
-            <span className="font-display font-bold text-sm tracking-wider text-[var(--c-text-max)]">
+          <NavLink to="/team" className="flex items-center gap-2 text-inherit no-underline">
+            <span className="w-2 h-2 bg-[var(--c-accent)] rounded-full" />
+            <span className="font-logo font-bold text-sm tracking-wide text-[var(--c-text-max)]">
               PS-247
             </span>
-          </div>
-          <span className="text-[var(--c-border-strong)]">|</span>
-          <span className="font-display text-xs text-[var(--c-text-mid)] tracking-widest uppercase hidden md:inline">
-            C-UAS TACTICAL THREAT TRAINER
-          </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-xs bg-[var(--c-bg-raised)] text-[var(--c-text-low)] border border-[var(--c-border-faint)]">
-            {location.pathname.replace('/', '').toUpperCase() || 'HOME'}
+          </NavLink>
+          <span className="text-[var(--c-text-low)] text-xs">/</span>
+          <span className="text-xs font-medium text-[var(--c-text-mid)] font-ui">
+            {currentTitle}
           </span>
         </div>
 
-        {/* Right: Operational Status, Zulu Clock, Actions */}
-        <div className="flex items-center gap-4 text-xs font-mono">
-          {/* DEFCON Readiness */}
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-xs">
-            <span className="text-[10px] text-[var(--c-text-low)]">STATUS:</span>
-            <span className="text-[var(--c-accent)] font-semibold tracking-wider">DEFCON-3 ACTIVE</span>
-          </div>
-
-          {/* Model Status LED */}
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-xs">
+        {/* Right: Single Status Dot + Keyboard Shortcut */}
+        <div className="flex items-center gap-3 text-xs font-ui">
+          {/* Operational Status Dot */}
+          <div className="flex items-center gap-1.5 text-xs text-[var(--c-text-mid)]">
             <span
               className={`w-2 h-2 rounded-full ${
-                modelStatus?.status === 'ok' || modelStatus?.weights_loaded !== false
-                  ? 'bg-[var(--c-accent)] shadow-[0_0_8px_var(--c-accent)]'
-                  : 'bg-[var(--c-warning)] shadow-[0_0_8px_var(--c-warning)] animate-pulse'
+                modelStatus?.status === 'error'
+                  ? 'bg-[var(--c-critical)]'
+                  : 'bg-[var(--c-advisory)]'
               }`}
             />
-            <span className="text-[10px] text-[var(--c-text-mid)] hidden lg:inline">
-              AI ENGINE: {modelStatus?.status || 'ONLINE'}
+            <span className="text-xs text-[var(--c-text-low)] hidden sm:inline">
+              {modelStatus?.status === 'error' ? 'Service degraded' : 'Operational'}
             </span>
           </div>
 
-          {/* Zulu Time */}
-          <div className="font-bold text-[var(--c-text-max)] tabular-nums tracking-widest hidden md:inline">
-            {timeStr}
-          </div>
+          {/* Quick Find (Ctrl+K) */}
+          <button
+            onClick={() => setPaletteOpen(true)}
+            className="flex items-center gap-2 px-2.5 py-1 bg-[var(--c-bg-raised)] hover:bg-[var(--c-bg-overlay)] border border-[var(--c-border-base)] rounded-md text-xs text-[var(--c-text-mid)] hover:text-[var(--c-text-max)] transition-colors cursor-pointer"
+          >
+            <Command className="w-3.5 h-3.5 text-[var(--c-text-low)]" />
+            <span className="text-xs hidden sm:inline">Search</span>
+            <kbd className="text-[10px] font-mono px-1 py-0.2 bg-[var(--c-bg-surface)] text-[var(--c-text-low)] border border-[var(--c-border-faint)] rounded">
+              Ctrl+K
+            </kbd>
+          </button>
 
-          {/* Tools & Palette */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={toggleColorBlind}
-              title="Toggle High-Contrast / Color-Blind Safe Mode"
-              className={`p-1.5 rounded-xs border transition-colors cursor-pointer ${
-                colorBlindMode
-                  ? 'bg-[var(--c-accent-bg)] text-[var(--c-accent)] border-[var(--c-accent)]'
-                  : 'text-[var(--c-text-low)] hover:text-[var(--c-text-max)] border-transparent hover:border-[var(--c-border-base)]'
-              }`}
-            >
-              <Eye className="w-3.5 h-3.5" />
-            </button>
-
-            <button
-              onClick={() => setPaletteOpen(true)}
-              className="flex items-center gap-1.5 px-2 py-1 bg-[var(--c-bg-raised)] hover:bg-[var(--c-bg-overlay)] border border-[var(--c-border-base)] rounded-xs text-[var(--c-text-mid)] hover:text-[var(--c-text-max)] cursor-pointer"
-            >
-              <Command className="w-3 h-3 text-[var(--c-accent)]" />
-              <span className="text-[10px] hidden sm:inline">Ctrl+K</span>
-            </button>
-
-            <button
-              onClick={() => setShortcutsOpen(true)}
-              title="Keyboard Shortcuts (?)"
-              className="p-1.5 text-[var(--c-text-low)] hover:text-[var(--c-text-max)] border border-transparent hover:border-[var(--c-border-base)] rounded-xs cursor-pointer"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          {/* Shortcut Help (?) */}
+          <button
+            onClick={() => setShortcutsOpen(true)}
+            title="Keyboard shortcuts (?)"
+            className="p-1 text-[var(--c-text-low)] hover:text-[var(--c-text-max)] rounded-md hover:bg-[var(--c-bg-raised)] transition-colors cursor-pointer"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
       {/* ── Main Layout (Side Nav + Content) ── */}
       <div className="flex flex-1 pt-[var(--topbar-h)] overflow-hidden">
-        {/* Collapsible Side Rail */}
+        {/* Collapsible Side Rail (220px) */}
         <aside
-          className={`shrink-0 bg-[var(--c-bg-surface)] border-r border-[var(--c-border-base)] transition-all duration-200 flex flex-col justify-between ${
-            collapsed ? 'w-14' : 'w-52'
+          className={`shrink-0 bg-[var(--c-bg-surface)] border-r border-[var(--c-border-base)] transition-all duration-150 flex flex-col justify-between min-h-0 ${
+            collapsed ? 'w-14' : 'w-[220px]'
           }`}
         >
-          {/* Navigation Links */}
-          <nav className="p-2 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-xs font-mono text-xs transition-colors group cursor-pointer ${
-                      isActive
-                        ? 'bg-[var(--c-bg-overlay)] text-[var(--c-accent)] border-l-2 border-l-[var(--c-accent)] font-semibold shadow-xs'
-                        : 'text-[var(--c-text-mid)] hover:bg-[var(--c-bg-raised)] hover:text-[var(--c-text-max)]'
-                    }`
-                  }
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                </NavLink>
-              );
-            })}
+          {/* Navigation Links Grouped */}
+          <nav className="p-2 space-y-4 overflow-y-auto flex-1 min-h-0">
+            {navGroups.map((group) => (
+              <div key={group.title} className="space-y-1">
+                {!collapsed && (
+                  <div className="px-3 pt-2 pb-1 text-[11px] font-medium text-[var(--c-text-low)] uppercase tracking-wider">
+                    {group.title}
+                  </div>
+                )}
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      title={collapsed ? item.label : undefined}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2 rounded-md font-ui text-sm transition-colors cursor-pointer ${
+                          isActive
+                            ? 'bg-[var(--c-bg-raised)] text-[var(--c-accent)] font-medium'
+                            : 'text-[var(--c-text-mid)] hover:bg-[var(--c-bg-raised)]/60 hover:text-[var(--c-text-high)]'
+                        } ${collapsed ? 'justify-center px-0' : ''}`
+                      }
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
 
           {/* Rail Footer & Collapse Toggle */}
-          <div className="p-2 border-t border-[var(--c-border-base)] bg-[var(--c-bg-deep)]">
+          <div className="p-2 border-t border-[var(--c-border-base)] shrink-0">
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="w-full flex items-center justify-center p-1.5 text-[var(--c-text-low)] hover:text-[var(--c-text-max)] rounded-xs hover:bg-[var(--c-bg-raised)] cursor-pointer"
+              className="w-full flex items-center justify-center p-2 text-xs text-[var(--c-text-low)] hover:text-[var(--c-text-high)] rounded-md hover:bg-[var(--c-bg-raised)] transition-colors cursor-pointer"
             >
               {collapsed ? (
                 <ChevronRight className="w-4 h-4" />
               ) : (
-                <div className="flex items-center justify-between w-full px-2 text-[10px] font-mono">
-                  <span>COLLAPSE RAIL</span>
+                <div className="flex items-center justify-between w-full px-2 text-xs font-ui">
+                  <span>Collapse sidebar</span>
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </div>
               )}
@@ -206,7 +194,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         </aside>
 
         {/* Viewport Content */}
-        <main className="flex-1 overflow-auto bg-[var(--c-bg-void)]">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[var(--c-bg-void)] min-w-0">
           {children}
         </main>
       </div>

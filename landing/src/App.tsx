@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import Lenis from 'lenis'
@@ -38,6 +38,12 @@ export default function App() {
 
   const lenisRef = useRef<Lenis | null>(null)
 
+  // Debug flag (?debug=1 in query param)
+  const isDebug = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    return new URLSearchParams(window.location.search).get('debug') === '1'
+  }, [])
+
   // Fetch scripted scenarios & health
   useEffect(() => {
     fetch('/api/scenario/scripted')
@@ -53,6 +59,42 @@ export default function App() {
     fetch('/api/model/status')
       .then((r) => setServerOnline(r.ok))
       .catch(() => setServerOnline(false))
+
+    // Support testing query parameters (?p=0.25, ?time=night, ?section=2)
+    const params = new URLSearchParams(window.location.search)
+    const pParam = params.get('p')
+    const timeParam = params.get('time')
+    const secParam = params.get('section')
+    if (timeParam === 'day' || timeParam === 'dusk' || timeParam === 'night') {
+      setTimeMode(timeParam)
+    }
+    if (secParam !== null) {
+      const sVal = Math.max(0, Math.min(7, parseInt(secParam, 10)))
+      const pVal = sVal === 0 ? 0 : sVal === 7 ? 0.98 : (sVal + 0.5) / 8
+      flight.progress = pVal
+      flight.damped = pVal
+      setScrollProgress(pVal)
+      setActiveSection(sVal)
+    } else if (pParam) {
+      const pVal = Math.max(0, Math.min(1, parseFloat(pParam)))
+      flight.progress = pVal
+      flight.damped = pVal
+      setScrollProgress(pVal)
+      const secIdx = Math.min(7, Math.floor(pVal * 8))
+      setActiveSection(secIdx)
+    }
+    ;(window as any).__setSection = (idx: number) => {
+      const sVal = Math.max(0, Math.min(7, idx))
+      const pVal = sVal === 0 ? 0 : sVal === 7 ? 0.98 : (sVal + 0.5) / 8
+      flight.progress = pVal
+      flight.damped = pVal
+      setScrollProgress(pVal)
+      setActiveSection(sVal)
+      const totalH = document.documentElement.scrollHeight - window.innerHeight
+      if (lenisRef.current && totalH > 0) {
+        lenisRef.current.scrollTo(pVal * totalH, { immediate: true })
+      }
+    }
   }, [])
 
   // Initialize Lenis smooth scroll and connect to flightState
@@ -99,7 +141,7 @@ export default function App() {
   // Click on a dot to scroll to section
   const scrollToSection = (idx: number) => {
     const totalH = document.documentElement.scrollHeight - window.innerHeight
-    const targetY = (idx / 7) * totalH
+    const targetY = idx === 0 ? 0 : idx === 7 ? totalH : ((idx + 0.5) / 8) * totalH
     if (lenisRef.current) {
       lenisRef.current.scrollTo(targetY, { duration: 1.4 })
     } else {
@@ -121,6 +163,8 @@ export default function App() {
   const launchScripted = () => {
     if (selectedDrill) {
       window.location.href = `/trainer?drill=${encodeURIComponent(selectedDrill)}&autostart=1`
+    } else {
+      window.location.href = `/trainer?autostart=1`
     }
   }
 
@@ -136,7 +180,7 @@ export default function App() {
   }, [])
 
   return (
-    <div className="relative w-full bg-[#020508] text-[#c8deef] select-none font-sans">
+    <div className="relative w-full bg-[#0b0e13] text-[#e6eaf0] select-none font-sans">
       {/* ── Fixed 3D Canvas Scene ── */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <Canvas
@@ -151,258 +195,320 @@ export default function App() {
         </Canvas>
       </div>
 
-      {/* ── Fixed Tactical HUD Header (Top) ── */}
-      <header className="fixed top-0 left-0 right-0 z-30 px-6 py-4 flex items-center justify-between pointer-events-auto bg-gradient-to-b from-[#020508]/80 to-transparent">
+      {/* ── Fixed Tactical Top Bar (56px height, px-6, z-40) ── */}
+      <header
+        id="app-header"
+        className="fixed top-0 left-0 right-0 z-40 h-[var(--header-h)] px-6 flex items-center justify-between pointer-events-auto bg-[#0b0e13]/85 border-b border-white/[0.08] backdrop-blur-md"
+      >
         <div className="flex items-center gap-3">
-          <span className="w-2.5 h-2.5 bg-[#00e87a] rounded-xs shadow-[0_0_8px_#00e87a]" />
-          <span className="font-['Chakra_Petch'] font-bold text-base tracking-widest text-[#f0f8ff]">
+          <span className="w-2 h-2 rounded-full bg-[#3dd6c6]" />
+          <span className="font-['Chakra_Petch'] font-semibold text-sm tracking-wider text-[#f8fafc]">
             PS-247 C-UAS
           </span>
-          <span className="text-xs font-mono text-[#8aaabf] hidden sm:inline">
-            // TACTICAL DRONE THREAT TRAINER
+          <span className="text-xs font-mono text-[#6b7585] hidden sm:inline">
+            Tactical drone threat trainer
           </span>
         </div>
 
         <div className="flex items-center gap-4 text-xs font-mono">
-          {/* Server Status LED */}
-          <div className="flex items-center gap-2 px-2.5 py-1 bg-[#05070a]/80 border border-[#1e3c64] rounded-xs backdrop-blur-xs">
-            <span className={`w-2 h-2 rounded-full ${serverOnline ? 'bg-[#00e87a] shadow-[0_0_6px_#00e87a]' : 'bg-[#ff3b3b]'}`} />
-            <span className="text-[#8aaabf] hidden md:inline">SYSTEM: {serverOnline ? 'ONLINE' : 'OFFLINE'}</span>
+          {/* Server Status Dot */}
+          <div className="flex items-center gap-2 text-xs text-[#9aa4b2]">
+            <span className={`w-2 h-2 rounded-full ${serverOnline ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
+            <span className="hidden md:inline">{serverOnline ? 'Operational' : 'Offline'}</span>
           </div>
 
-          {/* Dev Telemetry Toggle */}
-          <button
-            onClick={() => setShowDevTelemetry((v) => !v)}
-            className="px-2 py-1 bg-[#05070a]/80 border border-[#1e3c64] hover:border-[#00e87a] text-[11px] text-[#8aaabf] rounded-xs transition-colors cursor-pointer"
-          >
-            {showDevTelemetry ? 'HIDE METRICS' : 'DEV METRICS'}
-          </button>
+          {/* Dev Telemetry Toggle (?debug=1 only) */}
+          {isDebug && (
+            <button
+              onClick={() => setShowDevTelemetry((v) => !v)}
+              className="px-2 py-1 bg-[#181d26] border border-white/10 hover:border-[#3dd6c6] text-[11px] text-[#9aa4b2] rounded transition-colors cursor-pointer"
+            >
+              {showDevTelemetry ? 'Hide metrics' : 'Metrics'}
+            </button>
+          )}
 
           {/* Direct App Link */}
           <a
             href="/trainer"
-            className="px-3.5 py-1.5 bg-[#00e87a] text-[#020508] font-bold rounded-xs shadow-[0_0_14px_rgba(0,232,122,0.35)] hover:bg-[#00c968] transition-colors uppercase tracking-wider"
+            className="px-3.5 py-1.5 bg-[#3dd6c6] text-[#0b0e13] font-semibold text-xs rounded hover:bg-[#2bbfa0] transition-colors"
           >
-            Launch Trainer →
+            Launch trainer →
           </a>
         </div>
       </header>
 
-      {/* ── Fixed Full-Screen CSS Grid Overlay [180px] [content] [200px] ── */}
-      <div className="fixed inset-0 z-20 pointer-events-none grid grid-cols-1 md:grid-cols-[180px_1fr_200px] items-center px-4 md:px-8">
-        {/* Left Column: Collapsed 8-Dot Progress Rail */}
-        <div className="hidden md:flex flex-col gap-3 pointer-events-auto p-4 bg-[rgba(5,7,10,0.72)] border border-[#1e3c64] rounded-xs backdrop-blur-md shadow-xl w-[170px]">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-[#4e718a] mb-1">
-            FLIGHT SECTORS
-          </div>
-          <div className="flex flex-col gap-2.5">
-            {SECTIONS.map((sec, idx) => {
-              const isActive = activeSection === idx
-              return (
-                <button
-                  key={sec.id}
-                  onClick={() => scrollToSection(idx)}
-                  className={`flex items-center gap-2.5 text-left transition-all cursor-pointer group select-none ${
-                    isActive ? 'text-[#00e87a]' : 'text-[#4e718a] hover:text-[#c8deef]'
-                  }`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      isActive
-                        ? 'bg-[#00e87a] scale-125 shadow-[0_0_8px_#00e87a]'
-                        : 'bg-[#1e3c64] group-hover:bg-[#4e718a]'
-                    }`}
-                  />
-                  {isActive && (
-                    <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#00e87a] truncate animate-in fade-in duration-200">
-                      {sec.eyebrow.replace(/^0\d · /, '')}
-                    </span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
+      {/* ── Left Progress Rail: Sectors Box (Top-Left, ~24px below nav, ~24px from left, w-[220px], z-20) ── */}
+      <div
+        id="sectors-box"
+        className="fixed top-[calc(var(--header-h)+24px)] left-6 z-20 flex flex-col gap-2 p-3 bg-[rgba(8,11,16,0.88)] border border-white/[0.08] rounded-lg backdrop-blur-md shadow-xl w-[220px] max-[900px]:top-[calc(var(--header-h)+16px)] max-[900px]:left-4 max-[900px]:right-4 max-[900px]:w-[calc(100%-32px)] pointer-events-auto"
+      >
+        <div className="text-[10px] font-mono uppercase tracking-wider text-[#6b7585] mb-0.5">
+          Sectors
         </div>
-
-        {/* Center Column: ONE Active Story Section at a Time */}
-        <div className="w-full flex items-center justify-center relative min-h-[420px] pointer-events-none">
+        <div className="flex flex-col max-[900px]:flex-row max-[900px]:flex-wrap gap-2 max-[900px]:gap-3">
           {SECTIONS.map((sec, idx) => {
-            // Local section progress (0 to 1 over its 1/8 span)
-            const secSpan = 1 / 8
-            const secStart = idx * secSpan
-            const localT = (scrollProgress - secStart) / secSpan
+            const isActive = activeSection === idx
+            return (
+              <button
+                key={sec.id}
+                onClick={() => scrollToSection(idx)}
+                className={`flex items-center gap-2.5 text-left transition-all cursor-pointer group select-none pointer-events-auto ${
+                  isActive ? 'text-[#3dd6c6]' : 'text-[#6b7585] hover:text-[#e6eaf0]'
+                }`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full transition-all shrink-0 ${
+                    isActive
+                      ? 'bg-[#3dd6c6] scale-125'
+                      : 'bg-white/20 group-hover:bg-white/40'
+                  }`}
+                />
+                {isActive && (
+                  <span className="font-mono text-xs font-medium text-[#3dd6c6] leading-tight whitespace-normal max-w-[160px]">
+                    {sec.eyebrow.replace(/^0\d · /, '')}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
-            // Visibility window: visible only when localT is between -0.05 and 1.05
-            const isVisible = localT >= -0.05 && localT <= 1.05
+      {/* ── Section Panels Overlay Wrapper (Pointer-events: none, z-30) ── */}
+      <div className="section-overlay-container fixed inset-0 pointer-events-none z-30">
+        {SECTIONS.map((sec, idx) => {
+          const secSpan = 1 / 8
+          const secStart = idx * secSpan
+          const localT = (scrollProgress - secStart) / secSpan
 
-            if (!isVisible) return null
+          const isVisible = localT >= -0.05 && localT <= 1.05
+          if (!isVisible) return null
 
-            // Fade in over first 20%, hold, fade out over last 20%
-            let opacity = 0
-            let translateY = 0
+          // Fade in over first 20%, hold, fade out over last 20%
+          let opacity = 0
+          let translateY = 0
+          if (idx === 0) {
+            if (localT <= 0.6) {
+              opacity = 1
+              translateY = 0
+            } else {
+              const f = Math.max(0, (1 - localT) / 0.4)
+              opacity = f
+              translateY = -(1 - f) * 12
+            }
+          } else if (idx === 7) {
+            if (localT < 0.3) {
+              opacity = Math.max(0, localT / 0.3)
+              translateY = (1 - opacity) * 12
+            } else {
+              opacity = 1
+              translateY = 0
+            }
+          } else {
             if (localT < 0.2) {
               const f = Math.max(0, localT / 0.2)
               opacity = f
-              translateY = (1 - f) * 16
+              translateY = (1 - f) * 12
             } else if (localT <= 0.8) {
               opacity = 1
               translateY = 0
             } else {
               const f = Math.max(0, (1 - localT) / 0.2)
               opacity = f
-              translateY = -(1 - f) * 16
+              translateY = -(1 - f) * 12
             }
+          }
 
-            const alignClass =
-              sec.side === 'center'
-                ? 'justify-self-center text-center'
-                : sec.side === 'right'
-                ? 'justify-self-end text-left'
-                : 'justify-self-start text-left'
+          // Positioning:
+          // Left-side (including Hero): bottom-left (24px left, 24px bottom), max-w-[360px]
+          // Right-side: right-6, bottom-[calc(var(--telemetry-h)+48px)], max-w-[360px]
+          // Center-side: bottom-[calc(var(--telemetry-h)+36px)], horizontally centered
+          // Under 900px: stacked at bottom, full width with 16px margins
+          let posClass = ''
+          if (sec.side === 'left') {
+            posClass = 'fixed bottom-6 left-6 max-w-[360px] max-[900px]:bottom-4 max-[900px]:left-4 max-[900px]:right-4 max-[900px]:w-[calc(100%-32px)] max-[900px]:max-w-[calc(100%-32px)]'
+          } else if (sec.side === 'right') {
+            posClass = 'fixed bottom-[calc(var(--telemetry-h)+48px)] right-6 max-w-[360px] max-[900px]:bottom-[calc(var(--telemetry-h)+24px)] max-[900px]:left-4 max-[900px]:right-4 max-[900px]:w-[calc(100%-32px)] max-[900px]:max-w-[calc(100%-32px)]'
+          } else {
+            posClass = 'fixed bottom-[calc(var(--telemetry-h)+36px)] left-1/2 -translate-x-1/2 max-w-[460px] max-[900px]:bottom-[calc(var(--telemetry-h)+24px)] max-[900px]:left-4 max-[900px]:right-4 max-[900px]:translate-x-0 max-[900px]:w-[calc(100%-32px)] max-[900px]:max-w-[calc(100%-32px)]'
+          }
 
-            return (
-              <div
-                key={sec.id}
-                style={{
-                  opacity,
-                  transform: `translateY(${translateY}px)`,
-                  transition: 'opacity 0.15s ease-out, transform 0.15s ease-out',
-                }}
-                className={`absolute w-full max-w-[560px] p-6 bg-[rgba(5,7,10,0.78)] backdrop-blur-md rounded-xs border border-[#1e3c64] shadow-2xl space-y-4 pointer-events-auto ${alignClass}`}
-              >
-                {/* Eyebrow: at least 12px mono with letter-spacing */}
-                <div className="font-mono text-xs font-bold uppercase tracking-widest text-[#00e87a]">
-                  {sec.eyebrow}
-                </div>
+          const isActive = activeSection === idx
 
-                {/* Headline: clamp(32px, 4.5vw, 64px), text-wrap: balance */}
-                <h2 className="font-['Chakra_Petch'] text-[clamp(28px,4.2vw,54px)] font-extrabold uppercase tracking-wide text-[#f0f8ff] leading-[1.1] [text-wrap:balance]">
-                  {sec.title}
-                </h2>
-
-                {/* Body Text: at least 16px with line-height 1.5, text contrast > 7:1 */}
-                {sec.id === 'hero' && (
-                  <p className="text-base leading-relaxed text-[#c8deef]">
-                    Next-generation counter-UAS training simulator. Practice high-pressure radar classification, sensor cross-cueing, and graduated countermeasures before live operational deployments.
-                  </p>
-                )}
-
-                {sec.id === 'detect' && (
-                  <p className="text-base leading-relaxed text-[#c8deef]">
-                    Multispectral radar sweeps hostile air corridors. Cross-reference micro-doppler blade modulations with transponder telemetry to isolate hostile kamikaze incursions from friendly recon.
-                  </p>
-                )}
-
-                {sec.id === 'respond' && (
-                  <p className="text-base leading-relaxed text-[#c8deef]">
-                    Dynamic Rules of Engagement govern every strike. Enforce weapons-hold discipline, calculate collateral hazard radii, and deploy RF electronic disruption or kinetic interceptors.
-                  </p>
-                )}
-
-                {sec.id === 'swarm' && (
-                  <p className="text-base leading-relaxed text-[#c8deef]">
-                    Hostile autonomous swarms adapt in real time. Severing leader nodes triggers divergence and saturation tactics that demand rapid multi-target prioritization.
-                  </p>
-                )}
-
-                {sec.id === 'sensors' && (
-                  <p className="text-base leading-relaxed text-[#c8deef]">
-                    Adversarial electronic warfare actively jams radar and thermal cameras. Cross-validate tracks using acoustic microphone arrays and frequency-hopping RF scanners.
-                  </p>
-                )}
-
-                {sec.id === 'review' && (
-                  <p className="text-base leading-relaxed text-[#c8deef]">
-                    Complete after-action debriefing. Replay full 3D engagement flights, diagnose classification vulnerabilities with polar heatmaps, and verify cryptographic audit chains.
-                  </p>
-                )}
-
-                {sec.id === 'modes' && (
-                  <div className="grid grid-cols-3 gap-3 pt-2">
-                    <a href="/trainer" className="p-3 bg-[#08121e] border border-[#1e3c64] rounded hover:border-[#00e87a] transition-colors block text-center">
-                      <div className="font-mono text-xs font-bold text-[#f0f8ff]">2D SCOPE</div>
-                      <div className="text-[11px] text-[#8aaabf] mt-0.5">Desktop C-UAS</div>
-                    </a>
-                    <a href="/vr" className="p-3 bg-[#08121e] border border-[#1e3c64] rounded hover:border-[#00e87a] transition-colors block text-center">
-                      <div className="font-mono text-xs font-bold text-[#f0f8ff]">VR DOME</div>
-                      <div className="text-[11px] text-[#8aaabf] mt-0.5">Spatial WebXR</div>
-                    </a>
-                    <a href="/instructor" className="p-3 bg-[#08121e] border border-[#1e3c64] rounded hover:border-[#00e87a] transition-colors block text-center">
-                      <div className="font-mono text-xs font-bold text-[#f0f8ff]">COMMAND</div>
-                      <div className="text-[11px] text-[#8aaabf] mt-0.5">Threat Control</div>
-                    </a>
-                  </div>
-                )}
-
-                {sec.id === 'land' && (
-                  <div className="space-y-4 pt-2">
-                    <div className="space-y-2 text-left font-mono text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-[#8aaabf]">THREAT INGRESS LEVEL:</span>
-                        <span className="text-[#00e87a] font-bold">TIER 0{difficulty}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={1}
-                        max={5}
-                        value={difficulty}
-                        onChange={(e) => setDifficulty(Number(e.target.value))}
-                        className="w-full accent-[#00e87a] cursor-pointer"
-                      />
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <button
-                        onClick={launchCustom}
-                        className="flex-1 py-3 px-4 bg-[#00e87a] text-[#020508] font-mono font-bold text-xs rounded uppercase tracking-wider hover:bg-[#00c968] transition-colors shadow-lg cursor-pointer"
-                      >
-                        Start Training Drill →
-                      </button>
-                      <button
-                        onClick={launchScripted}
-                        className="py-3 px-4 bg-[#08121e] border border-[#1e3c64] text-[#f0f8ff] font-mono text-xs rounded hover:border-[#00e87a] transition-colors cursor-pointer"
-                      >
-                        Launch Scripted Drill
-                      </button>
-                    </div>
-                  </div>
-                )}
+          return (
+            <div
+              key={sec.id}
+              id={`section-panel-${sec.id}`}
+              style={{
+                opacity,
+                transform: `translateY(${translateY}px)${sec.side === 'center' ? ' translateX(-50%)' : ''}`,
+                transition: 'opacity 0.15s ease-out, transform 0.15s ease-out',
+              }}
+              className={`${posClass} ${
+                isActive ? 'active-section-panel' : ''
+              } section-panel w-full p-5 sm:p-6 bg-[rgba(8,11,16,0.88)] border border-white/[0.08] rounded-lg backdrop-blur-md shadow-2xl pointer-events-auto z-30`}
+            >
+              {/* Eyebrow: 12px mono in calm teal */}
+              <div className="font-mono text-xs font-semibold uppercase tracking-wider text-[#3dd6c6] mb-2 pointer-events-none">
+                {sec.eyebrow}
               </div>
-            )
-          })}
-        </div>
 
-        {/* Right Column: HUD Telemetry Panel (Bottom Right) */}
-        <div className="hidden md:flex flex-col gap-2 pointer-events-auto p-4 bg-[rgba(5,7,10,0.72)] border border-[#1e3c64] rounded-xs backdrop-blur-md shadow-xl text-xs font-mono w-[190px] justify-self-end">
-          <div className="text-[10px] uppercase tracking-widest text-[#4e718a] mb-1">
-            SECTOR TELEMETRY
+              {/* Headline: clamp(28px, 3vw, 40px), text-wrap: balance, line-height 1.1 */}
+              <h2 className="section-headline text-[clamp(28px,3vw,40px)] font-bold text-[#f8fafc] leading-[1.1] [text-wrap:balance] mb-3 pointer-events-none">
+                {sec.title}
+              </h2>
+
+              {/* Body Text: 15-16px, line-height 1.5, in #C6CED8 */}
+              {sec.id === 'hero' && (
+                <p className="section-body text-[15px] sm:text-base leading-[1.5] text-[#C6CED8] pointer-events-none max-h-[720px]:text-[14px]">
+                  Next-generation counter-UAS training simulator. Practice high-pressure radar classification, sensor cross-cueing, and graduated countermeasures before live operational deployments.
+                </p>
+              )}
+
+              {sec.id === 'detect' && (
+                <p className="section-body text-[15px] sm:text-base leading-[1.5] text-[#C6CED8] pointer-events-none max-h-[720px]:text-[14px]">
+                  Multispectral radar sweeps hostile air corridors. Cross-reference micro-doppler blade modulations with transponder telemetry to isolate hostile incursions from friendly reconnaissance.
+                </p>
+              )}
+
+              {sec.id === 'respond' && (
+                <p className="section-body text-[15px] sm:text-base leading-[1.5] text-[#C6CED8] pointer-events-none max-h-[720px]:text-[14px]">
+                  Dynamic Rules of Engagement govern every strike. Enforce weapons-hold discipline, calculate collateral hazard radii, and deploy RF electronic disruption or kinetic interceptors.
+                </p>
+              )}
+
+              {sec.id === 'swarm' && (
+                <p className="section-body text-[15px] sm:text-base leading-[1.5] text-[#C6CED8] pointer-events-none max-h-[720px]:text-[14px]">
+                  Autonomous swarms adapt in real time. Severing leader nodes triggers divergence and saturation tactics that demand rapid multi-target prioritization.
+                </p>
+              )}
+
+              {sec.id === 'sensors' && (
+                <p className="section-body text-[15px] sm:text-base leading-[1.5] text-[#C6CED8] pointer-events-none max-h-[720px]:text-[14px]">
+                  Adversarial electronic warfare actively jams radar and thermal cameras. Cross-validate tracks using acoustic microphone arrays and frequency-hopping RF scanners.
+                </p>
+              )}
+
+              {sec.id === 'review' && (
+                <p className="section-body text-[15px] sm:text-base leading-[1.5] text-[#C6CED8] pointer-events-none max-h-[720px]:text-[14px]">
+                  Complete after-action debriefing. Replay full 3D engagement flights, diagnose classification vulnerabilities with polar heatmaps, and verify cryptographic audit chains.
+                </p>
+              )}
+
+              {sec.id === 'modes' && (
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <a href="/trainer" className="p-3 bg-[#11151c] border border-white/[0.08] rounded-md hover:border-[#3dd6c6] transition-colors block text-center pointer-events-auto">
+                    <div className="font-mono text-xs font-semibold text-[#f8fafc]">2D scope</div>
+                    <div className="text-[11px] text-[#9aa4b2] mt-0.5">Desktop C-UAS</div>
+                  </a>
+                  <a href="/vr" className="p-3 bg-[#11151c] border border-white/[0.08] rounded-md hover:border-[#3dd6c6] transition-colors block text-center pointer-events-auto">
+                    <div className="font-mono text-xs font-semibold text-[#f8fafc]">VR dome</div>
+                    <div className="text-[11px] text-[#9aa4b2] mt-0.5">Spatial WebXR</div>
+                  </a>
+                  <a href="/instructor" className="p-3 bg-[#11151c] border border-white/[0.08] rounded-md hover:border-[#3dd6c6] transition-colors block text-center pointer-events-auto">
+                    <div className="font-mono text-xs font-semibold text-[#f8fafc]">Command</div>
+                    <div className="text-[11px] text-[#9aa4b2] mt-0.5">Threat control</div>
+                  </a>
+                </div>
+              )}
+
+              {sec.id === 'land' && (
+                <div className="space-y-3.5 pt-1">
+                  <p className="section-body text-[15px] sm:text-base leading-[1.5] text-[#C6CED8] pointer-events-none max-h-[720px]:text-[14px]">
+                    Configure scenario parameters to launch a live air defense drill or load a validated scripted exercise.
+                  </p>
+
+                  {/* Difficulty slider */}
+                  <div className="space-y-1 text-xs font-mono">
+                    <div className="flex justify-between">
+                      <span className="text-[#9aa4b2]">Threat ingress difficulty:</span>
+                      <span className="text-[#3dd6c6] font-semibold">Tier 0{difficulty}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={difficulty}
+                      onChange={(e) => setDifficulty(Number(e.target.value))}
+                      className="w-full accent-[#3dd6c6] cursor-pointer pointer-events-auto"
+                    />
+                  </div>
+
+                  {/* Time of Day selection */}
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    <span className="text-[#9aa4b2]">Time of day:</span>
+                    <div className="flex gap-1.5">
+                      {(['day', 'dusk', 'night'] as const).map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setTimeMode(t)}
+                          className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer pointer-events-auto ${
+                            timeMode === t
+                              ? 'bg-[#3dd6c6] text-[#0b0e13] font-semibold'
+                              : 'bg-[#181d26] text-[#9aa4b2] hover:text-[#e6eaf0]'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Launch Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                    <button
+                      onClick={launchCustom}
+                      className="flex-1 py-2.5 px-4 bg-[#3dd6c6] text-[#0b0e13] font-semibold text-xs rounded-md hover:bg-[#2bbfa0] transition-colors shadow-lg cursor-pointer text-center pointer-events-auto"
+                    >
+                      Start training drill →
+                    </button>
+                    <button
+                      onClick={launchScripted}
+                      className="py-2.5 px-4 bg-[#181d26] border border-white/[0.08] text-[#e6eaf0] text-xs font-semibold rounded-md hover:border-[#3dd6c6] transition-colors cursor-pointer text-center pointer-events-auto"
+                    >
+                      Load scripted drill
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── Right HUD Telemetry Panel (Bottom Right, z-20) ── */}
+      <div
+        id="telemetry-card"
+        className="fixed right-[var(--gutter)] bottom-[var(--gutter)] z-20 hidden md:flex flex-col justify-between p-3.5 bg-[rgba(8,11,16,0.88)] border border-white/[0.08] rounded-lg backdrop-blur-md shadow-xl text-xs font-mono w-[var(--telemetry-w)] h-[var(--telemetry-h)] pointer-events-auto"
+      >
+        <div className="text-[10px] uppercase tracking-wider text-[#6b7585] mb-0.5">
+          Sector telemetry
+        </div>
+        <div className="space-y-1.5 text-xs">
+          <div className="flex justify-between">
+            <span className="text-[#9aa4b2]">Biome:</span>
+            <span className="text-[#3dd6c6] font-semibold text-right">{currentBiome}</span>
           </div>
-          <div className="space-y-1.5 text-xs">
-            <div className="flex justify-between">
-              <span className="text-[#4e718a]">BIOME:</span>
-              <span className="text-[#00e87a] font-bold text-right">{currentBiome}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#4e718a]">RANGE:</span>
-              <span className="tabular-nums font-bold text-[#f0f8ff]">{Math.round(scrollProgress * 1600)}M</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#4e718a]">AIRSPEED:</span>
-              <span className="tabular-nums font-bold text-[#f0f8ff]">{(20 + flight.speed * 14).toFixed(1)} M/S</span>
-            </div>
+          <div className="flex justify-between">
+            <span className="text-[#9aa4b2]">Range:</span>
+            <span className="tabular-nums font-semibold text-[#f8fafc]">{Math.round(scrollProgress * 1600)}m</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#9aa4b2]">Airspeed:</span>
+            <span className="tabular-nums font-semibold text-[#f8fafc]">{(20 + flight.speed * 14).toFixed(1)} m/s</span>
           </div>
         </div>
       </div>
 
-      {/* ── Dev-Only Stability & Jitter Metrics Overlay (Top Left) ── */}
-      {showDevTelemetry && (
-        <div className="fixed top-16 left-6 z-30 p-3 bg-[#020508]/85 border border-[#1e3c64] rounded-xs font-mono text-[11px] text-[#8aaabf] pointer-events-auto shadow-2xl space-y-1">
-          <div className="text-[10px] font-bold text-[#00e87a] uppercase tracking-wider mb-1 flex items-center justify-between">
-            <span>FLIGHT STABILITY METRICS</span>
-            <span className={`w-2 h-2 rounded-full ${telemetry.deltaSpike ? 'bg-[#ff3b3b]' : 'bg-[#00e87a]'}`} />
+      {/* ── Flight Stability Metrics Overlay (?debug=1 Only) ── */}
+      {isDebug && showDevTelemetry && (
+        <div className="fixed bottom-6 left-6 z-30 p-3 bg-[#0b0e13]/90 border border-white/[0.08] rounded-lg font-mono text-[11px] text-[#9aa4b2] pointer-events-auto shadow-2xl space-y-1">
+          <div className="text-[10px] font-bold text-[#3dd6c6] uppercase tracking-wider mb-1 flex items-center justify-between">
+            <span>Flight stability</span>
+            <span className={`w-2 h-2 rounded-full ${telemetry.deltaSpike ? 'bg-[#ef4444]' : 'bg-[#10b981]'}`} />
           </div>
-          <div>FPS: <strong className={telemetry.fps < 45 ? 'text-[#ffb800]' : 'text-[#00e87a]'}>{telemetry.fps}</strong></div>
-          <div>DELTA: <span className="tabular-nums">{telemetry.delta}ms</span> {telemetry.deltaSpike && <span className="text-[#ff3b3b] font-bold">(SPIKE)</span>}</div>
+          <div>FPS: <strong className={telemetry.fps < 45 ? 'text-[#f59e0b]' : 'text-[#10b981]'}>{telemetry.fps}</strong></div>
+          <div>DELTA: <span className="tabular-nums">{telemetry.delta}ms</span> {telemetry.deltaSpike && <span className="text-[#ef4444] font-bold">(SPIKE)</span>}</div>
           <div>ROT-DELTA: <span className="tabular-nums">{telemetry.rotDelta}°/frame</span></div>
           <div>DRONE-Z: <span className="tabular-nums">{Math.round(telemetry.pos.z)}</span></div>
         </div>
@@ -410,8 +516,8 @@ export default function App() {
 
       {/* ── Scroll Guide Hint (Bottom Center) ── */}
       {!hasScrolled && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none font-mono text-xs text-[#00e87a] tracking-widest uppercase animate-bounce text-center">
-          ▼ SCROLL DOWN TO PILOT QUADCOPTER THROUGH ALL 8 BIOMES
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none font-mono text-xs text-[#3dd6c6] tracking-wider uppercase animate-bounce text-center">
+          ▼ Scroll down to fly quadcopter through sectors
         </div>
       )}
 

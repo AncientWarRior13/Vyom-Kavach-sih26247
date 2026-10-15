@@ -4,7 +4,14 @@ import * as THREE from 'three'
 import { flight } from '../lib/flightState'
 import { flightCurve } from './path'
 import { heightAt } from './terrainHeight'
-import { pathX } from './pathCore'
+import {
+  pathX,
+  URBAN_MARGIN,
+  BASE_CLEARANCE,
+  MAX_DESCENT_SLOPE,
+  buildingMargin,
+} from './pathCore'
+import { SECTIONS } from '../lib/sections'
 
 interface DroneProps {
   onTelemetryUpdate?: (data: {
@@ -25,14 +32,18 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
   const rotorsRef = useRef<THREE.Group[]>([])
 
   // Persistent math state to avoid allocations in useFrame
-  const dronePos = useRef(new THREE.Vector3(0, 26, 0))
-  const smoothedAlt = useRef(26)
+  const initAlt = heightAt(0, 0) + URBAN_MARGIN + BASE_CLEARANCE
+  const dronePos = useRef(new THREE.Vector3(0, initAlt, 0))
+  const smoothedAlt = useRef(initAlt)
+  const lastZ = useRef<number | null>(null)
+
   const droneQuat = useRef(new THREE.Quaternion())
   const prevQuat = useRef(new THREE.Quaternion())
   const targetQuat = useRef(new THREE.Quaternion())
   const targetEuler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'))
   const filteredRoll = useRef(0)
-  const camPos = useRef(new THREE.Vector3(0, 30, 20))
+  const filteredLateral = useRef(0)
+  const camPos = useRef(new THREE.Vector3(0, initAlt + 4.2, 14.8))
   const lookTarget = useRef(new THREE.Vector3())
   const lastTimeRef = useRef(performance.now())
   const fpsRef = useRef(60)
@@ -47,7 +58,7 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
       }),
       fuselageTrim: new THREE.MeshStandardMaterial({
         color: '#1a3050',
-        emissive: '#00e87a',
+        emissive: '#3dd6c6',
         emissiveIntensity: 0.35,
         roughness: 0.3,
         metalness: 0.7,
@@ -70,7 +81,7 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
         opacity: 0.85,
       }),
       rotorDisc: new THREE.MeshBasicMaterial({
-        color: '#00e87a',
+        color: '#3dd6c6',
         transparent: true,
         opacity: 0.22,
         side: THREE.DoubleSide,
@@ -81,13 +92,13 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
         metalness: 0.95,
       }),
       cameraLens: new THREE.MeshStandardMaterial({
-        color: '#00e87a',
-        emissive: '#00e87a',
+        color: '#3dd6c6',
+        emissive: '#3dd6c6',
         emissiveIntensity: 0.9,
         roughness: 0.1,
       }),
-      navRed: new THREE.MeshBasicMaterial({ color: '#ff2a2a' }),
-      navGreen: new THREE.MeshBasicMaterial({ color: '#00e87a' }),
+      navRed: new THREE.MeshBasicMaterial({ color: '#ff3b3b' }),
+      navGreen: new THREE.MeshBasicMaterial({ color: '#10b981' }),
       strobeWhite: new THREE.MeshBasicMaterial({ color: '#ffffff' }),
     }
   }, [])
@@ -115,14 +126,26 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
     for (let offset = 0; offset <= 40; offset += 10) {
       const aheadZ = curvePt.z - offset
       const aheadX = pathX(aheadZ)
-      const ground = heightAt(aheadX, aheadZ)
-      // In urban zone (z >= -400), account for building heights
-      const bldgMargin = aheadZ >= -400 && aheadZ <= 0 ? 24 : 0
-      maxGroundAhead = Math.max(maxGroundAhead, ground + bldgMargin)
+      const ground = heightAt(aheadX, aheadZ) + buildingMargin(aheadZ)
+      maxGroundAhead = Math.max(maxGroundAhead, ground)
     }
-    const targetAlt = maxGroundAhead + 18.0
-    const kAlt = 1 - Math.exp(-3.5 * clampedDelta)
-    smoothedAlt.current += (targetAlt - smoothedAlt.current) * kAlt
+    const targetAlt = maxGroundAhead + BASE_CLEARANCE
+
+    // Distance-based descent limit (dz = abs(curvePt.z - lastZ))
+    const isFirstFrame = lastZ.current === null
+    const dz = isFirstFrame ? 0 : Math.abs(curvePt.z - lastZ.current!)
+    lastZ.current = curvePt.z
+
+    if (isFirstFrame) {
+      smoothedAlt.current = targetAlt
+    } else {
+      const kAlt = 1 - Math.exp(-3.5 * clampedDelta)
+      let next = smoothedAlt.current + (targetAlt - smoothedAlt.current) * kAlt
+      // Limit descent slope to MAX_DESCENT_SLOPE * dz; climbing stays unlimited
+      next = Math.max(next, smoothedAlt.current - MAX_DESCENT_SLOPE * dz)
+      // Safety floor: at least heightAt(curvePt.x, curvePt.z) + 8
+      smoothedAlt.current = Math.max(next, heightAt(curvePt.x, curvePt.z) + 8)
+    }
 
     // Update master position
     dronePos.current.set(curvePt.x, smoothedAlt.current, curvePt.z)
@@ -144,7 +167,6 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
     const tangentNext = flightCurve.getTangentAt(pNext).normalize()
     const yawNext = Math.atan2(tangentNext.x, -tangentNext.z)
     let deltaYaw = yawNext - yaw
-    // Normalize angle difference
     if (deltaYaw > Math.PI) deltaYaw -= Math.PI * 2
     if (deltaYaw < -Math.PI) deltaYaw += Math.PI * 2
     const lateralCurvature = deltaYaw / 0.012
@@ -155,8 +177,12 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
     // Construct target quaternion and slerp smoothly
     targetEuler.current.set(pitch, yaw, filteredRoll.current, 'YXZ')
     targetQuat.current.setFromEuler(targetEuler.current)
-    const kQuat = 1 - Math.exp(-7.0 * clampedDelta)
-    droneQuat.current.slerp(targetQuat.current, kQuat)
+    if (isFirstFrame) {
+      droneQuat.current.copy(targetQuat.current)
+    } else {
+      const kQuat = 1 - Math.exp(-7.0 * clampedDelta)
+      droneQuat.current.slerp(targetQuat.current, kQuat)
+    }
 
     if (masterGroupRef.current) {
       masterGroupRef.current.quaternion.copy(droneQuat.current)
@@ -166,7 +192,7 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
     const rotDelta = prevQuat.current.angleTo(droneQuat.current)
     prevQuat.current.copy(droneQuat.current)
 
-    // 5. Hover bob applied ONLY to child group (max 0.15 units at 0.5 Hz, never on camera!)
+    // 5. Hover bob applied ONLY to child group (max 0.14 units, never on camera!)
     if (hoverGroupRef.current) {
       hoverGroupRef.current.position.y = Math.sin(state.clock.elapsedTime * Math.PI) * 0.14
     }
@@ -181,26 +207,57 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
       }
     })
 
-    // 7. Cinematic Third-Person Chase Camera:
-    // Fixed offset in drone's YAW-ONLY frame (immune to roll/bob!)
+    // 7. Framing & Camera Offset (Step 3a):
+    // Drone sits in lower-center (~62% down the viewport).
+    // Lateral shift: when text is on 'left', drone shifts right (+15% viewport width);
+    // when text is on 'right', drone shifts left (-15% viewport width);
+    // when 'center', drone is centered.
+    const secIdx = Math.min(7, Math.floor(p * 8))
+    const curSide = SECTIONS[secIdx]?.side || 'center'
+    // Target lateral shift: -1.0 for drone left (text right), +1.0 for drone right (text left)
+    const targetShiftFactor = curSide === 'left' ? 1.0 : curSide === 'right' ? -1.0 : 0.0
+    const targetLateralOffset = targetShiftFactor * 2.8
+
+    if (isFirstFrame) {
+      filteredLateral.current = targetLateralOffset
+    } else {
+      const kLateral = 1 - Math.exp(-3.5 * clampedDelta)
+      filteredLateral.current += (targetLateralOffset - filteredLateral.current) * kLateral
+    }
+
+    // Camera chase geometry:
+    // camDist = 14.8, camHeight = 4.2
+    // Normal vector perpendicular to heading in horizontal plane: (cos(yaw), -sin(yaw))
+    const rightX = Math.cos(yaw)
+    const rightZ = -Math.sin(yaw)
+
     const camDist = 14.8
     const camHeight = 4.2
-    const camOffsetX = -Math.sin(yaw) * camDist
-    const camOffsetZ = Math.cos(yaw) * camDist
+    const camOffsetX = -Math.sin(yaw) * camDist + rightX * (filteredLateral.current * 0.4)
+    const camOffsetZ = Math.cos(yaw) * camDist + rightZ * (filteredLateral.current * 0.4)
     const targetCamPos = new THREE.Vector3(
       dronePos.current.x + camOffsetX,
       dronePos.current.y + camHeight,
       dronePos.current.z + camOffsetZ
     )
 
-    const kCam = 1 - Math.exp(-6.0 * clampedDelta)
-    camPos.current.lerp(targetCamPos, kCam)
+    if (isFirstFrame) {
+      camPos.current.copy(targetCamPos)
+    } else {
+      const kCam = 1 - Math.exp(-6.0 * clampedDelta)
+      camPos.current.lerp(targetCamPos, kCam)
+    }
     state.camera.position.copy(camPos.current)
 
-    // Camera looks at a point ahead on the path rather than at the drone
+    // Camera looks ahead at lookTarget, with vertical offset +2.1 (framing drone at ~62% viewport)
+    // and lateral offset opposite to drone shift to frame the drone toward the free side.
     const lookAheadP = Math.min(1.0, p + 0.024)
     const lookAheadPt = flightCurve.getPointAt(lookAheadP)
-    lookTarget.current.set(lookAheadPt.x, dronePos.current.y + 1.2, lookAheadPt.z)
+    lookTarget.current.set(
+      lookAheadPt.x - rightX * (filteredLateral.current * 0.6),
+      dronePos.current.y + 2.1,
+      lookAheadPt.z - rightZ * (filteredLateral.current * 0.6)
+    )
     state.camera.lookAt(lookTarget.current)
 
     // Update global flight state vectors
@@ -238,7 +295,7 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
           {/* Glowing Tactical Status Bar */}
           <mesh position={[0, 0.34, -0.2]}>
             <boxGeometry args={[0.3, 0.04, 0.8]} />
-            <meshBasicMaterial color="#00e87a" />
+            <meshBasicMaterial color="#3dd6c6" />
           </mesh>
 
           {/* Under-Nose Gimbal Optical Pod (Under Nose at -Z) */}
@@ -311,7 +368,7 @@ export default function Drone({ onTelemetryUpdate }: DroneProps) {
         </mesh>
 
         {/* ── 4. Subtle Downward Tactical Under-Glow Light ── */}
-        <pointLight color="#00e87a" intensity={1.8} distance={8} position={[0, -0.5, 0]} />
+        <pointLight color="#3dd6c6" intensity={1.8} distance={8} position={[0, -0.5, 0]} />
 
         {/* ── 5. Dedicated Drone Rim Light (Ensures high contrast in all biomes) ── */}
         <directionalLight color="#e2f0fd" intensity={2.2} position={[0, 8, 10]} />

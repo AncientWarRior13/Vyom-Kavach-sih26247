@@ -1,32 +1,14 @@
 import * as THREE from 'three'
 import { heightAt } from './terrainHeight'
-import { pathX, smoothstep, WORLD_LENGTH, BIOME_RANGES } from './pathCore'
+import {
+  pathX,
+  WORLD_LENGTH,
+  BIOME_RANGES,
+  BASE_CLEARANCE,
+  buildingMargin,
+} from './pathCore'
 
 export { pathX, WORLD_LENGTH, BIOME_RANGES }
-
-function getBiomeClearance(z: number): number {
-  const cUrban = 34
-  const cCoastal = 18
-  const cMountain = 26
-  const cRural = 22
-
-  if (z >= -370) return cUrban
-  if (z >= -430) {
-    const t = smoothstep(-430, -370, z)
-    return cCoastal + (cUrban - cCoastal) * t
-  }
-  if (z >= -570) return cCoastal
-  if (z >= -630) {
-    const t = smoothstep(-630, -570, z)
-    return cMountain + (cCoastal - cMountain) * t
-  }
-  if (z >= -970) return cMountain
-  if (z >= -1030) {
-    const t = smoothstep(-1030, -970, z)
-    return cRural + (cMountain - cRural) * t
-  }
-  return cRural
-}
 
 const NUM_SAMPLES = 400
 const curvePoints: THREE.Vector3[] = []
@@ -36,7 +18,7 @@ for (let i = 0; i <= NUM_SAMPLES; i++) {
   const z = -t * WORLD_LENGTH
   const x = pathX(z)
   const groundY = heightAt(x, z)
-  const clearance = getBiomeClearance(z)
+  const clearance = buildingMargin(z) + BASE_CLEARANCE
   const y = groundY + clearance
 
   curvePoints.push(new THREE.Vector3(x, y, z))

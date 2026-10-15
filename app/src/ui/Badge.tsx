@@ -41,21 +41,21 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
 }) => {
   const sizeClasses = {
-    xs: 'px-1.5 py-0.2 text-[10px] gap-1 font-mono',
-    sm: 'px-2 py-0.5 text-xs gap-1.5 font-mono',
-    md: 'px-2.5 py-1 text-xs gap-2 font-mono',
+    xs: 'px-1.5 py-0.5 text-[11px] gap-1 font-ui',
+    sm: 'px-2 py-0.5 text-xs gap-1.5 font-ui',
+    md: 'px-2.5 py-1 text-xs gap-2 font-ui',
   }[size];
 
   const variantStyles: Record<BadgeVariant, string> = {
-    hostile: 'bg-[var(--c-hostile-bg)] text-[var(--c-hostile)] border-[var(--c-hostile)]/50',
-    unknown: 'bg-[var(--c-unknown-bg)] text-[var(--c-unknown)] border-[var(--c-unknown)]/50',
-    friendly: 'bg-[var(--c-friendly-bg)] text-[var(--c-friendly)] border-[var(--c-friendly)]/50',
-    decoy: 'bg-[var(--c-decoy-bg)] text-[var(--c-decoy)] border-[var(--c-decoy)]/50',
-    neutral: 'bg-[var(--c-neutral-bg)] text-[var(--c-neutral)] border-[var(--c-neutral)]/50',
-    info: 'bg-[var(--c-info)]/10 text-[var(--c-info)] border-[var(--c-info)]/40',
-    advisory: 'bg-[var(--c-advisory)]/10 text-[var(--c-advisory)] border-[var(--c-advisory)]/40',
-    warning: 'bg-[var(--c-warning)]/10 text-[var(--c-warning)] border-[var(--c-warning)]/40',
-    critical: 'bg-[var(--c-critical)]/10 text-[var(--c-critical)] border-[var(--c-critical)]/40',
+    hostile: 'bg-[var(--c-hostile-bg)] text-[var(--c-hostile)] border-[var(--c-hostile)]/30',
+    unknown: 'bg-[var(--c-unknown-bg)] text-[var(--c-unknown)] border-[var(--c-unknown)]/30',
+    friendly: 'bg-[var(--c-friendly-bg)] text-[var(--c-friendly)] border-[var(--c-friendly)]/30',
+    decoy: 'bg-[var(--c-decoy-bg)] text-[var(--c-decoy)] border-[var(--c-decoy)]/30',
+    neutral: 'bg-[var(--c-neutral-bg)] text-[var(--c-neutral)] border-[var(--c-neutral)]/30',
+    info: 'bg-[var(--c-info)]/10 text-[var(--c-info)] border-[var(--c-info)]/25',
+    advisory: 'bg-[var(--c-advisory)]/10 text-[var(--c-advisory)] border-[var(--c-advisory)]/25',
+    warning: 'bg-[var(--c-warning)]/10 text-[var(--c-warning)] border-[var(--c-warning)]/25',
+    critical: 'bg-[var(--c-critical)]/10 text-[var(--c-critical)] border-[var(--c-critical)]/25',
     default: 'bg-[var(--c-bg-raised)] text-[var(--c-text-mid)] border-[var(--c-border-base)]',
   };
 
@@ -63,9 +63,9 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center border rounded-sm font-semibold tracking-wider uppercase select-none ${sizeClasses} ${variantStyles[variant]} ${className}`}
+      className={`inline-flex items-center border rounded-md font-medium select-none ${sizeClasses} ${variantStyles[variant]} ${className}`}
     >
-      <span className={`text-[9px] ${pulse ? 'animate-pulse' : ''}`}>{glyph}</span>
+      <span className={`text-[9px] shrink-0 ${pulse ? 'animate-pulse' : ''}`}>{glyph}</span>
       <span>{children}</span>
     </span>
   );

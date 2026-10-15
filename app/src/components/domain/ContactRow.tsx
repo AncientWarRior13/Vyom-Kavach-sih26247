@@ -23,24 +23,24 @@ export const ContactRow: React.FC<ContactRowProps> = ({
   const cls = (contact.assigned_classification || contact.classification || 'unknown') as any;
 
   const stateBadges: Record<string, { label: string; variant: any }> = {
-    undetected: { label: 'UNDETECTED', variant: 'default' },
-    detected: { label: 'DETECTED', variant: 'info' },
-    tracking: { label: 'TRACKING', variant: 'warning' },
-    classified: { label: 'CLASSIFIED', variant: 'advisory' },
-    engaged: { label: 'ENGAGING', variant: 'critical' },
-    neutralized: { label: 'NEUTRALIZED', variant: 'friendly' },
-    escaped: { label: 'ESCAPED', variant: 'default' },
+    undetected: { label: 'Undetected', variant: 'default' },
+    detected: { label: 'Detected', variant: 'info' },
+    tracking: { label: 'Tracking', variant: 'warning' },
+    classified: { label: 'Classified', variant: 'advisory' },
+    engaged: { label: 'Engaging', variant: 'critical' },
+    neutralized: { label: 'Neutralized', variant: 'friendly' },
+    escaped: { label: 'Escaped', variant: 'default' },
   };
 
-  const stateInfo = stateBadges[contact.state] || { label: contact.state.toUpperCase(), variant: 'default' };
+  const stateInfo = stateBadges[contact.state] || { label: contact.state, variant: 'default' };
 
   return (
     <div
       onClick={() => onSelect(contact.id)}
-      className={`border rounded-sm transition-all duration-150 p-2.5 flex flex-col gap-2 cursor-pointer select-none ${
+      className={`border rounded-md transition-colors p-3 flex flex-col gap-2.5 cursor-pointer select-none ${
         isSelected
-          ? 'bg-[var(--c-bg-subtle)] border-[var(--c-accent)] shadow-[0_0_12px_rgba(0,232,122,0.15)]'
-          : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)] hover:bg-[var(--c-bg-overlay)]/60'
+          ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-sm'
+          : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)] hover:bg-[var(--c-bg-overlay)]/40'
       }`}
     >
       {/* Contact Header */}
@@ -49,8 +49,8 @@ export const ContactRow: React.FC<ContactRowProps> = ({
           <Badge variant={cls} size="xs" pulse={contact.state === 'tracking'}>
             {cls.replace('_', ' ')}
           </Badge>
-          <span className="font-mono font-bold text-xs text-[var(--c-text-max)]">
-            {contact.id.toUpperCase()}
+          <span className="font-mono font-medium text-xs text-[var(--c-text-high)]">
+            {contact.id}
           </span>
         </div>
         <Badge variant={stateInfo.variant} size="xs">
@@ -59,40 +59,40 @@ export const ContactRow: React.FC<ContactRowProps> = ({
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-4 gap-1.5 text-[10px] font-mono bg-[var(--c-bg-deep)]/50 p-1.5 rounded-xs border border-[var(--c-border-faint)]">
+      <div className="grid grid-cols-4 gap-2 text-xs font-ui bg-[var(--c-bg-deep)]/70 p-2 rounded-md border border-[var(--c-border-base)]">
         <div>
-          <span className="text-[var(--c-text-low)] block">RNG</span>
-          <span className="text-[var(--c-text-high)] font-semibold tabular-nums">
+          <span className="text-[11px] text-[var(--c-text-low)] block">Range</span>
+          <span className="text-[var(--c-text-high)] font-mono font-medium tabular-nums text-xs">
             {contact.range_km.toFixed(1)} km
           </span>
         </div>
         <div>
-          <span className="text-[var(--c-text-low)] block">BRG</span>
-          <span className="text-[var(--c-text-high)] font-semibold tabular-nums">
+          <span className="text-[11px] text-[var(--c-text-low)] block">Bearing</span>
+          <span className="text-[var(--c-text-high)] font-mono font-medium tabular-nums text-xs">
             {Math.round(contact.bearing_deg)}°
           </span>
         </div>
         <div>
-          <span className="text-[var(--c-text-low)] block">ALT</span>
-          <span className="text-[var(--c-text-high)] font-semibold tabular-nums">
+          <span className="text-[11px] text-[var(--c-text-low)] block">Altitude</span>
+          <span className="text-[var(--c-text-high)] font-mono font-medium tabular-nums text-xs">
             {contact.altitude} m
           </span>
         </div>
         <div>
-          <span className="text-[var(--c-text-low)] block">SPD</span>
-          <span className="text-[var(--c-text-high)] font-semibold tabular-nums">
+          <span className="text-[11px] text-[var(--c-text-low)] block">Speed</span>
+          <span className="text-[var(--c-text-high)] font-mono font-medium tabular-nums text-xs">
             {contact.speed} m/s
           </span>
         </div>
       </div>
 
-      {/* Actions (ONLY rendered when selected to prevent visual clutter) */}
+      {/* Actions (Rendered when selected) */}
       {isSelected && (
-        <div className="pt-2 border-t border-[var(--c-border-base)] flex flex-col gap-2 animate-in fade-in duration-150">
+        <div className="pt-2 border-t border-[var(--c-border-base)] flex flex-col gap-2">
           {/* Quick Sensor Scans */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] font-mono text-[var(--c-text-low)] uppercase tracking-wider">
-              SCANS:
+            <span className="text-xs font-ui text-[var(--c-text-low)] font-medium">
+              Scans:
             </span>
             <Button
               size="xs"
@@ -125,7 +125,7 @@ export const ContactRow: React.FC<ContactRowProps> = ({
                 onSensorRead && onSensorRead(contact.id, 'acoustic');
               }}
             >
-              ACOUSTIC
+              Acoustic
             </Button>
           </div>
 
@@ -141,7 +141,7 @@ export const ContactRow: React.FC<ContactRowProps> = ({
                   onClassify && onClassify(contact.id, 'hostile_drone');
                 }}
               >
-                HOSTILE
+                Hostile
               </Button>
               <Button
                 size="xs"
@@ -152,7 +152,7 @@ export const ContactRow: React.FC<ContactRowProps> = ({
                   onClassify && onClassify(contact.id, 'friendly_drone');
                 }}
               >
-                FRIENDLY
+                Friendly
               </Button>
               <Button
                 size="xs"
@@ -163,7 +163,7 @@ export const ContactRow: React.FC<ContactRowProps> = ({
                   onClassify && onClassify(contact.id, 'decoy');
                 }}
               >
-                DECOY
+                Decoy
               </Button>
             </div>
 
@@ -177,7 +177,7 @@ export const ContactRow: React.FC<ContactRowProps> = ({
                   onEngage(contact.id);
                 }}
               >
-                ENGAGE
+                Engage
               </Button>
             )}
           </div>

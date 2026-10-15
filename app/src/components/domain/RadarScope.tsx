@@ -52,7 +52,7 @@ export const RadarScope: React.FC<RadarScopeProps> = ({
     const safeMaxRangeKm = maxRangeKm > 0 ? maxRangeKm : 6;
 
     // 1. Clear with deep void tactical background
-    ctx.fillStyle = '#020508';
+    ctx.fillStyle = '#0B0E13';
     ctx.fillRect(0, 0, width, height);
 
     // 2. Tactical grid rings
@@ -62,12 +62,12 @@ export const RadarScope: React.FC<RadarScopeProps> = ({
       const r = (radius / ringCount) * i;
       ctx.beginPath();
       ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
-      ctx.strokeStyle = i === ringCount ? 'rgba(0, 232, 122, 0.45)' : 'rgba(30, 80, 50, 0.35)';
+      ctx.strokeStyle = i === ringCount ? 'rgba(61, 214, 198, 0.35)' : 'rgba(255, 255, 255, 0.06)';
       ctx.stroke();
 
       // Range labels (km)
-      const rangeLabel = `${((safeMaxRangeKm / ringCount) * i).toFixed(1)}km`;
-      ctx.fillStyle = 'rgba(0, 232, 122, 0.7)';
+      const rangeLabel = `${((safeMaxRangeKm / ringCount) * i).toFixed(1)} km`;
+      ctx.fillStyle = 'rgba(154, 164, 178, 0.8)';
       ctx.font = '10px "Geist Mono", monospace';
       ctx.fillText(rangeLabel, centerX + 5, centerY - r + 12);
     }
@@ -80,14 +80,14 @@ export const RadarScope: React.FC<RadarScopeProps> = ({
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.lineTo(centerX + Math.cos(rad) * radius, centerY + Math.sin(rad) * radius);
-      ctx.strokeStyle = isCardinal ? 'rgba(0, 232, 122, 0.45)' : 'rgba(30, 80, 50, 0.25)';
+      ctx.strokeStyle = isCardinal ? 'rgba(61, 214, 198, 0.25)' : 'rgba(255, 255, 255, 0.04)';
       ctx.stroke();
 
       // Bearing text on outer ring
       const labelDist = radius + 15;
       const labelX = centerX + Math.cos(rad) * labelDist;
       const labelY = centerY + Math.sin(rad) * labelDist;
-      ctx.fillStyle = isCardinal ? '#00e87a' : 'rgba(138, 170, 191, 0.6)';
+      ctx.fillStyle = isCardinal ? '#3DD6C6' : 'rgba(154, 164, 178, 0.6)';
       ctx.font = '10px "Geist Mono", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -103,16 +103,16 @@ export const RadarScope: React.FC<RadarScopeProps> = ({
       const aPx = centerX + Math.cos(aAngle) * aDist;
       const aPy = centerY + Math.sin(aAngle) * aDist;
 
-      ctx.fillStyle = 'rgba(255, 184, 0, 0.25)';
-      ctx.strokeStyle = '#ffb800';
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.20)';
+      ctx.strokeStyle = '#F59E0B';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(aPx - 8, aPy - 8, 16, 16);
       ctx.fillRect(aPx - 8, aPy - 8, 16, 16);
 
-      ctx.fillStyle = '#ffb800';
-      ctx.font = 'bold 9px "Geist Mono", monospace';
+      ctx.fillStyle = '#F59E0B';
+      ctx.font = '500 10px "Geist", system-ui, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('DEFENDED ASSET', aPx + 12, aPy + 3);
+      ctx.fillText('Defended asset', aPx + 12, aPy + 3);
     }
 
     // 5. No-Engage Zones
@@ -128,28 +128,28 @@ export const RadarScope: React.FC<RadarScopeProps> = ({
         ctx.save();
         ctx.beginPath();
         ctx.arc(zPx, zPy, Math.max(4, zRadius), 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 59, 59, 0.08)';
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.08)';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 59, 59, 0.6)';
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
         ctx.lineWidth = 1.5;
-        ctx.setLineDash([6, 6]);
+        ctx.setLineDash([4, 4]);
         ctx.stroke();
         ctx.restore();
 
-        ctx.fillStyle = 'rgba(255, 59, 59, 0.8)';
-        ctx.font = 'bold 9px "Geist Mono", monospace';
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
+        ctx.font = '500 10px "Geist", system-ui, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(zone.name || 'NO-ENGAGE ZONE', zPx, zPy - zRadius - 5);
+        ctx.fillText(zone.name || 'No-engage zone', zPx, zPy - zRadius - 5);
       });
     }
 
     // 6. Sweep Beam with Phosphor Decay
     const sweepAngle = sweepAngleRef.current;
     const sweepGradient = ctx.createConicGradient(sweepAngle - Math.PI / 2, centerX, centerY);
-    sweepGradient.addColorStop(0, 'rgba(0, 232, 122, 0.28)');
-    sweepGradient.addColorStop(0.08, 'rgba(0, 232, 122, 0.04)');
-    sweepGradient.addColorStop(0.18, 'rgba(0, 232, 122, 0)');
-    sweepGradient.addColorStop(1, 'rgba(0, 232, 122, 0)');
+    sweepGradient.addColorStop(0, 'rgba(61, 214, 198, 0.20)');
+    sweepGradient.addColorStop(0.08, 'rgba(61, 214, 198, 0.03)');
+    sweepGradient.addColorStop(0.18, 'rgba(61, 214, 198, 0)');
+    sweepGradient.addColorStop(1, 'rgba(61, 214, 198, 0)');
 
     ctx.save();
     ctx.beginPath();
@@ -162,17 +162,17 @@ export const RadarScope: React.FC<RadarScopeProps> = ({
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
     ctx.lineTo(centerX + Math.cos(sweepAngle) * radius, centerY + Math.sin(sweepAngle) * radius);
-    ctx.strokeStyle = 'rgba(0, 232, 122, 0.85)';
+    ctx.strokeStyle = 'rgba(61, 214, 198, 0.7)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     // Center home station crosshair
     ctx.beginPath();
     ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#00e87a';
+    ctx.fillStyle = '#3DD6C6';
     ctx.fill();
-    ctx.strokeStyle = '#00e87a';
-    ctx.strokeRect(centerX - 8, centerY - 8, 16, 16);
+    ctx.strokeStyle = '#3DD6C6';
+    ctx.strokeRect(centerX - 6, centerY - 6, 12, 12);
 
     // 7. Contacts Rendering
     (contacts || []).forEach((contact) => {
@@ -404,19 +404,19 @@ export const RadarScope: React.FC<RadarScopeProps> = ({
       <canvas ref={canvasRef} className="w-full h-full block cursor-crosshair" />
 
       {/* Scope Controls Overlay */}
-      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-[var(--c-bg-deep)]/80 backdrop-blur-xs border border-[var(--c-border-base)] p-1 rounded-sm text-xs font-mono">
+      <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-[var(--c-bg-surface)]/90 backdrop-blur-xs border border-[var(--c-border-base)] p-1 rounded-md text-xs font-ui shadow-sm">
         <button
           onClick={() => setZoom((z) => Math.min(4, z * 1.25))}
-          className="px-2 py-0.5 hover:bg-[var(--c-bg-raised)] text-[var(--c-text-high)] hover:text-white rounded cursor-pointer"
+          className="px-2 py-0.5 hover:bg-[var(--c-bg-raised)] text-[var(--c-text-high)] rounded cursor-pointer font-mono"
         >
           +
         </button>
-        <span className="text-[10px] text-[var(--c-text-mid)] tabular-nums px-1">
+        <span className="text-[11px] text-[var(--c-text-mid)] font-mono tabular-nums px-1">
           {Math.round(zoom * 100)}%
         </span>
         <button
           onClick={() => setZoom((z) => Math.max(0.4, z / 1.25))}
-          className="px-2 py-0.5 hover:bg-[var(--c-bg-raised)] text-[var(--c-text-high)] hover:text-white rounded cursor-pointer"
+          className="px-2 py-0.5 hover:bg-[var(--c-bg-raised)] text-[var(--c-text-high)] rounded cursor-pointer font-mono"
         >
           -
         </button>
@@ -425,9 +425,9 @@ export const RadarScope: React.FC<RadarScopeProps> = ({
             setZoom(1);
             setPan({ x: 0, y: 0 });
           }}
-          className="px-2 py-0.5 text-[10px] hover:bg-[var(--c-bg-raised)] text-[var(--c-accent)] rounded cursor-pointer border-l border-[var(--c-border-faint)] ml-1"
+          className="px-2 py-0.5 text-xs hover:bg-[var(--c-bg-raised)] text-[var(--c-accent)] rounded cursor-pointer border-l border-[var(--c-border-base)] ml-1"
         >
-          RESET
+          Reset
         </button>
       </div>
     </div>

@@ -26,7 +26,7 @@ export function Table<T extends Record<string, any>>({
   onRowClick,
   selectedKey,
   className = '',
-  emptyText = 'NO CONTACTS RECORDED',
+  emptyText = 'No records found',
 }: TableProps<T>) {
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -59,8 +59,8 @@ export function Table<T extends Record<string, any>>({
   };
 
   return (
-    <div className={`overflow-x-auto border border-[var(--c-border-base)] rounded-sm bg-[var(--c-bg-surface)] ${className}`}>
-      <table className="w-full text-left border-collapse text-xs font-mono">
+    <div className={`overflow-x-auto border border-[var(--c-border-base)] rounded-lg bg-[var(--c-bg-surface)] shadow-sm ${className}`}>
+      <table className="w-full text-left border-collapse text-xs font-ui">
         <thead className="bg-[var(--c-bg-deep)] border-b border-[var(--c-border-base)] sticky top-0 z-10 select-none">
           <tr>
             {columns.map((col) => (
@@ -68,15 +68,15 @@ export function Table<T extends Record<string, any>>({
                 key={col.key}
                 style={{ width: col.width }}
                 onClick={() => col.sortable && handleSort(col.key)}
-                className={`py-2 px-3 uppercase tracking-wider text-[11px] text-[var(--c-text-mid)] font-semibold ${
-                  col.sortable ? 'cursor-pointer hover:text-[var(--c-accent)]' : ''
+                className={`py-2.5 px-3.5 text-xs text-[var(--c-text-mid)] font-medium ${
+                  col.sortable ? 'cursor-pointer hover:text-[var(--c-text-high)]' : ''
                 } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
               >
-                <div className={`inline-flex items-center gap-1 ${col.align === 'right' ? 'justify-end' : ''}`}>
+                <div className={`inline-flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : ''}`}>
                   <span>{col.header}</span>
                   {col.sortable && sortCol === col.key && (
-                    <span className="text-[var(--c-accent)] text-[9px]">
-                      {sortDir === 'asc' ? '▲' : '▼'}
+                    <span className="text-[var(--c-accent)] text-[10px]">
+                      {sortDir === 'asc' ? '↑' : '↓'}
                     </span>
                   )}
                 </div>
@@ -84,12 +84,12 @@ export function Table<T extends Record<string, any>>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[var(--c-border-faint)]">
+        <tbody className="divide-y divide-[var(--c-border-base)]">
           {sortedData.length === 0 ? (
             <tr>
               <td
                 colSpan={columns.length}
-                className="py-6 text-center text-[var(--c-text-low)] tracking-wider uppercase font-mono text-xs"
+                className="py-8 text-center text-[var(--c-text-low)] font-ui text-xs"
               >
                 {emptyText}
               </td>
@@ -106,14 +106,14 @@ export function Table<T extends Record<string, any>>({
                     onRowClick ? 'cursor-pointer' : ''
                   } ${
                     isSelected
-                      ? 'bg-[var(--c-bg-subtle)] text-[var(--c-text-max)] border-l-2 border-l-[var(--c-accent)]'
-                      : 'hover:bg-[var(--c-bg-overlay)]/60 text-[var(--c-text-high)]'
+                      ? 'bg-[var(--c-bg-raised)] text-[var(--c-text-max)]'
+                      : 'hover:bg-[var(--c-bg-raised)]/50 text-[var(--c-text-high)]'
                   }`}
                 >
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className={`py-1.5 px-3 whitespace-nowrap ${
+                      className={`py-2.5 px-3.5 whitespace-nowrap ${
                         col.align === 'right'
                           ? 'text-right tabular-nums'
                           : col.align === 'center'

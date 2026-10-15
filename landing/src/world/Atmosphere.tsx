@@ -99,11 +99,13 @@ export default function Atmosphere() {
     }
 
     if (moonRef.current) {
-      moonRef.current.intensity = tod.starOpacity * 1.6
+      // Moon directional light illuminates terrain at dusk/night
+      moonRef.current.intensity = Math.max(0.2, tod.starOpacity * 2.4)
     }
 
     if (hemiRef.current) {
-      hemiRef.current.intensity = tod.hemiIntensity
+      // Raised ambient floor so terrain always stays readable
+      hemiRef.current.intensity = Math.max(0.5, tod.hemiIntensity)
     }
 
     // Cut fog density by 70%, fading only the far third of the view (500 to 1600 units)

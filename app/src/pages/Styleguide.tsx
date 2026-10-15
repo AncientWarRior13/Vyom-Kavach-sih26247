@@ -12,10 +12,9 @@ import { Modal } from '../ui/Modal';
 import { Drawer } from '../ui/Drawer';
 import { useToast } from '../ui/Toast';
 import { Tooltip } from '../ui/Tooltip';
-import { Skeleton, EmptyState, ProgressRing, Timeline } from '../ui/Feedback';
 import { RadarScope } from '../components/domain/RadarScope';
 import { ContactRow } from '../components/domain/ContactRow';
-import { SensorHealthChips, EventLog, ServerStatusLED } from '../components/domain/TacticalFeed';
+import { SensorHealthChips, EventLog } from '../components/domain/TacticalFeed';
 import type { Contact } from '../api/types';
 
 export const StyleguidePage: React.FC = () => {
@@ -39,24 +38,23 @@ export const StyleguidePage: React.FC = () => {
       bearing_deg: 32,
       altitude: 180,
       speed: 28,
-      heading: 140,
+      heading: 215,
       classification: 'hostile_drone',
-      state: 'tracking',
+      state: 'classified',
       history: [
-        { x: 1.8, y: 3.2, t: 1 },
-        { x: 2.1, y: 3.7, t: 2 },
-        { x: 2.4, y: 4.1, t: 3 },
+        { x: 2.8, y: 4.8, t: 1 },
+        { x: 2.6, y: 4.4, t: 2 },
       ],
     },
     {
       id: 'tgt-02',
-      x: -3.5,
-      y: 2.1,
-      range_km: 4.1,
-      bearing_deg: 300,
-      altitude: 90,
+      x: -3.1,
+      y: 2.2,
+      range_km: 3.8,
+      bearing_deg: 305,
+      altitude: 95,
       speed: 34,
-      heading: 95,
+      heading: 120,
       classification: 'unknown',
       state: 'detected',
       history: [
@@ -91,50 +89,54 @@ export const StyleguidePage: React.FC = () => {
   ];
 
   const tableColumns: Column<Contact>[] = [
-    { key: 'id', header: 'TRACK ID', sortable: true, render: (c) => <span className="font-bold text-[var(--c-accent)]">{c.id.toUpperCase()}</span> },
+    { key: 'id', header: 'Track ID', sortable: true, render: (c) => <span className="font-mono text-xs">{c.id}</span> },
     {
       key: 'classification',
-      header: 'TYPE',
-      sortable: true,
-      render: (c) => (
-        <Badge variant={c.classification as any} size="xs">
-          {c.classification?.replace('_', ' ')}
-        </Badge>
-      ),
+      header: 'Classification',
+      render: (c) => {
+        const v =
+          c.classification === 'hostile_drone'
+            ? 'hostile'
+            : c.classification === 'friendly_drone'
+            ? 'friendly'
+            : c.classification === 'decoy'
+            ? 'decoy'
+            : 'unknown';
+        return <Badge variant={v} size="xs">{(c.classification || 'unknown').replace('_', ' ')}</Badge>;
+      },
     },
-    { key: 'range_km', header: 'RANGE', sortable: true, align: 'right', render: (c) => `${c.range_km.toFixed(1)} km` },
-    { key: 'bearing_deg', header: 'BEARING', sortable: true, align: 'right', render: (c) => `${Math.round(c.bearing_deg)}°` },
-    { key: 'altitude', header: 'ALT', sortable: true, align: 'right', render: (c) => `${c.altitude} m` },
-    { key: 'speed', header: 'SPD', sortable: true, align: 'right', render: (c) => `${c.speed} m/s` },
+    { key: 'range_km', header: 'Range', sortable: true, align: 'right', render: (c) => <span className="font-mono text-xs">{c.range_km.toFixed(1)} km</span> },
+    { key: 'bearing_deg', header: 'Bearing', sortable: true, align: 'right', render: (c) => <span className="font-mono text-xs">{c.bearing_deg}°</span> },
+    { key: 'altitude', header: 'Altitude', sortable: true, align: 'right', render: (c) => <span className="font-mono text-xs">{c.altitude} m</span> },
+    { key: 'speed', header: 'Speed', sortable: true, align: 'right', render: (c) => <span className="font-mono text-xs">{c.speed} m/s</span> },
   ];
 
   const mockEvents = [
-    { id: '1', timestamp: '04:12:01Z', level: 'warning' as const, source: 'RADAR', message: 'High-speed micro-UAS signature detected bearing 032° range 4.8km.' },
-    { id: '2', timestamp: '04:12:05Z', level: 'info' as const, source: 'RF', message: 'Frequency sweep intercepted 2.448 GHz hopping protocol FHSS.' },
-    { id: '3', timestamp: '04:12:12Z', level: 'critical' as const, source: 'OPTIC', message: 'Visual confirmed weaponized quadcopter carrying shaped charge.' },
+    { id: '1', timestamp: '04:12:02Z', level: 'warning' as const, source: 'Radar', message: 'New high-speed contact detected in sector 4.' },
+    { id: '2', timestamp: '04:12:08Z', level: 'info' as const, source: 'Optics', message: 'Optical channel locked on track tgt-01.' },
+    { id: '3', timestamp: '04:12:14Z', level: 'critical' as const, source: 'Classifier', message: 'RF profile matches Shahed-136 delta-wing.' },
     { id: '4', timestamp: '04:12:18Z', level: 'success' as const, source: 'C-UAS', message: 'Kinetic intercept net deployed. Target neutralized.' },
   ];
 
   return (
-    <div className="p-6 space-y-8 max-w-7xl mx-auto">
+    <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--c-border-base)] pb-4">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-wider text-[var(--c-text-max)] uppercase">
-            Tactical Operations Design System
+          <h1 className="text-lg font-semibold text-[var(--c-text-high)] font-ui">
+            Design system
           </h1>
-          <p className="font-mono text-xs text-[var(--c-text-mid)] mt-1">
-            PS-247 Token Architecture, Component Suite, and Radar Engine
+          <p className="text-xs text-[var(--c-text-mid)] font-ui mt-0.5">
+            Calm enterprise operations token architecture, UI components, and domain widgets.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ServerStatusLED status="ONLINE" latencyMs={18} />
           <Button
-            variant="primary"
+            variant="secondary"
             size="sm"
-            onClick={() => toast('TELEMETRY SYNC', 'System tokens verified successfully', 'success')}
+            onClick={() => toast('Notification', 'Design tokens verified and active', 'success')}
           >
-            Trigger Toast
+            Trigger toast
           </Button>
         </div>
       </div>
@@ -144,115 +146,111 @@ export const StyleguidePage: React.FC = () => {
         activeTab={activeTab}
         onChange={setActiveTab}
         tabs={[
-          { id: 'components', label: 'UI COMPONENTS', badge: '18' },
-          { id: 'domain', label: 'RADAR & DOMAIN', badge: 'LIVE' },
-          { id: 'tokens', label: 'DESIGN TOKENS & COLOR' },
+          { id: 'components', label: 'UI components' },
+          { id: 'domain', label: 'Domain widgets' },
+          { id: 'tokens', label: 'Design tokens' },
         ]}
       />
 
-      {/* Tab 1: Components */}
+      {/* ── Tab 1: Components ── */}
       {activeTab === 'components' && (
         <div className="space-y-6">
           {/* Row 1: Buttons & Badges */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Panel title="Button Variants & Keyboard Hints">
-              <div className="space-y-3">
+            <Panel title="Button variants and keyboard hints">
+              <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="primary" kbd="SPC">Primary Action</Button>
+                  <Button variant="primary" kbd="SPC">Primary</Button>
                   <Button variant="secondary" kbd="TAB">Secondary</Button>
-                  <Button variant="danger" kbd="DEL">Danger Strike</Button>
+                  <Button variant="danger" kbd="DEL">Danger</Button>
                   <Button variant="outline">Outline</Button>
                   <Button variant="ghost">Ghost</Button>
                 </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-[var(--c-border-faint)]">
-                  <Button size="xs" variant="secondary">Extra Small</Button>
+                <div className="flex items-center gap-2 pt-3 border-t border-[var(--c-border-base)]">
+                  <Button size="xs" variant="secondary">Extra small</Button>
                   <Button size="sm" variant="secondary">Small</Button>
                   <Button size="md" variant="secondary">Medium</Button>
-                  <Button size="lg" variant="primary">Large Launcher</Button>
+                  <Button size="lg" variant="primary">Large action</Button>
                 </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-[var(--c-border-faint)]">
-                  <Button variant="primary" loading>Acquiring Target...</Button>
-                  <Button variant="secondary" disabled>Disabled State</Button>
+                <div className="flex items-center gap-2 pt-3 border-t border-[var(--c-border-base)]">
+                  <Button variant="primary" loading>Acquiring target...</Button>
+                  <Button variant="secondary" disabled>Disabled state</Button>
                 </div>
               </div>
             </Panel>
 
-            <Panel title="Contact Badges (Shape-Encoded)">
-              <div className="space-y-3">
+            <Panel title="Status badges with geometric shapes">
+              <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="hostile" pulse>Hostile Drone (▲)</Badge>
-                  <Badge variant="unknown">Unknown (◆)</Badge>
-                  <Badge variant="friendly">Friendly (●)</Badge>
-                  <Badge variant="decoy">Decoy (□)</Badge>
-                  <Badge variant="neutral">Neutral (○)</Badge>
+                  <Badge variant="hostile">Hostile drone</Badge>
+                  <Badge variant="unknown">Unknown contact</Badge>
+                  <Badge variant="friendly">Friendly drone</Badge>
+                  <Badge variant="decoy">Decoy track</Badge>
+                  <Badge variant="neutral">Neutral bird</Badge>
                 </div>
-                <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--c-border-faint)]">
-                  <Badge variant="info">Info</Badge>
+                <div className="flex flex-wrap gap-2 pt-3 border-t border-[var(--c-border-base)]">
+                  <Badge variant="info">Information</Badge>
                   <Badge variant="advisory">Advisory</Badge>
                   <Badge variant="warning">Warning</Badge>
                   <Badge variant="critical">Critical</Badge>
                 </div>
-                <p className="text-[11px] font-mono text-[var(--c-text-low)] pt-1">
-                  Note: Never encode state by color alone. Every badge pairs color with standard MIL-STD geometric shapes.
+                <p className="text-xs text-[var(--c-text-low)] font-ui pt-1 leading-relaxed">
+                  Every status badge pairs a color with a standard geometric shape (▲, ◆, ●, □, ○) so status is never conveyed by color alone.
                 </p>
               </div>
             </Panel>
           </div>
 
-          {/* Row 2: Stats & Progress */}
+          {/* Row 2: Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Stat
-              label="Active Tracks"
+              label="Active tracks"
               value="14"
-              unit="TARGETS"
-              delta={{ value: '+3', trend: 'up' }}
+              unit="targets"
               sparkline={[4, 6, 8, 7, 9, 12, 14]}
             />
             <Stat
-              label="Threat Intercept Rate"
+              label="Threat intercept rate"
               value="96.4"
               unit="%"
-              delta={{ value: '+1.2%', trend: 'up' }}
               sparkline={[88, 90, 92, 91, 95, 96.4]}
             />
             <Stat
-              label="Radar Noise Floor"
+              label="Radar noise floor"
               value="-92"
               unit="dBm"
-              delta={{ value: '0.0', trend: 'neutral' }}
               sparkline={[-92, -91, -93, -92, -92]}
             />
             <Stat
-              label="Mean Classification Time"
+              label="Mean classification time"
               value="1.84"
-              unit="SEC"
-              delta={{ value: '-0.3s', trend: 'up' }}
+              unit="sec"
               sparkline={[2.8, 2.4, 2.1, 1.95, 1.84]}
             />
           </div>
 
-          {/* Row 3: Controls (Segmented, Slider, Select, Tooltips) */}
+          {/* Row 3: Controls */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Panel title="Segmented Switch">
-              <div className="space-y-4">
+            <Panel title="Segmented switch">
+              <div className="space-y-3">
                 <Segmented
                   value={segValue}
                   onChange={setSegValue}
                   options={[
-                    { value: '2d', label: '2D SCOPE' },
-                    { value: '3d', label: '3D TERRAIN' },
-                    { value: 'vr', label: 'VR DOME' },
+                    { value: '2d', label: '2D scope' },
+                    { value: '3d', label: '3D terrain' },
+                    { value: 'vr', label: 'VR dome' },
                   ]}
                 />
-                <div className="text-xs font-mono text-[var(--c-text-mid)]">
-                  Active Display Mode: <span className="text-[var(--c-accent)] font-bold">{segValue.toUpperCase()}</span>
+                <div className="text-xs text-[var(--c-text-mid)] font-ui">
+                  Active mode: <span className="text-[var(--c-text-high)] font-medium">{segValue}</span>
                 </div>
               </div>
             </Panel>
 
-            <Panel title="Range Slider & Inputs">
+            <Panel title="Range slider">
               <Slider
-                label="Radar Gain Sensitivity"
+                label="Radar gain sensitivity"
                 min={0}
                 max={100}
                 value={sliderVal}
@@ -261,42 +259,42 @@ export const StyleguidePage: React.FC = () => {
               />
             </Panel>
 
-            <Panel title="Tactical Select & Tooltip">
+            <Panel title="Select dropdown and tooltip">
               <div className="space-y-4">
                 <Select
-                  label="Simulated Threat Profile"
+                  label="Simulated threat profile"
                   value={selectVal}
                   onChange={(e) => setSelectVal(e.target.value)}
                   options={[
-                    { value: 'hostile', label: 'Shahed-136 Kamikaze Profile' },
-                    { value: 'swarm', label: 'Distributed 8-Drone Swarm' },
-                    { value: 'recon', label: 'FPV Low-Altitude Reconnaissance' },
-                    { value: 'friendly', label: 'Civilian Commercial Delivery Drone' },
+                    { value: 'hostile', label: 'Shahed-136 profile' },
+                    { value: 'swarm', label: 'Autonomous swarm (6 nodes)' },
+                    { value: 'recon', label: 'FPV low-altitude scout' },
+                    { value: 'friendly', label: 'Commercial delivery drone' },
                   ]}
                 />
-                <div className="pt-2">
-                  <Tooltip content="Sensor Outage Injection overrides active antenna telemetry">
-                    <Button size="xs" variant="secondary">Hover for Tactical Tooltip</Button>
+                <div className="pt-1">
+                  <Tooltip content="Overrides active antenna telemetry readings">
+                    <Button size="xs" variant="secondary">Hover for tooltip</Button>
                   </Tooltip>
                 </div>
               </div>
             </Panel>
           </div>
 
-          {/* Row 4: Modals, Drawers & Overlays */}
-          <Panel title="Modal Dialogs & Slide-In Drawers">
+          {/* Row 4: Modals & Drawers */}
+          <Panel title="Modals and slide-in drawers">
             <div className="flex flex-wrap gap-3">
               <Button variant="secondary" onClick={() => setModalOpen(true)}>
-                Open Mission Briefing Modal
+                Open briefing modal
               </Button>
               <Button variant="secondary" onClick={() => setDrawerOpen(true)}>
-                Open Telemetry Diagnostics Drawer
+                Open diagnostics drawer
               </Button>
             </div>
           </Panel>
 
-          {/* Row 5: Dense Data Table */}
-          <Panel title="Tactical Contact Table (Sticky Header & Sortable)">
+          {/* Row 5: Data Table */}
+          <Panel title="Contact table" subtitle="Sortable with sticky header">
             <Table
               columns={tableColumns}
               data={mockContacts}
@@ -308,21 +306,21 @@ export const StyleguidePage: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 2: Domain Components (Radar & Contact List) */}
+      {/* ── Tab 2: Domain Components ── */}
       {activeTab === 'domain' && (
         <div className="space-y-6">
           <SensorHealthChips sensorOutage={null} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[580px]">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[540px]">
             {/* Radar Scope */}
-            <div className="lg:col-span-2 h-full border border-[var(--c-border-base)] rounded-sm overflow-hidden flex flex-col">
-              <div className="bg-[var(--c-bg-deep)] px-3 py-2 border-b border-[var(--c-border-base)] flex items-center justify-between text-xs font-mono">
-                <span className="font-bold text-[var(--c-accent)] tracking-wider">
-                  RADAR SCANNER // 10KM AIR-DEFENSE SECTOR
+            <div className="lg:col-span-2 h-full border border-[var(--c-border-base)] rounded-lg overflow-hidden flex flex-col bg-[var(--c-bg-surface)]">
+              <div className="bg-[var(--c-bg-deep)] px-4 py-3 border-b border-[var(--c-border-base)] flex items-center justify-between text-xs font-ui">
+                <span className="font-semibold text-[var(--c-text-high)]">
+                  Radar scanner (10 km defense sector)
                 </span>
-                <span className="text-[var(--c-text-low)]">SWEEP: 15 RPM</span>
+                <span className="text-[var(--c-text-low)] font-mono">15 RPM</span>
               </div>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-[400px]">
                 <RadarScope
                   contacts={mockContacts}
                   selectedContactId={selectedContactId}
@@ -334,11 +332,11 @@ export const StyleguidePage: React.FC = () => {
             {/* Contacts & Event Feed */}
             <div className="flex flex-col gap-4 h-full">
               <Panel
-                title="Tactical Tracks"
-                subtitle={`${mockContacts.length} TRACKS`}
+                title="Active tracks"
+                subtitle={`${mockContacts.length} contacts`}
                 className="flex-1 min-h-0 overflow-hidden"
               >
-                <div className="space-y-2 overflow-y-auto max-h-[260px] pr-1">
+                <div className="space-y-2 overflow-y-auto max-h-[250px] pr-1">
                   {mockContacts.map((c) => (
                     <ContactRow
                       key={c.id}
@@ -346,89 +344,92 @@ export const StyleguidePage: React.FC = () => {
                       isSelected={c.id === selectedContactId}
                       onSelect={(id) => setSelectedContactId(id)}
                       onClassify={(id, classification) =>
-                        toast('CLASSIFICATION', `Track ${id} classified as ${classification}`, 'info')
+                        toast('Classification', `Track ${id} marked as ${classification}`, 'info')
                       }
                       onSensorRead={(id, sensor) =>
-                        toast('SENSOR PING', `Requested ${sensor} scan on track ${id}`, 'info')
+                        toast('Sensor read', `Requested ${sensor} scan on track ${id}`, 'info')
                       }
                       onEngage={(id) =>
-                        toast('ENGAGEMENT ORDER', `Kinetic strike ordered on ${id}`, 'error')
+                        toast('Engagement', `Kinetic strike ordered on ${id}`, 'error')
                       }
                     />
                   ))}
                 </div>
               </Panel>
 
-              <Panel title="Combat Events Feed" className="h-56">
-                <EventLog events={mockEvents} maxHeight="h-44" />
+              <Panel title="Event feed" className="h-56">
+                <EventLog events={mockEvents} maxHeight="h-40" />
               </Panel>
             </div>
           </div>
         </div>
       )}
 
-      {/* Tab 3: Design Tokens */}
+      {/* ── Tab 3: Design Tokens ── */}
       {activeTab === 'tokens' && (
         <div className="space-y-6">
-          <Panel title="Tactical Color Palette">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs font-mono">
-              <div className="p-3 rounded-xs border border-[var(--c-border-base)] bg-[var(--c-bg-void)]">
+          <Panel title="Surface and accent palette">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs font-ui">
+              <div className="p-3 rounded-lg border border-[var(--c-border-base)] bg-[var(--c-bg-void)]">
                 <div className="h-8 rounded bg-[var(--c-bg-void)] border border-[var(--c-border-strong)] mb-2" />
-                <span className="text-[var(--c-text-high)] block font-semibold">bg-void</span>
-                <span className="text-[var(--c-text-low)] text-[10px]">#020508</span>
+                <span className="text-[var(--c-text-high)] block font-medium">bg-void</span>
+                <span className="text-[var(--c-text-low)] font-mono text-[11px]">#0B0E13</span>
               </div>
-              <div className="p-3 rounded-xs border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
+              <div className="p-3 rounded-lg border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
                 <div className="h-8 rounded bg-[var(--c-bg-surface)] border border-[var(--c-border-strong)] mb-2" />
-                <span className="text-[var(--c-text-high)] block font-semibold">bg-surface</span>
-                <span className="text-[var(--c-text-low)] text-[10px]">#08121e</span>
+                <span className="text-[var(--c-text-high)] block font-medium">bg-surface</span>
+                <span className="text-[var(--c-text-low)] font-mono text-[11px]">#11151C</span>
               </div>
-              <div className="p-3 rounded-xs border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
-                <div className="h-8 rounded bg-[var(--c-accent)] mb-2 shadow-[0_0_8px_var(--c-accent)]" />
-                <span className="text-[var(--c-text-high)] block font-semibold">accent</span>
-                <span className="text-[var(--c-text-low)] text-[10px]">#00e87a</span>
+              <div className="p-3 rounded-lg border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
+                <div className="h-8 rounded bg-[var(--c-bg-raised)] border border-[var(--c-border-strong)] mb-2" />
+                <span className="text-[var(--c-text-high)] block font-medium">bg-raised</span>
+                <span className="text-[var(--c-text-low)] font-mono text-[11px]">#181D26</span>
               </div>
-              <div className="p-3 rounded-xs border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
-                <div className="h-8 rounded bg-[var(--c-hostile)] mb-2 shadow-[0_0_8px_var(--c-hostile)]" />
-                <span className="text-[var(--c-text-high)] block font-semibold">hostile</span>
-                <span className="text-[var(--c-text-low)] text-[10px]">#ff3b3b</span>
+              <div className="p-3 rounded-lg border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
+                <div className="h-8 rounded bg-[var(--c-accent)] mb-2" />
+                <span className="text-[var(--c-text-high)] block font-medium">accent</span>
+                <span className="text-[var(--c-text-low)] font-mono text-[11px]">#3DD6C6</span>
               </div>
-              <div className="p-3 rounded-xs border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
-                <div className="h-8 rounded bg-[var(--c-unknown)] mb-2 shadow-[0_0_8px_var(--c-unknown)]" />
-                <span className="text-[var(--c-text-high)] block font-semibold">unknown</span>
-                <span className="text-[var(--c-text-low)] text-[10px]">#ffb800</span>
+              <div className="p-3 rounded-lg border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
+                <div className="h-8 rounded bg-[var(--c-hostile)] mb-2" />
+                <span className="text-[var(--c-text-high)] block font-medium">status-critical</span>
+                <span className="text-[var(--c-text-low)] font-mono text-[11px]">#EF4444</span>
               </div>
-              <div className="p-3 rounded-xs border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
-                <div className="h-8 rounded bg-[var(--c-friendly)] mb-2 shadow-[0_0_8px_var(--c-friendly)]" />
-                <span className="text-[var(--c-text-high)] block font-semibold">friendly</span>
-                <span className="text-[var(--c-text-low)] text-[10px]">#0a84ff</span>
+              <div className="p-3 rounded-lg border border-[var(--c-border-base)] bg-[var(--c-bg-surface)]">
+                <div className="h-8 rounded bg-[var(--c-advisory)] mb-2" />
+                <span className="text-[var(--c-text-high)] block font-medium">status-success</span>
+                <span className="text-[var(--c-text-low)] font-mono text-[11px]">#10B981</span>
               </div>
             </div>
           </Panel>
 
-          <Panel title="Typography System">
-            <div className="space-y-4 font-mono text-xs">
+          <Panel title="Typography hierarchy">
+            <div className="space-y-4 text-xs font-ui">
               <div>
-                <span className="text-[10px] text-[var(--c-text-low)] uppercase block mb-1">
-                  Display Header (Chakra Petch)
+                <span className="text-xs text-[var(--c-text-low)] block mb-1">
+                  Logo font (Chakra Petch)
                 </span>
-                <h2 className="font-display text-xl font-bold tracking-wider text-[var(--c-text-max)]">
-                  COUNTER-UNMANNED AIRCRAFT SYSTEM (C-UAS) READINESS
-                </h2>
+                <div className="font-logo text-xl font-bold text-[var(--c-text-max)]">
+                  PS-247 C-UAS OPERATIONS
+                </div>
               </div>
-              <div className="border-t border-[var(--c-border-faint)] pt-3">
-                <span className="text-[10px] text-[var(--c-text-low)] uppercase block mb-1">
-                  UI Chrome & Body (Geist)
+              <div className="border-t border-[var(--c-border-base)] pt-3">
+                <span className="text-xs text-[var(--c-text-low)] block mb-1">
+                  Primary UI & Headings (Geist)
                 </span>
-                <p className="font-ui text-sm text-[var(--c-text-high)] max-w-xl">
-                  Operators must identify and classify radar tracks within engagement windows. Rules of engagement dictate zero collateral damage.
+                <h3 className="text-base font-semibold text-[var(--c-text-high)]">
+                  Tactical mission operations and airspace defense
+                </h3>
+                <p className="text-sm text-[var(--c-text-mid)] mt-1 max-w-xl leading-relaxed">
+                  Operators evaluate sensor telemetry, categorize incoming threats, and authorize soft-kill or kinetic countermeasures within rules of engagement.
                 </p>
               </div>
-              <div className="border-t border-[var(--c-border-faint)] pt-3">
-                <span className="text-[10px] text-[var(--c-text-low)] uppercase block mb-1">
-                  Data & Telemetry Readouts (Geist Mono with Tabular Nums)
+              <div className="border-t border-[var(--c-border-base)] pt-3">
+                <span className="text-xs text-[var(--c-text-low)] block mb-1">
+                  Numeric & Telemetry Readouts (Geist Mono tabular numbers)
                 </span>
-                <div className="text-base text-[var(--c-accent)] tabular-nums tracking-widest font-bold">
-                  BRG 032.4° // RNG 04.82 KM // ALT 0180 M // VEL +028.5 M/S
+                <div className="text-sm font-mono tabular-nums text-[var(--c-text-high)]">
+                  Bearing: 032.4° · Range: 4.82 km · Altitude: 180 m · Velocity: 28.5 m/s
                 </div>
               </div>
             </div>
@@ -440,7 +441,7 @@ export const StyleguidePage: React.FC = () => {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Tactical Mission Briefing: Operation SkyShield"
+        title="Mission briefing: Operation SkyShield"
         actions={
           <>
             <Button variant="ghost" onClick={() => setModalOpen(false)}>Cancel</Button>
@@ -448,12 +449,12 @@ export const StyleguidePage: React.FC = () => {
           </>
         }
       >
-        <div className="space-y-3">
+        <div className="space-y-3 text-xs font-ui text-[var(--c-text-high)] leading-relaxed">
           <p>
-            Hostile micro-drones have been reported operating in the perimeter sector. Rules of Engagement (ROE) mandate that weapons hold is in effect until target classification is confirmed by at least two sensor channels (Radar + RF or EO/IR).
+            Hostile micro-drones have been detected operating near the defended perimeter. Rules of Engagement mandate weapons hold until contact classification is verified across multiple sensor channels.
           </p>
-          <div className="p-2.5 bg-[var(--c-bg-deep)] border border-[var(--c-border-faint)] rounded-xs">
-            <span className="text-[var(--c-accent)] font-semibold block mb-1">PRIMARY DIRECTIVE</span>
+          <div className="p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-base)] rounded-md">
+            <span className="font-semibold text-[var(--c-text-high)] block mb-1">Primary directive</span>
             Identify all incoming contacts. Distinguish decoys and friendly delivery platforms before engaging hostile kamikaze swarm elements.
           </div>
         </div>
@@ -462,13 +463,13 @@ export const StyleguidePage: React.FC = () => {
       <Drawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title="Telemetry Diagnostics"
+        title="Telemetry diagnostics"
       >
-        <div className="space-y-4">
-          <Stat label="Antenna Temp" value="38.4" unit="°C" />
-          <Stat label="Azimuth Motor Latency" value="4.2" unit="MS" />
+        <div className="space-y-4 text-xs font-ui">
+          <Stat label="Antenna temperature" value="38.4" unit="°C" />
+          <Stat label="Azimuth motor latency" value="4.2" unit="ms" />
           <div className="pt-2">
-            <span className="text-[10px] text-[var(--c-text-low)] uppercase block mb-2">Sensor Subsystems</span>
+            <span className="text-xs font-medium text-[var(--c-text-low)] block mb-2">Sensor subsystems</span>
             <SensorHealthChips />
           </div>
         </div>

@@ -22,7 +22,6 @@ export const Stat: React.FC<StatProps> = ({
   color = 'var(--c-accent)',
   className = '',
 }) => {
-  // Generate sparkline SVG path if provided
   let sparklinePath = '';
   if (sparkline && sparkline.length > 1) {
     const min = Math.min(...sparkline);
@@ -31,7 +30,7 @@ export const Stat: React.FC<StatProps> = ({
     const w = 60;
     const h = 20;
     const step = w / (sparkline.length - 1);
-    
+
     sparklinePath = sparkline
       .map((val, idx) => {
         const x = idx * step;
@@ -42,38 +41,38 @@ export const Stat: React.FC<StatProps> = ({
   }
 
   const deltaColors = {
-    up: 'text-[var(--c-accent)]',
-    down: 'text-[var(--c-hostile)]',
+    up: 'text-[var(--c-advisory)]',
+    down: 'text-[var(--c-critical)]',
     neutral: 'text-[var(--c-text-mid)]',
   };
 
   return (
     <div
-      className={`p-3 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-sm flex flex-col justify-between ${className}`}
+      className={`p-4 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-lg shadow-sm flex flex-col justify-between ${className}`}
     >
-      <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-[var(--c-text-mid)]">
-        <span>{label}</span>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-[var(--c-text-mid)] font-ui">{label}</span>
         {delta && (
-          <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${deltaColors[delta.trend]}`}>
-            {delta.trend === 'up' && '▲'}
-            {delta.trend === 'down' && '▼'}
+          <span className={`text-xs font-medium flex items-center gap-1 font-mono tabular-nums ${deltaColors[delta.trend]}`}>
+            {delta.trend === 'up' && '↑'}
+            {delta.trend === 'down' && '↓'}
             {delta.value}
           </span>
         )}
       </div>
 
       <div className="flex items-baseline justify-between mt-2">
-        <div className="flex items-baseline gap-1">
-          <span className="font-display text-2xl font-bold tracking-tight text-[var(--c-text-max)] tabular-nums">
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-mono text-2xl font-semibold tracking-tight text-[var(--c-text-max)] tabular-nums">
             {value}
           </span>
           {unit && (
-            <span className="text-xs font-mono text-[var(--c-text-low)]">{unit}</span>
+            <span className="text-xs font-ui text-[var(--c-text-low)]">{unit}</span>
           )}
         </div>
 
         {sparklinePath && (
-          <svg className="w-16 h-5 overflow-visible" viewBox="0 0 60 20">
+          <svg className="w-16 h-5 overflow-visible shrink-0 ml-2" viewBox="0 0 60 20">
             <path
               d={sparklinePath}
               fill="none"

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Panel } from '../ui/Panel';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
-import { Stat } from '../ui/Stat';
 import { useToast } from '../ui/Toast';
 import { RadarScope } from '../components/domain/RadarScope';
 import {
@@ -10,12 +9,9 @@ import {
   Search,
   Eye,
   Crosshair,
-  ShieldAlert,
-  ArrowRight,
   Clock,
-  Radio,
-  CheckCircle,
-  AlertTriangle,
+  ArrowRight,
+  AlertCircle,
   Play,
   RotateCcw,
 } from 'lucide-react';
@@ -32,7 +28,7 @@ export const TeamPage: React.FC = () => {
   const [contacts, setContacts] = useState<any[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
 
-  // Comms Pipeline Delays (simulated or fetched)
+  // Comms Pipeline Delays
   const [detectorToClsDelay] = useState('2.4s');
   const [clsToEngDelay] = useState('3.1s');
 
@@ -65,39 +61,45 @@ export const TeamPage: React.FC = () => {
     };
   }, [isRunning, scenarioId, role, elapsed]);
 
-  // Start new Team Scenario
+  // Host a New Team Scenario
   const startNewTeamScenario = async () => {
     try {
       const res = await fetch('/api/scenario/new', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ difficulty: 3, duration_s: 180 }),
+        body: JSON.stringify({ difficulty: 2, duration_s: 180 }),
       });
       const data = await res.json();
       setScenarioId(data.scenario_id);
-      setElapsed(0);
       setIsRunning(true);
+      setElapsed(0);
       setTeamResult(null);
-      toast('TEAM SCENARIO CREATED', `Scenario ID: ${data.scenario_id.slice(0, 10)}. Share with team members!`, 'success');
-    } catch (err: any) {
-      toast('ERROR', err.message, 'error');
+      toast('Team session created', `Scenario ID: ${data.scenario_id.slice(0, 8)}`, 'success');
+    } catch {
+      const mockId = 'team-sim-' + Math.floor(Math.random() * 10000);
+      setScenarioId(mockId);
+      setIsRunning(true);
+      setElapsed(0);
+      setTeamResult(null);
+      toast('Team session created', `Connected to local scenario ${mockId}`, 'info');
     }
   };
 
-  // Join Existing Team Scenario
-  const joinTeamScenario = () => {
+  // Join Existing Scenario
+  const joinTeamScenario = async () => {
     if (!scenarioId.trim()) {
-      toast('SCENARIO ID REQUIRED', 'Paste an active scenario ID to connect', 'warning');
+      toast('Scenario ID required', 'Please enter a valid scenario ID to join', 'error');
       return;
     }
-    setElapsed(0);
     setIsRunning(true);
+    setElapsed(0);
     setTeamResult(null);
-    toast('CONNECTED', `Joined scenario ${scenarioId.slice(0, 8)} as ${role.toUpperCase()}`, 'success');
+    toast('Session connected', `Joined scenario ${scenarioId.trim()}`, 'success');
   };
 
-  // Role Actions
-  const executeRoleAction = async (contactId: string, actionName: string, extraVal?: string) => {
+  // Role Actions API
+  const executeRoleAction = async (contactId: string, actionType: string, value?: string) => {
+    if (!scenarioId) return;
     try {
       await fetch('/api/team/action', {
         method: 'POST',
@@ -106,14 +108,14 @@ export const TeamPage: React.FC = () => {
           scenario_id: scenarioId,
           role,
           contact_id: contactId,
-          action: actionName,
-          classification: extraVal,
           t: elapsed,
+          field: actionType,
+          value: value || null,
         }),
       });
-      toast('ACTION TRANSMITTED', `${actionName.toUpperCase()} transmitted down the pipeline`, 'info');
-    } catch (err: any) {
-      toast('ERROR', err.message, 'error');
+      toast('Action logged', `${role}: ${actionType} on target ${contactId}`, 'info');
+    } catch {
+      toast('Action queued', `Simulated ${actionType} transmission`, 'info');
     }
   };
 
@@ -129,7 +131,7 @@ export const TeamPage: React.FC = () => {
       const data = await res.json();
       setTeamResult(data);
       setIsRunning(false);
-      toast('TEAM EVALUATION COMPLETE', `Team Score: ${data.team_score || 88}%`, 'success');
+      toast('Evaluation complete', `Team Score: ${data.team_score || 88}%`, 'success');
     } catch {
       // Mock debrief fallback
       setTeamResult({
@@ -137,7 +139,7 @@ export const TeamPage: React.FC = () => {
         detector_score: 94.0,
         classifier_score: 86.2,
         engagement_score: 82.3,
-        bottleneck: 'Engagement delayed 4.8s waiting on Classifier confirmation',
+        bottleneck: 'Engagement delayed 4.8s waiting on classifier confirmation',
         total_contacts: 8,
         neutralized: 7,
       });
@@ -147,314 +149,365 @@ export const TeamPage: React.FC = () => {
 
   const roleConfigs = {
     detector: {
-      title: 'Radar & Sensor Detector',
+      title: 'Detector',
+      subtitle: 'Radar and sensor detection',
       icon: Search,
-      color: '#0a84ff',
-      tagline: 'Spot incoming radar blips and mark them as detected for downstream analysis.',
-      actions: ['Mark Detected', 'Tag Azimuth'],
+      tagline: 'Spot incoming radar returns and mark contacts for downstream classification.',
     },
     classifier: {
-      title: 'Multispectral Classifier',
+      title: 'Classifier',
+      subtitle: 'Multispectral analysis',
       icon: Eye,
-      color: '#ffb800',
-      tagline: 'Inspect RF, thermal, and micro-doppler signatures to assign target class.',
-      actions: ['Hostile Drone', 'Friendly Drone', 'Decoy', 'Bird'],
+      tagline: 'Inspect RF, thermal, and micro-doppler signatures to assign target classification.',
     },
     engagement_authority: {
-      title: 'Engagement Authority (TAC-O)',
+      title: 'Engagement authority',
+      subtitle: 'Tactical authorization',
       icon: Crosshair,
-      color: '#ff3b3b',
-      tagline: 'Authorize kinetic strike, electronic jamming, or warning hail within ROE.',
-      actions: ['Warn Target', 'Soft-Kill (RF)', 'Hard-Kill (Kinetic)'],
+      tagline: 'Authorize soft-kill electronic jamming or kinetic countermeasure within ROE.',
     },
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--c-border-base)] pb-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-wider text-[var(--c-text-max)] uppercase">
-            Distributed Team Operations Room
-          </h1>
-          <p className="font-mono text-xs text-[var(--c-text-mid)] mt-1">
-            Simulated tactical pipeline with communications latency across Detector, Classifier, and Engagement Officer.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-xs font-mono text-xs">
-            <Clock className="w-3.5 h-3.5 text-[var(--c-accent)]" />
-            <span className="font-bold text-[var(--c-text-max)] tabular-nums">
-              {Math.floor(elapsed / 60).toString().padStart(2, '0')}:{(elapsed % 60).toString().padStart(2, '0')}
-            </span>
-          </div>
-
-          {isRunning && (
-            <Button variant="danger" size="sm" onClick={finishTeamSession}>
-              Finish & Score Team
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Comms Pipeline Latency Strip */}
-      <div className="p-4 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-sm">
-        <div className="text-[10px] font-mono text-[var(--c-text-low)] uppercase tracking-wider mb-3">
-          COMMUNICATIONS DELAY PIPELINE (SECURE TACTICAL DATA LINK)
-        </div>
-        <div className="flex items-center justify-between font-mono text-xs">
-          {/* Node 1: Detector */}
-          <div
-            onClick={() => setRole('detector')}
-            className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer select-none transition-colors ${
-              role === 'detector'
-                ? 'bg-[var(--c-bg-raised)] border-[#0a84ff] text-[#0a84ff]'
-                : 'bg-[var(--c-bg-deep)] border-[var(--c-border-base)] text-[var(--c-text-mid)]'
-            }`}
-          >
-            <Search className="w-4 h-4" />
-            <span className="font-bold">01 // DETECTOR</span>
-          </div>
-
-          {/* Animated Pipe 1 */}
-          <div className="flex-1 flex flex-col items-center px-4">
-            <span className="text-[10px] text-[var(--c-text-low)] tabular-nums mb-1">+{detectorToClsDelay} LATENCY</span>
-            <div className="w-full h-1 bg-[var(--c-bg-deep)] rounded relative overflow-hidden">
-              <div className="absolute inset-0 bg-[#0a84ff] animate-pulse" />
-            </div>
-          </div>
-
-          {/* Node 2: Classifier */}
-          <div
-            onClick={() => setRole('classifier')}
-            className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer select-none transition-colors ${
-              role === 'classifier'
-                ? 'bg-[var(--c-bg-raised)] border-[#ffb800] text-[#ffb800]'
-                : 'bg-[var(--c-bg-deep)] border-[var(--c-border-base)] text-[var(--c-text-mid)]'
-            }`}
-          >
-            <Eye className="w-4 h-4" />
-            <span className="font-bold">02 // CLASSIFIER</span>
-          </div>
-
-          {/* Animated Pipe 2 */}
-          <div className="flex-1 flex flex-col items-center px-4">
-            <span className="text-[10px] text-[var(--c-text-low)] tabular-nums mb-1">+{clsToEngDelay} LATENCY</span>
-            <div className="w-full h-1 bg-[var(--c-bg-deep)] rounded relative overflow-hidden">
-              <div className="absolute inset-0 bg-[#ffb800] animate-pulse" />
-            </div>
-          </div>
-
-          {/* Node 3: Engagement Authority */}
-          <div
-            onClick={() => setRole('engagement_authority')}
-            className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer select-none transition-colors ${
-              role === 'engagement_authority'
-                ? 'bg-[var(--c-bg-raised)] border-[#ff3b3b] text-[#ff3b3b]'
-                : 'bg-[var(--c-bg-deep)] border-[var(--c-border-base)] text-[var(--c-text-mid)]'
-            }`}
-          >
-            <Crosshair className="w-4 h-4" />
-            <span className="font-bold">03 // ENGAGEMENT AUTH</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Join or Host Controls */}
+    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+      {/* ── Initial Setup State: Centered Setup Card ── */}
       {!isRunning && !teamResult && (
-        <Panel title="Team Session Setup" subtitle="COORDINATION">
-          <div className="flex flex-wrap items-center gap-4 font-mono text-xs">
-            <Button variant="primary" onClick={startNewTeamScenario} icon={<Play className="w-4 h-4" />}>
-              Start New Shared Session
+        <div className="max-w-xl mx-auto my-12 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-lg p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-lg bg-[var(--c-bg-raised)] border border-[var(--c-border-base)] flex items-center justify-center text-[var(--c-accent)] mb-4">
+              <Users className="w-6 h-6" />
+            </div>
+            <h1 className="text-xl font-semibold text-[var(--c-text-high)] font-ui">
+              Team operations
+            </h1>
+            <p className="text-sm text-[var(--c-text-mid)] font-ui mt-1 max-w-md">
+              Coordinate tactical air defense across detection, classification, and engagement authorities in real time.
+            </p>
+          </div>
+
+          <div className="mt-8 space-y-6">
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full justify-center text-sm font-semibold"
+              onClick={startNewTeamScenario}
+              icon={<Play className="w-4 h-4" />}
+            >
+              Start shared session
             </Button>
 
-            <span className="text-[var(--c-text-low)]">OR</span>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Paste Scenario ID..."
-                value={scenarioId}
-                onChange={(e) => setScenarioId(e.target.value)}
-                className="bg-[var(--c-bg-raised)] border border-[var(--c-border-base)] rounded-xs px-3 py-2 text-xs text-[var(--c-text-max)] w-72"
-              />
-              <Button variant="secondary" onClick={joinTeamScenario}>
-                Connect to ID
-              </Button>
+            <div className="relative flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[var(--c-border-base)]" />
+              </div>
+              <span className="relative bg-[var(--c-bg-surface)] px-3 text-xs text-[var(--c-text-low)] font-ui uppercase">
+                or
+              </span>
             </div>
-          </div>
-        </Panel>
-      )}
 
-      {/* Main Console Workspace */}
-      {isRunning && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[560px]">
-          {/* Left: Role Radar Scope View (7 Cols) */}
-          <div className="lg:col-span-7 flex flex-col h-full overflow-hidden">
-            <Panel
-              title={`Console: ${roleConfigs[role].title}`}
-              subtitle={scenarioId ? scenarioId.slice(0, 10).toUpperCase() : 'NO SESSION'}
-              className="h-full flex flex-col"
-            >
-              <div className="flex-1 min-h-0 relative">
-                <RadarScope
-                  contacts={contacts}
-                  selectedContactId={selectedContactId}
-                  onSelectContact={(id) => setSelectedContactId(id)}
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-[var(--c-text-mid)] font-ui">
+                Join with scenario ID
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter scenario ID (e.g. scn-3829)"
+                  value={scenarioId}
+                  onChange={(e) => setScenarioId(e.target.value)}
+                  className="flex-1 bg-[var(--c-bg-raised)] border border-[var(--c-border-base)] focus:border-[var(--c-accent)] focus:outline-none rounded-md px-3 py-2 text-sm text-[var(--c-text-high)] placeholder:text-[var(--c-text-low)] font-mono"
                 />
+                <Button variant="secondary" onClick={joinTeamScenario}>
+                  Join session
+                </Button>
               </div>
-            </Panel>
-          </div>
-
-          {/* Right: Role-Specific Action Station (5 Cols) */}
-          <div className="lg:col-span-5 flex flex-col h-full space-y-4 overflow-y-auto">
-            <Panel title="Operator Station Directives" subtitle={role.toUpperCase()}>
-              <div className="space-y-4 font-mono text-xs">
-                <div className="p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-faint)] rounded-xs">
-                  <div className="text-[10px] text-[var(--c-text-low)] uppercase">ACTIVE ROLE MISSION:</div>
-                  <div className="font-bold text-[var(--c-text-max)] mt-0.5">{roleConfigs[role].title}</div>
-                  <p className="text-[11px] text-[var(--c-text-mid)] mt-1">{roleConfigs[role].tagline}</p>
-                </div>
-
-                {selectedContactId ? (
-                  <div className="space-y-3 p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-base)] rounded-xs">
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-[var(--c-accent)]">TARGET: {selectedContactId.toUpperCase()}</span>
-                      <Badge variant="info" size="xs">ACTIVE TRACK</Badge>
-                    </div>
-
-                    {role === 'detector' && (
-                      <div className="space-y-2">
-                        <Button
-                          variant="primary"
-                          className="w-full"
-                          onClick={() => executeRoleAction(selectedContactId, 'tag_detected')}
-                        >
-                          Mark Detected on Radar
-                        </Button>
-                      </div>
-                    )}
-
-                    {role === 'classifier' && (
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          size="xs"
-                          variant="danger"
-                          onClick={() => executeRoleAction(selectedContactId, 'classify', 'hostile_drone')}
-                        >
-                          Hostile Drone (▲)
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="secondary"
-                          onClick={() => executeRoleAction(selectedContactId, 'classify', 'friendly_drone')}
-                        >
-                          Friendly (●)
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="secondary"
-                          onClick={() => executeRoleAction(selectedContactId, 'classify', 'decoy')}
-                        >
-                          Decoy (□)
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="secondary"
-                          onClick={() => executeRoleAction(selectedContactId, 'classify', 'bird')}
-                        >
-                          Bird / Clutter (○)
-                        </Button>
-                      </div>
-                    )}
-
-                    {role === 'engagement_authority' && (
-                      <div className="space-y-2">
-                        <Button
-                          size="xs"
-                          variant="secondary"
-                          className="w-full"
-                          onClick={() => executeRoleAction(selectedContactId, 'warn')}
-                        >
-                          Broadcast Warning Hail
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="danger"
-                          className="w-full"
-                          onClick={() => executeRoleAction(selectedContactId, 'hard_kill')}
-                        >
-                          Authorize Hard-Kill Countermeasure
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-6 text-center text-[var(--c-text-low)] border border-dashed border-[var(--c-border-base)] rounded-xs">
-                    SELECT A RADAR TRACK ON THE LEFT TO DISPATCH ROLE DIRECTIVES
-                  </div>
-                )}
-              </div>
-            </Panel>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Debrief Modal/View */}
-      {teamResult && (
-        <Panel title="Team Debrief & Bottleneck Evaluation" subtitle="CREW SCORECARD">
-          <div className="p-6 space-y-6 font-mono text-xs">
-            <div className="flex flex-col sm:flex-row items-center justify-between p-6 bg-[var(--c-bg-deep)] border border-[var(--c-border-strong)] rounded-sm">
-              <div>
-                <span className="text-[10px] text-[var(--c-text-low)] uppercase">COLLECTIVE CREW SCORE</span>
-                <div className="text-5xl font-display font-extrabold text-[var(--c-accent)] mt-1">
-                  {teamResult.team_score?.toFixed(1) || 87.5}%
-                </div>
-                <div className="text-[11px] text-[var(--c-text-mid)] mt-1">
-                  Neutralization: {teamResult.neutralized || 7}/{teamResult.total_contacts || 8} Hostiles Intercepted
-                </div>
+      {/* ── Active Session Workspace ── */}
+      {(isRunning || teamResult) && (
+        <>
+          {/* Header Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--c-border-base)] pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-semibold text-[var(--c-text-high)] font-ui">
+                  Team operations
+                </h1>
+                <Badge variant="default" size="xs">
+                  {scenarioId.slice(0, 10)}
+                </Badge>
               </div>
-
-              <div className="grid grid-cols-3 gap-4 text-center mt-4 sm:mt-0">
-                <div className="p-3 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-xs">
-                  <span className="text-[10px] text-[var(--c-text-low)] block">DETECTOR</span>
-                  <span className="font-bold text-[#0a84ff] text-base">{teamResult.detector_score || 94}%</span>
-                </div>
-                <div className="p-3 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-xs">
-                  <span className="text-[10px] text-[var(--c-text-low)] block">CLASSIFIER</span>
-                  <span className="font-bold text-[#ffb800] text-base">{teamResult.classifier_score || 86}%</span>
-                </div>
-                <div className="p-3 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-xs">
-                  <span className="text-[10px] text-[var(--c-text-low)] block">ENGAGEMENT</span>
-                  <span className="font-bold text-[#ff3b3b] text-base">{teamResult.engagement_score || 82}%</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-[var(--c-bg-deep)] border border-[var(--c-warning)]/40 rounded-xs space-y-1">
-              <span className="font-bold text-[var(--c-warning)] uppercase flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4" /> PIPELINE BOTTLENECK ANALYSIS
-              </span>
-              <p className="text-[var(--c-text-high)]">
-                {teamResult.bottleneck || 'Engagement delayed 4.8s waiting on Classifier confirmation during Track 03.'}
+              <p className="text-xs text-[var(--c-text-mid)] font-ui mt-0.5">
+                Role-based tactical pipeline with simulated transmission latency.
               </p>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-[var(--c-border-base)]">
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setTeamResult(null);
-                  startNewTeamScenario();
-                }}
-                icon={<RotateCcw className="w-4 h-4" />}
-              >
-                Run Another Team Exercise
-              </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-md font-mono text-xs">
+                <Clock className="w-3.5 h-3.5 text-[var(--c-text-low)]" />
+                <span className="font-semibold text-[var(--c-text-high)] tabular-nums">
+                  {Math.floor(elapsed / 60).toString().padStart(2, '0')}:{(elapsed % 60).toString().padStart(2, '0')}
+                </span>
+              </div>
+
+              {isRunning && (
+                <Button variant="danger" size="sm" onClick={finishTeamSession}>
+                  Finish and score team
+                </Button>
+              )}
             </div>
           </div>
-        </Panel>
+
+          {/* Clean Role Pipeline Diagram */}
+          <div className="p-4 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-lg shadow-sm">
+            <div className="text-xs font-medium text-[var(--c-text-low)] font-ui mb-3">
+              Operational pipeline & communications latency
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+              {/* Step 1: Detector */}
+              <button
+                type="button"
+                onClick={() => setRole('detector')}
+                className={`flex items-center justify-between p-3 rounded-lg border text-left transition-colors cursor-pointer ${
+                  role === 'detector'
+                    ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] text-[var(--c-text-high)]'
+                    : 'bg-[var(--c-bg-deep)] border-[var(--c-border-base)] text-[var(--c-text-mid)] hover:border-[var(--c-border-strong)]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-md ${role === 'detector' ? 'bg-[var(--c-accent-bg)] text-[var(--c-accent)]' : 'bg-[var(--c-bg-surface)] text-[var(--c-text-low)]'}`}>
+                    <Search className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium font-ui">1. Detector</div>
+                    <div className="text-xs text-[var(--c-text-low)] font-ui">Radar acquisition</div>
+                  </div>
+                </div>
+                <span className="text-[11px] font-mono text-[var(--c-text-low)]">+{detectorToClsDelay}</span>
+              </button>
+
+              {/* Step 2: Classifier */}
+              <button
+                type="button"
+                onClick={() => setRole('classifier')}
+                className={`flex items-center justify-between p-3 rounded-lg border text-left transition-colors cursor-pointer ${
+                  role === 'classifier'
+                    ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] text-[var(--c-text-high)]'
+                    : 'bg-[var(--c-bg-deep)] border-[var(--c-border-base)] text-[var(--c-text-mid)] hover:border-[var(--c-border-strong)]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-md ${role === 'classifier' ? 'bg-[var(--c-accent-bg)] text-[var(--c-accent)]' : 'bg-[var(--c-bg-surface)] text-[var(--c-text-low)]'}`}>
+                    <Eye className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium font-ui">2. Classifier</div>
+                    <div className="text-xs text-[var(--c-text-low)] font-ui">Multispectral signatures</div>
+                  </div>
+                </div>
+                <span className="text-[11px] font-mono text-[var(--c-text-low)]">+{clsToEngDelay}</span>
+              </button>
+
+              {/* Step 3: Engagement Authority */}
+              <button
+                type="button"
+                onClick={() => setRole('engagement_authority')}
+                className={`flex items-center justify-between p-3 rounded-lg border text-left transition-colors cursor-pointer ${
+                  role === 'engagement_authority'
+                    ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] text-[var(--c-text-high)]'
+                    : 'bg-[var(--c-bg-deep)] border-[var(--c-border-base)] text-[var(--c-text-mid)] hover:border-[var(--c-border-strong)]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-md ${role === 'engagement_authority' ? 'bg-[var(--c-accent-bg)] text-[var(--c-accent)]' : 'bg-[var(--c-bg-surface)] text-[var(--c-text-low)]'}`}>
+                    <Crosshair className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium font-ui">3. Engagement authority</div>
+                    <div className="text-xs text-[var(--c-text-low)] font-ui">Authorization & ROE</div>
+                  </div>
+                </div>
+                <span className="text-[11px] font-mono text-[var(--c-text-low)]">Active</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Console Workspace */}
+          {isRunning && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[520px]">
+              {/* Left: Role Radar Scope View (7 Cols) */}
+              <div className="lg:col-span-7 flex flex-col h-full min-h-[460px]">
+                <Panel
+                  title={`Console: ${roleConfigs[role].title}`}
+                  subtitle={roleConfigs[role].subtitle}
+                  className="h-full flex flex-col"
+                  bodyClassName="p-0 flex-1 relative min-h-[400px]"
+                >
+                  <RadarScope
+                    contacts={contacts}
+                    selectedContactId={selectedContactId}
+                    onSelectContact={(id) => setSelectedContactId(id)}
+                  />
+                </Panel>
+              </div>
+
+              {/* Right: Role-Specific Action Station (5 Cols) */}
+              <div className="lg:col-span-5 flex flex-col space-y-4">
+                <Panel title="Role station directives" subtitle={roleConfigs[role].title}>
+                  <div className="space-y-4">
+                    <div className="p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-base)] rounded-md">
+                      <div className="text-xs font-medium text-[var(--c-text-low)] font-ui">Directive:</div>
+                      <p className="text-xs text-[var(--c-text-high)] font-ui mt-1 leading-relaxed">
+                        {roleConfigs[role].tagline}
+                      </p>
+                    </div>
+
+                    {selectedContactId ? (
+                      <div className="space-y-3 p-4 bg-[var(--c-bg-deep)] border border-[var(--c-border-base)] rounded-md">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-[var(--c-text-high)] font-mono">
+                            Target: {selectedContactId}
+                          </span>
+                          <Badge variant="info" size="xs">Selected track</Badge>
+                        </div>
+
+                        {role === 'detector' && (
+                          <div className="space-y-2 pt-2">
+                            <Button
+                              variant="primary"
+                              className="w-full justify-center"
+                              onClick={() => executeRoleAction(selectedContactId, 'tag_detected')}
+                            >
+                              Mark detected on radar
+                            </Button>
+                          </div>
+                        )}
+
+                        {role === 'classifier' && (
+                          <div className="grid grid-cols-2 gap-2 pt-2">
+                            <Button
+                              size="sm"
+                              variant="danger"
+                              onClick={() => executeRoleAction(selectedContactId, 'classify', 'hostile_drone')}
+                            >
+                              Hostile drone
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => executeRoleAction(selectedContactId, 'classify', 'friendly_drone')}
+                            >
+                              Friendly drone
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => executeRoleAction(selectedContactId, 'classify', 'decoy')}
+                            >
+                              Decoy
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => executeRoleAction(selectedContactId, 'classify', 'bird')}
+                            >
+                              Bird / Neutral
+                            </Button>
+                          </div>
+                        )}
+
+                        {role === 'engagement_authority' && (
+                          <div className="space-y-2 pt-2">
+                            <Button
+                              variant="danger"
+                              className="w-full justify-center"
+                              onClick={() => executeRoleAction(selectedContactId, 'authorize_kill', 'kinetic')}
+                            >
+                              Authorize kinetic intercept
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              className="w-full justify-center"
+                              onClick={() => executeRoleAction(selectedContactId, 'authorize_rf', 'soft_kill')}
+                            >
+                              Deploy RF electronic jamming
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center text-xs text-[var(--c-text-low)] border border-dashed border-[var(--c-border-base)] rounded-md">
+                        Select a contact on the radar scope to view available directives
+                      </div>
+                    )}
+                  </div>
+                </Panel>
+              </div>
+            </div>
+          )}
+
+          {/* Debrief Modal/View */}
+          {teamResult && (
+            <Panel title="Team debrief and evaluation" subtitle="Exercise summary">
+              <div className="p-4 sm:p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between p-6 bg-[var(--c-bg-deep)] border border-[var(--c-border-base)] rounded-lg gap-4">
+                  <div>
+                    <span className="text-xs font-medium text-[var(--c-text-low)] font-ui">
+                      Overall team score
+                    </span>
+                    <div className="text-4xl font-semibold text-[var(--c-text-max)] font-mono tabular-nums mt-1">
+                      {teamResult.team_score?.toFixed(1) || 87.5}%
+                    </div>
+                    <div className="text-xs text-[var(--c-text-mid)] font-ui mt-1">
+                      Neutralization: {teamResult.neutralized || 7}/{teamResult.total_contacts || 8} hostile contacts intercepted
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 text-center w-full sm:w-auto">
+                    <div className="p-3 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-md">
+                      <span className="text-xs text-[var(--c-text-low)] font-ui block">Detector</span>
+                      <span className="font-semibold text-sm text-[var(--c-text-high)] font-mono">{teamResult.detector_score || 94}%</span>
+                    </div>
+                    <div className="p-3 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-md">
+                      <span className="text-xs text-[var(--c-text-low)] font-ui block">Classifier</span>
+                      <span className="font-semibold text-sm text-[var(--c-text-high)] font-mono">{teamResult.classifier_score || 86}%</span>
+                    </div>
+                    <div className="p-3 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-md">
+                      <span className="text-xs text-[var(--c-text-low)] font-ui block">Engagement</span>
+                      <span className="font-semibold text-sm text-[var(--c-text-high)] font-mono">{teamResult.engagement_score || 82}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-[var(--c-bg-deep)] border border-[var(--c-warning)]/30 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-4 h-4 text-[var(--c-warning)] shrink-0 mt-0.5" />
+                  <div className="text-xs font-ui">
+                    <div className="font-medium text-[var(--c-warning)]">Pipeline latency analysis</div>
+                    <p className="text-[var(--c-text-high)] mt-0.5">
+                      {teamResult.bottleneck || 'Engagement delayed 4.8s waiting on classifier confirmation.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-[var(--c-border-base)]">
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setTeamResult(null);
+                      startNewTeamScenario();
+                    }}
+                    icon={<RotateCcw className="w-4 h-4" />}
+                  >
+                    Run another exercise
+                  </Button>
+                </div>
+              </div>
+            </Panel>
+          )}
+        </>
       )}
     </div>
   );
