@@ -246,6 +246,18 @@ def audit_verify_chain():
     return verify_audit_chain()
 
 
+@app.get("/api/aar/verify_audit_chain")
+def aar_verify_audit_chain_alias():
+    """Alias for /api/audit/verify_chain, used by the tactical React AAR page."""
+    return verify_audit_chain()
+
+
+@app.get("/api/aar/missed_positions")
+def aar_missed_positions_alias(trainee_id: str = "", unit_id: str = ""):
+    """Alias for /api/aar/missed_heatmap, used by the tactical React AAR page."""
+    return missed_positions(trainee_id or None, unit_id or None)
+
+
 class ClassifyRequest(BaseModel):
     scenario_id: str
     contact_id: str
