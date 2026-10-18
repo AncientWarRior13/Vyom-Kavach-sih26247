@@ -201,7 +201,7 @@ export default function App() {
         className="fixed top-0 left-0 right-0 z-40 h-[var(--header-h)] px-6 flex items-center justify-between pointer-events-auto bg-[#0b0e13]/85 border-b border-white/[0.08] backdrop-blur-md"
       >
         <div className="flex items-center gap-3">
-          <span className="w-2 h-2 rounded-full bg-[#3dd6c6]" />
+          <img src="/landing-static/favicon.svg" alt="Vyom Kavach" className="w-5 h-5 drop-shadow-[0_0_8px_rgba(0,229,255,0.45)]" />
           <span className="font-['Chakra_Petch'] font-semibold text-sm tracking-wider text-[#f8fafc]">
             Vyom Kavach C-UAS
           </span>

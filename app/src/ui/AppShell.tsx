@@ -84,7 +84,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         {/* Left: Branding & Breadcrumb */}
         <div className="flex items-center gap-3">
           <NavLink to="/team" className="flex items-center gap-2 text-inherit no-underline">
-            <span className="w-2 h-2 bg-[var(--c-accent)] rounded-full" />
+            <img src="/favicon.svg" alt="Vyom Kavach" className="w-5 h-5 drop-shadow-[0_0_6px_rgba(0,229,255,0.4)]" />
             <span className="font-logo font-bold text-sm tracking-wide text-[var(--c-text-max)]">
               Vyom Kavach
             </span>
