@@ -46,23 +46,27 @@ if (fs.existsSync(appDist)) {
   console.warn('Warning: app/dist does not exist yet.');
 }
 
-// 3. Ensure favicon.svg is universally available in root and all static route folders
-const faviconSrc = path.join(rootDir, 'app', 'public', 'favicon.svg');
-if (fs.existsSync(faviconSrc)) {
-  console.log('Copying favicon.svg to root and route directories...');
-  fs.copyFileSync(faviconSrc, path.join(distDir, 'favicon.svg'));
-  fs.copyFileSync(faviconSrc, path.join(distDir, 'favicon.ico'));
+// 3. Ensure all favicon formats (SVG, multi-resolution binary ICO, PNGs) are available across all routes
+const publicDir = path.join(rootDir, 'app', 'public');
+const iconFiles = ['favicon.svg', 'favicon.ico', 'favicon-32x32.png', 'favicon-16x16.png', 'apple-touch-icon.png'];
 
-  const landingStaticDir = path.join(distDir, 'landing-static');
-  if (fs.existsSync(landingStaticDir)) {
-    fs.copyFileSync(faviconSrc, path.join(landingStaticDir, 'favicon.svg'));
-  }
+console.log('Copying all favicon formats to root and route directories...');
+for (const iconFile of iconFiles) {
+  const src = path.join(publicDir, iconFile);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, path.join(distDir, iconFile));
 
-  const appRoutes = ['trainer', 'aar', 'vr', 'instructor', 'team', 'swarm', 'styleguide'];
-  for (const route of appRoutes) {
-    const routeDir = path.join(distDir, route);
-    if (fs.existsSync(routeDir)) {
-      fs.copyFileSync(faviconSrc, path.join(routeDir, 'favicon.svg'));
+    const landingStaticDir = path.join(distDir, 'landing-static');
+    if (fs.existsSync(landingStaticDir)) {
+      fs.copyFileSync(src, path.join(landingStaticDir, iconFile));
+    }
+
+    const appRoutes = ['trainer', 'aar', 'vr', 'instructor', 'team', 'swarm', 'styleguide'];
+    for (const route of appRoutes) {
+      const routeDir = path.join(distDir, route);
+      if (fs.existsSync(routeDir)) {
+        fs.copyFileSync(src, path.join(routeDir, iconFile));
+      }
     }
   }
 }
