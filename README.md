@@ -2,7 +2,7 @@
 
 > **Next-Generation 77GHz FMCW Micro-Doppler Radar DSP, Decentralized Autonomous Swarm Defense, 3D Urban Canopy C2 Digital Twin & Auditable Operator Certification System for Air Defense & Homeland Security Forces**
 
-[Live Web Application](https://dronethreattrainer.vercel.app/) • [API Documentation (Swagger)](http://localhost:8090/docs) • [Architectural Specifications](DESIGN.md) • [Deployment Guide (Vercel & Render)](DEPLOYMENT.md)
+[Live Web Application](https://vyom-kavach-ps247.vercel.app/) • [API Documentation (Swagger)](https://vyomkavach-api-sw9g.onrender.com/docs) • [Architectural Specifications](DESIGN.md) • [Deployment Guide (Vercel & Render)](DEPLOYMENT.md)
 
 ---
 
