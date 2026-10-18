@@ -1,0 +1,350 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 640" width="100%" height="100%">
+  <defs>
+    <!-- Background grid pattern -->
+    <pattern id="tacticalGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0F1B2B" stroke-width="0.8" stroke-opacity="0.6"/>
+      <circle cx="40" cy="40" r="1" fill="#1E3A5F" fill-opacity="0.4"/>
+    </pattern>
+
+    <!-- Arrow markers -->
+    <marker id="arrowCyan" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 1 L 6 4 L 0 7 Z" fill="#00E5FF"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 1 L 6 4 L 0 7 Z" fill="#00E87A"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 1 L 6 4 L 0 7 Z" fill="#A855F7"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 1 L 6 4 L 0 7 Z" fill="#F59E0B"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 1 L 6 4 L 0 7 Z" fill="#FF3366"/>
+    </marker>
+
+    <!-- Header glow filter -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <style>
+    .title-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; font-weight: 700; fill: #FFFFFF; }
+    .badge-text { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; }
+    .node-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; font-weight: 700; }
+    .node-desc { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; fill: #8DA2BB; }
+    .node-code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 10.5px; fill: #CBD5E1; }
+    .connector-label { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 9.5px; font-weight: 600; fill: #64748B; }
+  </style>
+
+  <!-- Deep Canvas Background -->
+  <rect width="1160" height="640" rx="12" fill="#04070C"/>
+  <rect width="1160" height="640" rx="12" fill="url(#tacticalGrid)"/>
+  <rect width="1160" height="640" rx="12" fill="none" stroke="#162536" stroke-width="1.5"/>
+
+  <!-- Top Title Banner -->
+  <g transform="translate(40, 28)">
+    <rect x="0" y="0" width="1080" height="48" rx="8" fill="#08101A" stroke="#1E324B" stroke-width="1"/>
+    
+    <!-- Branding Icon & Title -->
+    <circle cx="24" cy="24" r="10" fill="#0A192F" stroke="#00E5FF" stroke-width="1.5"/>
+    <circle cx="24" cy="24" r="3.5" fill="#00E5FF"/>
+    
+    <text x="44" y="22" class="title-text" font-size="14.5" fill="#FFFFFF">VYOM KAVACH (व्योम कवच)</text>
+    <text x="238" y="22" class="title-text" font-size="13" fill="#64748B">|</text>
+    <text x="250" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500" fill="#94A3B8">End-to-End Autonomous C-UAS Threat Recognition &amp; Interdiction Pipeline</text>
+    <text x="44" y="38" class="badge-text" fill="#00E5FF">SIH 2026 • PROBLEM STATEMENT PS-247 • REAL-TIME C2 ARCHITECTURE</text>
+
+    <!-- Telemetry Status Pills -->
+    <rect x="880" y="14" width="84" height="20" rx="4" fill="#0D281E" stroke="#00E87A" stroke-width="0.8"/>
+    <circle cx="890" cy="24" r="3" fill="#00E87A"/>
+    <text x="898" y="27.5" class="badge-text" fill="#00E87A">DSP: CFAR</text>
+
+    <rect x="974" y="14" width="94" height="20" rx="4" fill="#1C1833" stroke="#A855F7" stroke-width="0.8"/>
+    <circle cx="984" cy="24" r="3" fill="#A855F7"/>
+    <text x="992" y="27.5" class="badge-text" fill="#D8B4FE">ONNX: ~0.03ms</text>
+  </g>
+
+  <!-- ==================== STAGE 1: MULTI-SENSOR INGESTION ==================== -->
+  <g transform="translate(40, 100)">
+    <rect width="200" height="490" rx="10" fill="#070D16" stroke="#00E5FF" stroke-width="1.5" stroke-opacity="0.85"/>
+    
+    <!-- Stage Header -->
+    <path d="M 0 10 Q 0 0 10 0 L 190 0 Q 200 0 200 10 L 200 38 L 0 38 Z" fill="#0A1828"/>
+    <text x="14" y="24" class="node-title" fill="#00E5FF">1. SENSOR INGESTION</text>
+    <line x1="0" y1="38" x2="200" y2="38" stroke="#132B45" stroke-width="1"/>
+
+    <!-- Module 1: 77GHz FMCW Radar -->
+    <g transform="translate(12, 50)">
+      <rect width="176" height="96" rx="6" fill="#0B1320" stroke="#1A314D" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">77GHz FMCW Radar</text>
+      <text x="10" y="36" class="node-code">iq_synthesizer.py</text>
+      <text x="10" y="54" class="node-desc">• In-phase/Quadrature (I/Q)</text>
+      <text x="10" y="69" class="node-desc">• Radial velocity modulation</text>
+      <text x="10" y="84" class="node-desc">• Rotor blade jitter harmonics</text>
+    </g>
+
+    <!-- Module 2: EO/IR Thermal Camera -->
+    <g transform="translate(12, 158)">
+      <rect width="176" height="96" rx="6" fill="#0B1320" stroke="#1A314D" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">EO/IR Thermal Array</text>
+      <text x="10" y="36" class="node-code">multi_sensor.py [eo_ir]</text>
+      <text x="10" y="54" class="node-desc">• Optical silhouette profiling</text>
+      <text x="10" y="69" class="node-desc">• Night/dusk illumination loss</text>
+      <text x="10" y="84" class="node-desc">• Gross shape discrimination</text>
+    </g>
+
+    <!-- Module 3: Passive RF Electronic Sniffing -->
+    <g transform="translate(12, 266)">
+      <rect width="176" height="96" rx="6" fill="#0B1320" stroke="#1A314D" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">RF Emission Sniffer</text>
+      <text x="10" y="36" class="node-code">multi_sensor.py [rf]</text>
+      <text x="10" y="54" class="node-desc">• 2.4 / 5.8 GHz telemetry links</text>
+      <text x="10" y="69" class="node-desc">• FHSS signal hopping detection</text>
+      <text x="10" y="84" class="node-desc">• RF-silent drone blindspot</text>
+    </g>
+
+    <!-- Module 4: Acoustic Triangulation -->
+    <g transform="translate(12, 374)">
+      <rect width="176" height="96" rx="6" fill="#0B1320" stroke="#1A314D" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">Acoustic Microphone</text>
+      <text x="10" y="36" class="node-code">multi_sensor.py [acoustic]</text>
+      <text x="10" y="54" class="node-desc">• Rotor acoustic harmonics</text>
+      <text x="10" y="69" class="node-desc">• Low-altitude azimuth cue</text>
+      <text x="10" y="84" class="node-desc">• Wind/urban noise model</text>
+    </g>
+  </g>
+
+  <!-- Connectors: Stage 1 -> Stage 2 -->
+  <path d="M 240 198 L 268 198" fill="none" stroke="#00E5FF" stroke-width="1.8" marker-end="url(#arrowCyan)"/>
+  <path d="M 240 306 L 254 306 L 254 280 L 268 280" fill="none" stroke="#00E5FF" stroke-width="1.8" stroke-dasharray="3 3" marker-end="url(#arrowCyan)"/>
+  <path d="M 240 414 L 254 414 L 254 362 L 268 362" fill="none" stroke="#00E5FF" stroke-width="1.8" stroke-dasharray="3 3" marker-end="url(#arrowCyan)"/>
+  <text x="242" y="190" class="connector-label">Raw I/Q</text>
+
+  <!-- ==================== STAGE 2: DSP & ONNX INFERENCE ==================== -->
+  <g transform="translate(270, 100)">
+    <rect width="200" height="490" rx="10" fill="#070F0B" stroke="#00E87A" stroke-width="1.5" stroke-opacity="0.85"/>
+    
+    <!-- Stage Header -->
+    <path d="M 0 10 Q 0 0 10 0 L 190 0 Q 200 0 200 10 L 200 38 L 0 38 Z" fill="#0C2115"/>
+    <text x="14" y="24" class="node-title" fill="#00E87A">2. DSP &amp; ONNX ENGINE</text>
+    <line x1="0" y1="38" x2="200" y2="38" stroke="#163824" stroke-width="1"/>
+
+    <!-- Module 1: 2D FFT Processing -->
+    <g transform="translate(12, 50)">
+      <rect width="176" height="96" rx="6" fill="#0A1810" stroke="#184326" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">Range-Doppler 2D-FFT</text>
+      <text x="10" y="36" class="node-code">radar_dsp.py [fft2d]</text>
+      <text x="10" y="54" class="node-desc">• Fast-time Range FFT</text>
+      <text x="10" y="69" class="node-desc">• Slow-time Doppler FFT</text>
+      <text x="10" y="84" class="node-desc">• Micro-motion spectrogram</text>
+    </g>
+
+    <!-- Module 2: CA-CFAR Detector -->
+    <g transform="translate(12, 158)">
+      <rect width="176" height="96" rx="6" fill="#0A1810" stroke="#184326" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">Cell-Averaging CFAR</text>
+      <text x="10" y="36" class="node-code">radar_dsp.py [ca_cfar]</text>
+      <text x="10" y="54" class="node-desc">• Guard &amp; training cell averaging</text>
+      <text x="10" y="69" class="node-desc">• Adaptive noise thresholding</text>
+      <text x="10" y="84" class="node-desc">• Physical missed-blip dropout</text>
+    </g>
+
+    <!-- Module 3: 11-D Feature Extraction -->
+    <g transform="translate(12, 266)">
+      <rect width="176" height="96" rx="6" fill="#0A1810" stroke="#184326" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">11-D Kinematic Tensor</text>
+      <text x="10" y="36" class="node-code">radar_classifier.py</text>
+      <text x="10" y="54" class="node-desc">• Doppler velocity &amp; jitter</text>
+      <text x="10" y="69" class="node-desc">• Micro-Doppler bandwidth</text>
+      <text x="10" y="84" class="node-desc">• SNR (dB) + RCS estimate</text>
+    </g>
+
+    <!-- Module 4: CatBoost ONNX Model -->
+    <g transform="translate(12, 374)">
+      <rect width="176" height="96" rx="6" fill="#0A1810" stroke="#184326" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">CatBoost ONNX Runner</text>
+      <text x="10" y="36" class="node-code">radarsense.onnx</text>
+      <text x="10" y="54" class="node-desc">• Latency: ~0.03 ms / call</text>
+      <text x="10" y="69" class="node-desc">• Quad / Fixed / Bird / Decoy</text>
+      <text x="10" y="84" class="node-desc">• POST /api/contact/classify</text>
+    </g>
+  </g>
+
+  <!-- Connectors: Stage 2 -> Stage 3 -->
+  <path d="M 470 200 L 498 200" fill="none" stroke="#00E87A" stroke-width="1.8" marker-end="url(#arrowGreen)"/>
+  <path d="M 470 422 L 484 422 L 484 320 L 498 320" fill="none" stroke="#00E87A" stroke-width="1.8" marker-end="url(#arrowGreen)"/>
+  <text x="472" y="190" class="connector-label">Target Blips</text>
+
+  <!-- ==================== STAGE 3: TACTICAL C2 PRESENTATION ==================== -->
+  <g transform="translate(500, 100)">
+    <rect width="200" height="490" rx="10" fill="#0E0916" stroke="#A855F7" stroke-width="1.5" stroke-opacity="0.85"/>
+    
+    <!-- Stage Header -->
+    <path d="M 0 10 Q 0 0 10 0 L 190 0 Q 200 0 200 10 L 200 38 L 0 38 Z" fill="#201133"/>
+    <text x="14" y="24" class="node-title" fill="#C084FC">3. AIRSPACE C2 DECK</text>
+    <line x1="0" y1="38" x2="200" y2="38" stroke="#371E54" stroke-width="1"/>
+
+    <!-- Module 1: 2D PPI Radar Scope -->
+    <g transform="translate(12, 50)">
+      <rect width="176" height="96" rx="6" fill="#140E1E" stroke="#36224D" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">2D Tactical PPI Scope</text>
+      <text x="10" y="36" class="node-code">RadarScope.tsx [2d]</text>
+      <text x="10" y="54" class="node-desc">• 360° phosphor azimuth sweep</text>
+      <text x="10" y="69" class="node-desc">• Range rings &amp; velocity vectors</text>
+      <text x="10" y="84" class="node-desc">• No-Engage zone overlays</text>
+    </g>
+
+    <!-- Module 2: 3D Airspace Dome -->
+    <g transform="translate(12, 158)">
+      <rect width="176" height="96" rx="6" fill="#140E1E" stroke="#36224D" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">3D Airspace Dome</text>
+      <text x="10" y="36" class="node-code">Three.js / WebGL / WebXR</text>
+      <text x="10" y="54" class="node-desc">• Hemispherical ceiling volume</text>
+      <text x="10" y="69" class="node-desc">• Altitude arcs &amp; climb slopes</text>
+      <text x="10" y="84" class="node-desc">• Standoff range envelopes</text>
+    </g>
+
+    <!-- Module 3: 3D Urban Canopy -->
+    <g transform="translate(12, 266)">
+      <rect width="176" height="96" rx="6" fill="#140E1E" stroke="#36224D" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">3D Urban Canopy</text>
+      <text x="10" y="36" class="node-code">UrbanMap3D.tsx [MapLibre]</text>
+      <text x="10" y="54" class="node-desc">• 3D extruded building twins</text>
+      <text x="10" y="69" class="node-desc">• Elevation line-of-sight block</text>
+      <text x="10" y="84" class="node-desc">• Contact cluster de-confliction</text>
+    </g>
+
+    <!-- Module 4: Ares-X Swarm Simulation -->
+    <g transform="translate(12, 374)">
+      <rect width="176" height="96" rx="6" fill="#140E1E" stroke="#36224D" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">Ares-X Swarm Engine</text>
+      <text x="10" y="36" class="node-code">swarm_kinematics.py</text>
+      <text x="10" y="54" class="node-desc">• Decentralized Boids flocking</text>
+      <text x="10" y="69" class="node-desc">• Seeded deterministic paths</text>
+      <text x="10" y="84" class="node-desc">• Live mid-flight loss recovery</text>
+    </g>
+  </g>
+
+  <!-- Connectors: Stage 3 -> Stage 4 -->
+  <path d="M 700 200 L 728 200" fill="none" stroke="#A855F7" stroke-width="1.8" marker-end="url(#arrowPurple)"/>
+  <path d="M 700 374 L 714 374 L 714 330 L 728 330" fill="none" stroke="#A855F7" stroke-width="1.8" marker-end="url(#arrowPurple)"/>
+  <text x="702" y="190" class="connector-label">Threat Tracks</text>
+
+  <!-- ==================== STAGE 4: OPERATOR DECISION & ROE ==================== -->
+  <g transform="translate(730, 100)">
+    <rect width="200" height="490" rx="10" fill="#120E06" stroke="#F59E0B" stroke-width="1.5" stroke-opacity="0.85"/>
+    
+    <!-- Stage Header -->
+    <path d="M 0 10 Q 0 0 10 0 L 190 0 Q 200 0 200 10 L 200 38 L 0 38 Z" fill="#291E0A"/>
+    <text x="14" y="24" class="node-title" fill="#FBBF24">4. OPERATOR &amp; ROE</text>
+    <line x1="0" y1="38" x2="200" y2="38" stroke="#48330D" stroke-width="1"/>
+
+    <!-- Module 1: 3-Role Team Terminal -->
+    <g transform="translate(12, 50)">
+      <rect width="176" height="96" rx="6" fill="#1A1408" stroke="#4A340C" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">3-Role Crew Chain</text>
+      <text x="10" y="36" class="node-code">team.html [/team]</text>
+      <text x="10" y="54" class="node-desc">• 1: Surveillance / Detector</text>
+      <text x="10" y="69" class="node-desc">• 2: Classification Analyst</text>
+      <text x="10" y="84" class="node-desc">• 3: Engagement Authority</text>
+    </g>
+
+    <!-- Module 2: Comms Relay Latency -->
+    <g transform="translate(12, 158)">
+      <rect width="176" height="96" rx="6" fill="#1A1408" stroke="#4A340C" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">Relay Comms Delay</text>
+      <text x="10" y="36" class="node-code">POST /api/team/action</text>
+      <text x="10" y="54" class="node-desc">• 5s tactical handoff latency</text>
+      <text x="10" y="69" class="node-desc">• Server-side 403 enforcement</text>
+      <text x="10" y="84" class="node-desc">• Stress-tested handoff chain</text>
+    </g>
+
+    <!-- Module 3: Graduated Response Ladder -->
+    <g transform="translate(12, 266)">
+      <rect width="176" height="96" rx="6" fill="#1A1408" stroke="#4A340C" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">Graduated Response</text>
+      <text x="10" y="36" class="node-code">scorer.py [graduated_roe]</text>
+      <text x="10" y="54" class="node-desc">• Tier 1: Warning Strobe / Audio</text>
+      <text x="10" y="69" class="node-desc">• Tier 2: Soft-Kill RF/GNSS Jam</text>
+      <text x="10" y="84" class="node-desc">• Tier 3: Kinetic Hard-Kill (600ms)</text>
+    </g>
+
+    <!-- Module 4: No-Engage Collateral Protection -->
+    <g transform="translate(12, 374)">
+      <rect width="176" height="96" rx="6" fill="#1A1408" stroke="#4A340C" stroke-width="1"/>
+      <text x="10" y="20" class="node-title" fill="#FFFFFF">No-Engage Buffer Zones</text>
+      <text x="10" y="36" class="node-code">generator.py [no_engage]</text>
+      <text x="10" y="54" class="node-desc">• Hospitals / schools / housing</text>
+      <text x="10" y="69" class="node-desc">• Kinetic strike vetoes</text>
+      <text x="10" y="84" class="node-desc">• Procedural violation grading</text>
+    </g>
+  </g>
+
+  <!-- Connectors: Stage 4 -> Stage 5 -->
+  <path d="M 930 200 L 958 200" fill="none" stroke="#F59E0B" stroke-width="1.8" marker-end="url(#arrowAmber)"/>
+  <path d="M 930 422 L 944 422 L 944 320 L 958 320" fill="none" stroke="#F59E0B" stroke-width="1.8" marker-end="url(#arrowAmber)"/>
+  <text x="932" y="190" class="connector-label">Engagement</text>
+
+  <!-- ==================== STAGE 5: AUDIT & AAR LEDGER ==================== -->
+  <g transform="translate(960, 100)">
+    <rect width="160" height="490" rx="10" fill="#140609" stroke="#FF3366" stroke-width="1.5" stroke-opacity="0.85"/>
+    
+    <!-- Stage Header -->
+    <path d="M 0 10 Q 0 0 10 0 L 150 0 Q 160 0 160 10 L 160 38 L 0 38 Z" fill="#2C0C14"/>
+    <text x="12" y="24" class="node-title" fill="#FF4D79">5. AUDIT &amp; AAR</text>
+    <line x1="0" y1="38" x2="160" y2="38" stroke="#4A1422" stroke-width="1"/>
+
+    <!-- Module 1: Decision-Tree Scorer -->
+    <g transform="translate(10, 50)">
+      <rect width="140" height="96" rx="6" fill="#1C090F" stroke="#4A1824" stroke-width="1"/>
+      <text x="8" y="20" class="node-title" fill="#FFFFFF">Decision-Tree</text>
+      <text x="8" y="36" class="node-code">scorer.py [0-100]</text>
+      <text x="8" y="54" class="node-desc">• Detection (20%)</text>
+      <text x="8" y="69" class="node-desc">• Classification (25%)</text>
+      <text x="8" y="84" class="node-desc">• ROE &amp; Time (55%)</text>
+    </g>
+
+    <!-- Module 2: Automation Bias Tracking -->
+    <g transform="translate(10, 158)">
+      <rect width="140" height="96" rx="6" fill="#1C090F" stroke="#4A1824" stroke-width="1"/>
+      <text x="8" y="20" class="node-title" fill="#FFFFFF">Automation Bias</text>
+      <text x="8" y="36" class="node-code">ai_trust Index</text>
+      <text x="8" y="54" class="node-desc">• Hint followed/overrode</text>
+      <text x="8" y="69" class="node-desc">• Spoof decoy gullibility</text>
+      <text x="8" y="84" class="node-desc">• Cognitive trust score</text>
+    </g>
+
+    <!-- Module 3: Ed25519 Hash Ledger -->
+    <g transform="translate(10, 266)">
+      <rect width="140" height="96" rx="6" fill="#1C090F" stroke="#4A1824" stroke-width="1"/>
+      <text x="8" y="20" class="node-title" fill="#FFFFFF">Ed25519 Ledger</text>
+      <text x="8" y="36" class="node-code">store.py [hash_chain]</text>
+      <text x="8" y="54" class="node-desc">• SHA-256 block chain</text>
+      <text x="8" y="69" class="node-desc">• 100% tamper detection</text>
+      <text x="8" y="84" class="node-desc">• /api/audit/verify_chain</text>
+    </g>
+
+    <!-- Module 4: AAR Telemetry & Replay -->
+    <g transform="translate(10, 374)">
+      <rect width="140" height="96" rx="6" fill="#1C090F" stroke="#4A1824" stroke-width="1"/>
+      <text x="8" y="20" class="node-title" fill="#FFFFFF">Ghost Replay &amp; Heat</text>
+      <text x="8" y="36" class="node-code">aar.html [/aar]</text>
+      <text x="8" y="54" class="node-desc">• Missed-blip heatmap</text>
+      <text x="8" y="69" class="node-desc">• Error taxonomy profile</text>
+      <text x="8" y="84" class="node-desc">• Trainee certification</text>
+    </g>
+  </g>
+
+  <!-- Live Dynamic Reactive Loop Feedback Arrow (Stage 4 Kill -> Stage 3 Ares Sim) -->
+  <path d="M 830 472 L 830 500 L 600 500 L 600 472" fill="none" stroke="#FF3366" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#arrowRed)"/>
+  <text x="640" y="515" class="connector-label" fill="#FF6688">Live Drone Shoot-Down: Injects UAV_FAILURE &amp; Dynamic Flocking Reallocation</text>
+
+  <!-- Footer Watermark / Metadata -->
+  <g transform="translate(40, 608)">
+    <text x="0" y="14" class="badge-text" fill="#475569">VYOM KAVACH DEFENSE PLATFORM • SMART INDIA HACKATHON 2026 (PS-247) • AUTONOMOUS C-UAS ARCHITECTURAL BLUEPRINT</text>
+    <text x="1080" y="14" class="badge-text" fill="#00E5FF" text-anchor="end">SYSTEM TOPOLOGY: VERIFIED</text>
+  </g>
+</svg>

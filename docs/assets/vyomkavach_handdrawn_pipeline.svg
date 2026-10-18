@@ -1,0 +1,339 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 900" width="100%" height="100%">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&amp;family=Caveat:wght@600&amp;display=swap');
+      
+      text {
+        font-family: 'Patrick Hand', 'Caveat', 'Virgil', 'Comic Sans MS', 'Chalkboard SE', 'Segoe Print', cursive, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .hand-title {
+        font-size: 28px;
+        font-weight: 700;
+        fill: #18181B;
+      }
+      .hand-subtitle {
+        font-size: 15px;
+        fill: #52525B;
+      }
+      .container-title {
+        font-size: 26px;
+        font-weight: 700;
+        fill: #18181B;
+      }
+      .node-text-lg {
+        font-size: 18px;
+        font-weight: 700;
+        fill: #18181B;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      .node-text-md {
+        font-size: 16px;
+        font-weight: 700;
+        fill: #18181B;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      .node-text-sub {
+        font-size: 12.5px;
+        fill: #3F3F46;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      .edge-label {
+        font-size: 14px;
+        font-weight: 700;
+        fill: #18181B;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      .edge-label-red {
+        font-size: 13.5px;
+        font-weight: 700;
+        fill: #B91C1C;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+      .badge-tag {
+        font-size: 14px;
+        font-weight: 700;
+        fill: #18181B;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+    </style>
+
+    <!-- Hand-drawn charcoal arrow marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#262626" stroke="#262626" stroke-width="1" stroke-linejoin="round"/>
+    </marker>
+    <!-- Red feedback loop marker -->
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#DC2626" stroke="#DC2626" stroke-width="1" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- Clean Off-White Background -->
+  <rect width="1320" height="900" rx="16" fill="#F4F4F6"/>
+  <rect width="1320" height="900" rx="16" fill="none" stroke="#D4D4D8" stroke-width="1.5"/>
+
+  <!-- Header Banner -->
+  <g transform="translate(50, 42)">
+    <text x="0" y="0" class="hand-title">Vyom Kavach (व्योम कवच) — System Architecture Pipeline</text>
+    <text x="0" y="24" class="hand-subtitle">Smart India Hackathon 2026 (PS-247) • Micro-Doppler Radar DSP, ONNX Threat Classification, C2 Deck &amp; Hash Ledger</text>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- BIG YELLOW CONTAINER: DVC / RADAR DSP & ML PIPELINE     -->
+  <!-- ======================================================== -->
+  <g transform="translate(755, 90)">
+    <!-- Main Yellow Container -->
+    <rect width="515" height="595" rx="26" fill="#FEE388" stroke="#262626" stroke-width="2.4" stroke-linejoin="round"/>
+    <text x="257" y="38" class="container-title" text-anchor="middle">Radar DSP &amp; ML Pipeline</text>
+
+    <!-- Node: Data(without Outliers) / 2D FFT Doppler Matrix (Green) -->
+    <g transform="translate(80, 75)">
+      <rect width="365" height="60" rx="16" fill="#74E1A2" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+      <text x="182" y="22" class="node-text-lg">2D-FFT Doppler Matrix</text>
+      <text x="182" y="43" class="node-text-sub">iq_synthesizer.py (raw chirps without clutter)</text>
+    </g>
+
+    <!-- Resampled + EWMA arrow down -->
+    <path d="M 345 135 L 345 204" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <rect x="255" y="158" width="180" height="22" rx="5" fill="#FEE388"/>
+    <text x="345" y="169" class="edge-label">Range-Doppler EWMA</text>
+
+    <!-- Resampled Data / 11-D Physical Features (Green) -->
+    <g transform="translate(250, 206)">
+      <rect width="195" height="62" rx="16" fill="#74E1A2" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+      <text x="97" y="23" class="node-text-md">11-D Feature Vector</text>
+      <text x="97" y="44" class="node-text-sub">Jitter, RCS, Vel, SNR</text>
+    </g>
+
+    <!-- Blue Diamonds inside Yellow Container: Scaler & Kmeans -->
+    <!-- Diamond 1: CA-CFAR Filter -->
+    <g transform="translate(135, 205)">
+      <polygon points="0,-36 44,0 0,36 -44,0" fill="#8AC7F8" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+      <text x="0" y="-3" class="node-text-md">CA-CFAR</text>
+      <text x="0" y="14" class="node-text-sub">Filter</text>
+    </g>
+
+    <!-- Diamond 2: RCS Gate -->
+    <g transform="translate(135, 315)">
+      <polygon points="0,-36 44,0 0,36 -44,0" fill="#8AC7F8" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+      <text x="0" y="-3" class="node-text-md">RCS &amp; SNR</text>
+      <text x="0" y="14" class="node-text-sub">Gate</text>
+    </g>
+
+    <!-- Arrow from 11-D Feature Vector down to Encoder + Model (Lag features) -->
+    <path d="M 347 268 L 347 380 L 315 380 L 315 408" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <rect x="270" y="328" width="155" height="22" rx="5" fill="#FEE388"/>
+    <text x="347" y="339" class="edge-label">Micro-Doppler Jitter</text>
+
+    <!-- Blue Box: Encoder + Model (CatBoost ONNX) -->
+    <g transform="translate(115, 410)">
+      <rect width="285" height="76" rx="18" fill="#8AC7F8" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+      <text x="142" y="27" class="node-text-lg">CatBoost ONNX Model</text>
+      <text x="142" y="50" class="node-text-sub">radarsense.onnx • ~0.03ms Inference</text>
+    </g>
+
+    <!-- Side Pink Pills inside Yellow Box (Train / Test badges in reference) -->
+    <g transform="translate(425, 405)">
+      <rect width="70" height="34" rx="10" fill="#F7A1A7" stroke="#262626" stroke-width="2" stroke-linejoin="round"/>
+      <text x="35" y="17" class="badge-tag">4-Class</text>
+    </g>
+    <g transform="translate(425, 452)">
+      <rect width="70" height="34" rx="10" fill="#F7A1A7" stroke="#262626" stroke-width="2" stroke-linejoin="round"/>
+      <text x="35" y="17" class="badge-tag">0.03 ms</text>
+    </g>
+
+    <!-- Arrow down from Encoder + Model to Register Model outside -->
+    <path d="M 257 486 L 257 544" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- Bottom Yellow Node outside container: Register Model / Threat Vector -->
+  <g transform="translate(890, 715)">
+    <rect width="245" height="58" rx="16" fill="#FEE07A" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="122" y="22" class="node-text-lg">4-Class Threat Vector</text>
+    <text x="122" y="42" class="node-text-sub">Quad • Fixed-Wing • Bird • Decoy</text>
+  </g>
+
+  <!-- ======================================================== -->
+  <!-- LEFT SIDE: SENSOR INGESTION & PIPELINE INPUTS            -->
+  <!-- ======================================================== -->
+
+  <!-- Green Inputs (like Jan, Feb, Mar in reference) -->
+  <g transform="translate(50, 115)">
+    <ellipse cx="68" cy="24" rx="68" ry="24" fill="#74E1A2" stroke="#262626" stroke-width="2.2"/>
+    <text x="68" y="17" class="node-text-md">77GHz Radar</text>
+    <text x="68" y="31" class="node-text-sub">Raw FMCW I/Q</text>
+  </g>
+
+  <g transform="translate(50, 177)">
+    <ellipse cx="68" cy="24" rx="68" ry="24" fill="#74E1A2" stroke="#262626" stroke-width="2.2"/>
+    <text x="68" y="17" class="node-text-md">EO/IR Optics</text>
+    <text x="68" y="31" class="node-text-sub">Thermal Cross-Cue</text>
+  </g>
+
+  <g transform="translate(50, 239)">
+    <ellipse cx="68" cy="24" rx="68" ry="24" fill="#74E1A2" stroke="#262626" stroke-width="2.2"/>
+    <text x="68" y="17" class="node-text-md">RF Scanner</text>
+    <text x="68" y="31" class="node-text-sub">Emission Spectrum</text>
+  </g>
+
+  <g transform="translate(50, 301)">
+    <ellipse cx="68" cy="24" rx="68" ry="24" fill="#74E1A2" stroke="#262626" stroke-width="2.2"/>
+    <text x="68" y="17" class="node-text-md">Ares Swarm Sim</text>
+    <text x="68" y="31" class="node-text-sub">Decentralized UAVs</text>
+  </g>
+
+  <!-- Arrows from Green Ovals to Pink Concat -->
+  <path d="M 186 139 L 285 225" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M 186 201 L 285 233" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M 186 263 L 285 245" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M 186 325 L 285 253" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- Pink Node: Concat / Ingest Sync -->
+  <g transform="translate(290, 212)">
+    <rect width="120" height="54" rx="14" fill="#F7A1A7" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="60" y="20" class="node-text-md">Ingest &amp; Sync</text>
+    <text x="60" y="39" class="node-text-sub">generator.py</text>
+  </g>
+
+  <!-- Arrow from Concat to Blue Drop Columns / Pre-Filter -->
+  <path d="M 410 239 L 475 239" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- Blue Node: Drop Columns / Clutter Pre-Filter -->
+  <g transform="translate(480, 209)">
+    <rect width="140" height="62" rx="14" fill="#8AC7F8" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="70" y="22" class="node-text-md">Clutter Filter</text>
+    <text x="70" y="42" class="node-text-sub">Static Ground Clutter</text>
+  </g>
+
+  <!-- Arrow from Drop Columns into Yellow Box's Data(without Outliers) -->
+  <path d="M 620 239 L 830 195" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- ======================================================== -->
+  <!-- CENTER / BOTTOM-LEFT: C2, OPERATORS, ROE & SWARM LOOP    -->
+  <!-- ======================================================== -->
+
+  <!-- Long Arrow from Data (without Outliers) to Location Subset / Tactical C2 Deck -->
+  <path d="M 830 205 L 218 395" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="440" y="302" width="168" height="24" rx="5" fill="#F4F4F6"/>
+  <text x="524" y="314" class="edge-label">Target Tracks &amp; Elevation</text>
+
+  <!-- Pink Box: Location Subset / Tactical C2 Deck -->
+  <g transform="translate(68, 395)">
+    <rect width="150" height="88" rx="16" fill="#F7A1A7" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="75" y="27" class="node-text-lg">Tactical C2</text>
+    <text x="75" y="50" class="node-text-lg">Deck</text>
+    <text x="75" y="71" class="node-text-sub">server.py • WebSocket</text>
+  </g>
+
+  <!-- Partial Fit Arrows to Scaler & Kmeans / 2D & 3D Visualizers -->
+  <path d="M 218 415 L 305 395" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="225" y="388" width="76" height="20" rx="4" fill="#F4F4F6"/>
+  <text x="263" y="398" class="edge-label">2D Sweep</text>
+
+  <path d="M 218 455 L 305 475" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="225" y="455" width="76" height="20" rx="4" fill="#F4F4F6"/>
+  <text x="263" y="465" class="edge-label">3D Canopy</text>
+
+  <!-- Blue Diamonds outside: 2D PPI Scope & 3D Urban Map -->
+  <g transform="translate(360, 395)">
+    <polygon points="0,-36 50,0 0,36 -50,0" fill="#8AC7F8" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="0" y="-3" class="node-text-md">2D PPI Scope</text>
+    <text x="0" y="14" class="node-text-sub">RadarScope</text>
+  </g>
+
+  <g transform="translate(360, 485)">
+    <polygon points="0,-36 50,0 0,36 -50,0" fill="#8AC7F8" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="0" y="-3" class="node-text-md">3D Urban Twin</text>
+    <text x="0" y="14" class="node-text-sub">MapLibre GL</text>
+  </g>
+
+  <!-- Vertical connector arrow from C2 Deck to Operator & ROE -->
+  <path d="M 143 483 L 143 528" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="105" y="495" width="76" height="18" rx="4" fill="#F4F4F6"/>
+  <text x="143" y="504" class="edge-label">C2 Feed</text>
+
+  <!-- Green Node: Split Data / Operator Interdiction & ROE -->
+  <g transform="translate(65, 532)">
+    <rect width="180" height="72" rx="16" fill="#74E1A2" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="90" y="27" class="node-text-lg">Operator &amp; ROE</text>
+    <text x="90" y="50" class="node-text-sub">Graduated Response Ladder</text>
+  </g>
+
+  <!-- Arrows to Train and Test (Pink Nodes) -->
+  <path d="M 112 604 L 78 655" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M 198 604 L 232 655" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- Pink Node: Train / Soft-Kill Jam -->
+  <g transform="translate(35, 658)">
+    <rect width="92" height="48" rx="12" fill="#F7A1A7" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="46" y="17" class="node-text-md">Soft-Kill</text>
+    <text x="46" y="33" class="node-text-sub">RF Jammer</text>
+  </g>
+
+  <!-- Pink Node: Test / Hard-Kill Kinetic -->
+  <g transform="translate(186, 658)">
+    <rect width="98" height="48" rx="12" fill="#F7A1A7" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="49" y="17" class="node-text-md">Hard-Kill</text>
+    <text x="49" y="33" class="node-text-sub">Kinetic C-UAS</text>
+  </g>
+
+  <!-- Arrow from 11-D Features back to Operator / Split Data (like Lag features in reference) -->
+  <path d="M 1005 318 L 1005 350 L 475 350 L 475 562 L 250 562" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="545" y="340" width="160" height="22" rx="5" fill="#F4F4F6"/>
+  <text x="625" y="351" class="edge-label">Threat Priority &amp; ETA</text>
+
+  <!-- Blue Node: Encoder + Model / Scorer (scorer.py) -->
+  <g transform="translate(375, 642)">
+    <rect width="190" height="68" rx="16" fill="#8AC7F8" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="95" y="25" class="node-text-lg">Decision Scorer</text>
+    <text x="95" y="47" class="node-text-sub">scorer.py • 4 Evaluation Axes</text>
+  </g>
+
+  <!-- Evaluate and Training arrows to Decision Scorer -->
+  <path d="M 81 706 L 81 748 L 385 698" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="185" y="718" width="84" height="20" rx="4" fill="#F4F4F6"/>
+  <text x="227" y="728" class="edge-label">Execution</text>
+
+  <path d="M 284 682 L 370 682" fill="none" stroke="#262626" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="298" y="672" width="62" height="20" rx="4" fill="#F4F4F6"/>
+  <text x="329" y="682" class="edge-label">Verify</text>
+
+  <!-- Pink Node: Automation Bias Index -->
+  <g transform="translate(610, 645)">
+    <rect width="170" height="62" rx="14" fill="#F7A1A7" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="85" y="23" class="node-text-md">Automation Bias</text>
+    <text x="85" y="44" class="node-text-sub">AI Trust &amp; Spoof Index</text>
+  </g>
+
+  <!-- Arrow from Decision Scorer to Automation Bias -->
+  <path d="M 565 676 L 605 676" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- ======================================================== -->
+  <!-- BOTTOM FORENSIC LEDGER: ED25519 HASH CHAIN               -->
+  <!-- ======================================================== -->
+  <g transform="translate(440, 788)">
+    <rect width="375" height="62" rx="16" fill="#FEE07A" stroke="#262626" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="187" y="24" class="node-text-lg">Ed25519 Hash-Chained Audit Ledger</text>
+    <text x="187" y="44" class="node-text-sub">store.py • SHA-256 Tamper Detection • AAR Heatmap</text>
+  </g>
+
+  <!-- Arrow down to Audit Ledger from Scorer & Bias -->
+  <path d="M 470 710 L 470 782" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M 695 707 L 695 782" fill="none" stroke="#262626" stroke-width="2.2" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <rect x="535" y="736" width="130" height="20" rx="4" fill="#F4F4F6"/>
+  <text x="600" y="746" class="edge-label">Forensic Proof</text>
+
+  <!-- ======================================================== -->
+  <!-- DYNAMIC SWARM FEEDBACK LOOP (RED DASHED ARROW)           -->
+  <!-- ======================================================== -->
+  <path d="M 235 658 C 235 510, 315 325, 192 325" fill="none" stroke="#DC2626" stroke-width="2.4" stroke-dasharray="6,5" stroke-linecap="round" marker-end="url(#arrow-red)"/>
+  <rect x="228" y="330" width="235" height="22" rx="5" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="1"/>
+  <text x="345" y="341" class="edge-label-red">Shoot-Down: UAV_FAILURE Injected</text>
+
+</svg>
