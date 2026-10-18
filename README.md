@@ -12,7 +12,7 @@
 
 Key operational, technical, and cognitive bottlenecks in modern C-UAS operations include:
 
-1. **Micro-Doppler Radar Blindspots**: Low-altitude micro-UAVs exhibit Radar Cross Sections (RCS) comparable to birds and urban clutter ($\sigma \approx 0.001 - 0.01\text{ m}^2$). Conventional 2D radar systems fail to distinguish hostile weaponized drones from biological clutter without frequency-domain micro-Doppler rotor blade modulation analysis.
+1. **Micro-Doppler Radar Blindspots**: Low-altitude micro-UAVs exhibit Radar Cross Sections (RCS) comparable to birds and urban clutter (σ ≈ 0.001 – 0.01 m²). Conventional 2D radar systems fail to distinguish hostile weaponized drones from biological clutter without frequency-domain micro-Doppler rotor blade modulation analysis.
 2. **Autonomous Swarm Saturation**: Hostile swarms utilize decentralized flocking (Boids / potential-field algorithms) and adaptive recovery. When a single drone is neutralized, the swarm dynamically re-routes along evasive trajectories, overwhelming single-target kinetic defensive rings.
 3. **Cognitive Automation Bias & ROE Failures**: Operators facing extreme time pressure either suffer from *automation bias* (blindly trusting faulty AI suggestions, particularly against spoofed electronic decoys) or *procedural failure* (skipping graduated warning protocols in sensitive civilian No-Engage buffer zones).
 4. **Lack of Auditable Training & Evidentiary Provenance**: Existing simulators use pre-scripted video playback or idealized kinematic formulas, lacking physical signal synthesis, rigorous time-to-impact scoring, and tamper-evident cryptographic ledgers for military After-Action Reviews (AAR).
@@ -118,7 +118,10 @@ Vyom Kavach replicates the full tactical lifecycle: from raw 77GHz FMCW radar I/
 
 ### 6. Cryptographic Provenance & Tamper-Evident Ledger
 - Every completed drill calculates an Ed25519 cryptographic signature and a forward-linked SHA-256 block hash covering all score axes, timestamps, and trainee actions:
-  $$\text{Block Hash} = \text{SHA256}(\text{Prev\_Hash} \parallel \text{Trainee\_ID} \parallel \text{Scores} \parallel \text{Timestamp})$$
+
+  ```text
+  Block_Hash = SHA256(Prev_Hash ∥ Trainee_ID ∥ Scores ∥ Timestamp)
+  ```
 - Retrospective modification of any session row detectably breaks all subsequent hashes in the chain, verifiable via `GET /api/audit/verify_chain`.
 - Scripted scenarios are distributed as **HMAC-SHA256 signed packs**, verifiable completely offline for air-gapped defense deployments.
 
@@ -253,4 +256,4 @@ Vyom Kavach supports distributed multi-operator crew exercises over simulated re
 ---
 
 *Developed with tactical precision and defense-grade engineering rigor for the Smart India Hackathon 2026.*  
-*Built by Team **AncientWarriors**.*
+*Built by Team **JSON 0xFF**.*
