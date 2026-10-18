@@ -46,4 +46,25 @@ if (fs.existsSync(appDist)) {
   console.warn('Warning: app/dist does not exist yet.');
 }
 
+// 3. Ensure favicon.svg is universally available in root and all static route folders
+const faviconSrc = path.join(rootDir, 'app', 'public', 'favicon.svg');
+if (fs.existsSync(faviconSrc)) {
+  console.log('Copying favicon.svg to root and route directories...');
+  fs.copyFileSync(faviconSrc, path.join(distDir, 'favicon.svg'));
+  fs.copyFileSync(faviconSrc, path.join(distDir, 'favicon.ico'));
+
+  const landingStaticDir = path.join(distDir, 'landing-static');
+  if (fs.existsSync(landingStaticDir)) {
+    fs.copyFileSync(faviconSrc, path.join(landingStaticDir, 'favicon.svg'));
+  }
+
+  const appRoutes = ['trainer', 'aar', 'vr', 'instructor', 'team', 'swarm', 'styleguide'];
+  for (const route of appRoutes) {
+    const routeDir = path.join(distDir, route);
+    if (fs.existsSync(routeDir)) {
+      fs.copyFileSync(faviconSrc, path.join(routeDir, 'favicon.svg'));
+    }
+  }
+}
+
 console.log('=== Unified distribution assembled in dist/ ===');
