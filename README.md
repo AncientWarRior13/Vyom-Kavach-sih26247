@@ -50,15 +50,15 @@ Vyom Kavach replicates the full tactical lifecycle: from raw 77GHz FMCW radar I/
 
 | Feature | Legacy C-UAS Simulators / Manual Spreadsheets | Vyom Kavach (PS 247) |
 | :--- | :--- | :--- |
-| **Physics-Based Radar DSP** | Look-up tables or pre-baked animations; zero true frequency-domain signal processing. | Native **77GHz FMCW I/Q raw signal synthesizer** $\rightarrow$ **2D Range-Doppler FFT** $\rightarrow$ **CA-CFAR filter** extracting real rotor micro-Doppler modulation signatures. |
+| **Physics-Based Radar DSP** | Look-up tables or pre-baked animations; zero true frequency-domain signal processing. | Native **77GHz FMCW I/Q raw signal synthesizer** → **2D Range-Doppler FFT** → **CA-CFAR filter** extracting real rotor micro-Doppler modulation signatures. |
 | **Sub-Millisecond ML Inference** | Slow cloud-dependent models or static rule-based heuristics (>500 ms latency). | Production **CatBoost 4-Class ONNX model** (`radarsense.onnx`) executing in **~0.03 ms**, classifying Quadcopters, Fixed-Wing UAVs, Biologicals (Birds), and Decoys. |
 | **3D Urban Canopy Digital Twin** | Flat 2D vector top-down maps with zero elevation or structural occlusion awareness. | Dual-mode **2D Tactical PPI** + **3D WebGL Airspace Dome** + **3D Urban Canopy (MapLibre GL)** with real-time building height occlusion and contact de-confliction. |
 | **Decentralized Swarm Interdiction** | Pre-recorded rigid linear paths; no dynamic reaction to drone shoot-downs. | Live **Ares-X Swarm Kinematics Engine**: neutralizing a swarm node triggers deterministic real-time evasive re-routing and convergent re-allocation. |
-| **Graduated Response ROE Ladder** | Binary "Click to Kill" button; no legal or rules-of-engagement boundaries. | Structured 4-tier doctrine: **Warn** $\rightarrow$ **Soft-Kill** (Directional Jammer) $\rightarrow$ **Hard-Kill** (Kinetic Laser/Missile) with active **No-Engage Zones** (hospitals, schools). |
+| **Graduated Response ROE Ladder** | Binary "Click to Kill" button; no legal or rules-of-engagement boundaries. | Structured 4-tier doctrine: **Warn** → **Soft-Kill** (Directional Jammer) → **Hard-Kill** (Kinetic Laser/Missile) with active **No-Engage Zones** (hospitals, schools). |
 | **Automation Bias Calibration** | AI hints treated as ground truth; zero measurement of operator over-reliance. | Real-time **Automation Bias Tracking Index** measuring whether the operator blindly followed incorrect hints against spoofed decoys. |
 | **Cryptographic AAR Audit Ledger** | Mutable SQL tables or local CSV files susceptible to retroactive alteration. | **Append-only Ed25519 hash-chained audit ledger** with SHA-256 block hashes, ensuring **100% tamper detection** across scoring and action logs. |
 | **Air-Gapped Verifiable Scenarios** | Network-dependent drill downloads prone to interception or tampering. | **HMAC-SHA256 signed drill packs** verifiable offline without internet access for air-gapped military deployments. |
-| **Multi-Terminal Crew Chain** | Single-user monolithic exercise screen. | Dedicated **3-Operator Distributed Terminal** (`Surveillance Detector` $\rightarrow$ `Sensor Classifier` $\rightarrow$ `Engagement Authority`) with configurable relay comms latency. |
+| **Multi-Terminal Crew Chain** | Single-user monolithic exercise screen. | Dedicated **3-Operator Distributed Terminal** (`Surveillance Detector` → `Sensor Classifier` → `Engagement Authority`) with configurable relay comms latency. |
 
 ---
 
@@ -71,56 +71,6 @@ Vyom Kavach replicates the full tactical lifecycle: from raw 77GHz FMCW radar I/
 *Figure 1: Vyom Kavach End-to-End System Architecture Pipeline — Multi-Sensor Radar DSP, Micro-Doppler Extraction, CatBoost ONNX Inference, C2 Operator Interdiction & Ed25519 Cryptographic Audit Ledger.*
 
 </div>
-
-```mermaid
-flowchart LR
-    subgraph S1["1. Multi-Sensor Ingestion"]
-        direction TB
-        A1["77GHz FMCW Radar<br/><code>iq_synthesizer.py</code>"]
-        A2["EO/IR Thermal Optics<br/><code>Multi-Spectral</code>"]
-        A3["RF Scanner / ADS-B<br/><code>Telemetry Feed</code>"]
-        A4["Scenario Engine<br/><code>generator.py</code>"]
-    end
-
-    subgraph S2["2. DSP & Inference Engine"]
-        direction TB
-        B1["2D FFT Doppler Matrix<br/><code>radar_dsp.py</code>"]
-        B2["2D CA-CFAR Filter<br/><code>Noise Thresholding</code>"]
-        B3["11-D Feature Extraction<br/><code>Jitter, RCS, Velocity</code>"]
-        B4["CatBoost ONNX Model<br/><code>radarsense.onnx (0.03ms)</code>"]
-    end
-
-    subgraph S3["3. Airspace C2 Deck"]
-        direction TB
-        C1["FastAPI Async Engine<br/><code>server.py (WebSocket)</code>"]
-        C2["2D Tactical PPI Canvas<br/><code>RadarScope.tsx</code>"]
-        C3["3D Three.js Airspace Dome<br/><code>AirspaceDome.tsx</code>"]
-        C4["3D Urban Canopy Twin<br/><code>UrbanMap3D.tsx</code>"]
-        C5["Ares-X Swarm Kinematics<br/><code>Decentralized Swarm</code>"]
-    end
-
-    subgraph S4["4. Operator Interdiction"]
-        direction TB
-        D1["Surveillance TOC<br/><code>Sector Verification</code>"]
-        D2["Classification Analyst<br/><code>Cross-Cueing / Spoof</code>"]
-        D3["Engagement Authority<br/><code>ROE Response Ladder</code>"]
-        D4["Warn / Jam / Kinetic<br/><code>No-Engage Zones</code>"]
-    end
-
-    subgraph S5["5. Audit & Ledger"]
-        direction TB
-        E1["Decision-Tree Scorer<br/><code>scorer.py (4 Axes)</code>"]
-        E2["Automation Bias Index<br/><code>Over-trust Telemetry</code>"]
-        E3["Ed25519 Hash Ledger<br/><code>store.py (SHA-256 Chain)</code>"]
-        E4["Ghost Replay Heatmap<br/><code>AAR Archive</code>"]
-    end
-
-    S1 -->|Raw I/Q Chirps| S2
-    S2 -->|4-Class Vector (UAV/Quad/Bird/Decoy)| S3
-    S3 -->|Target Trackers & Threat Vectors| S4
-    S4 -->|Engagement Decisions & Telemetry| S5
-    D4 -.->|Live Interdiction: UAV_FAILURE| C5
-```
 
 ```
                         VYOM KAVACH SYSTEM TOPOLOGY
@@ -163,7 +113,7 @@ flowchart LR
 - Graded across four independent mathematical axes (0–100 weighted index):
   1. **Detection Window (20%)**: Full credit within 20s of emergence; decays linearly.
   2. **Classification Precision (25%)**: Exact 4-class match (full credit) vs. hostile/friendly bucket match (half credit).
-  3. **ROE Compliance (35%)**: Evaluates adherence to the graduated response ladder (`Warn` $\rightarrow$ `Soft-Kill` $\rightarrow$ `Hard-Kill`) and penalizes kinetic strikes inside civilian No-Engage buffer zones.
+  3. **ROE Compliance (35%)**: Evaluates adherence to the graduated response ladder (`Warn` → `Soft-Kill` → `Hard-Kill`) and penalizes kinetic strikes inside civilian No-Engage buffer zones.
   4. **Timeliness to Impact (20%)**: Scores engagement latency against each hostile contact's closing velocity time-to-impact ETA.
 
 ### 6. Cryptographic Provenance & Tamper-Evident Ledger
@@ -236,7 +186,7 @@ ps247-drone/
 
 ### 2. Automated One-Command Launch (Zero Configuration)
 
-Vyom Kavach includes an automated setup script that creates a virtual environment, installs Python/Node dependencies, builds production bundles, picks an open port (8090 $\rightarrow$ 8099), and opens your browser:
+Vyom Kavach includes an automated setup script that creates a virtual environment, installs Python/Node dependencies, builds production bundles, picks an open port (8090 → 8099), and opens your browser:
 
 * **Windows**: Double-click [`start.bat`](start.bat) (or run in terminal: `.\start.bat`)
 * **Linux / macOS**: Run `chmod +x start.sh && ./start.sh`
@@ -294,7 +244,7 @@ Vyom Kavach supports distributed multi-operator crew exercises over simulated re
 | **Drone & Swarm Threat Recognition** | 77GHz FMCW Range-Doppler DSP + CatBoost ONNX inference classifying UAVs, Birds, Aircraft, Decoys in 0.03ms. | [`ml_bridge/radar_classifier.py`](ml_bridge/radar_classifier.py) |
 | **Multi-UAV Swarm Simulation** | Decentralized Ares-X Boids flocking with dynamic mid-flight loss recovery and convergent evasion. | [`ml_bridge/swarm_kinematics.py`](ml_bridge/swarm_kinematics.py) |
 | **3D Tactical PPI & Urban Visualization** | 2D PPI Radar Scope, 3D Hemispherical Airspace Dome (Three.js), and 3D Urban Canopy (MapLibre GL). | [`app/src/components/domain/`](app/src/components/domain/) |
-| **Rules of Engagement (ROE) Scorer** | 4-Tier Graduated Response ladder (`Warn` $\rightarrow$ `Soft-Kill` $\rightarrow$ `Hard-Kill`) with No-Engage Zone collateral checks. | [`scoring_engine/scorer.py`](scoring_engine/scorer.py) |
+| **Rules of Engagement (ROE) Scorer** | 4-Tier Graduated Response ladder (`Warn` → `Soft-Kill` → `Hard-Kill`) with No-Engage Zone collateral checks. | [`scoring_engine/scorer.py`](scoring_engine/scorer.py) |
 | **Multi-Sensor Data Fusion** | Real-time cross-cueing across 77GHz Radar, EO/IR shape profiling, RF electronic emission, and Acoustic arrays. | [`ml_bridge/multi_sensor.py`](ml_bridge/multi_sensor.py) |
 | **After-Action Review (AAR) Dashboard** | Longitudinal trainee score trends, weakness error taxonomy, spatial missed-contact heatmaps, and certification status. | [`aar_dashboard/aar.html`](aar_dashboard/aar.html) |
 | **Cryptographic Provenance & Audit** | Ed25519 hash-chained session ledger and offline-verifiable HMAC-SHA256 signed scenario packages. | [`aar_dashboard/store.py`](aar_dashboard/store.py) |
