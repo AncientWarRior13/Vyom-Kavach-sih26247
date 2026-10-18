@@ -43,7 +43,7 @@ SEQUENCING_ARMS = ["blocked", "randomized"]
 
 BASE_DIR = Path(__file__).parent
 
-app = FastAPI(title="Drone Threat Trainer")
+app = FastAPI(title="Vyom Kavach")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -68,7 +68,7 @@ app.add_middleware(
 #     NOT catch this, because Host always reflects the request's target,
 #     never the origin of the page that sent it.
 # Either check failing rejects the request, unless explicitly opted out via
-# DRONETHREATTRAINER_ALLOW_REMOTE=1 (e.g. for a deliberate multi-machine
+# VYOMKAVACH_ALLOW_REMOTE=1 (e.g. for a deliberate multi-machine
 # instructor/trainee LAN deployment — which still needs its own auth layer
 # in front; this only restores the "only this machine can talk to it"
 # property that --host 0.0.0.0 would otherwise remove silently).
@@ -83,14 +83,14 @@ def _origin_is_allowed(origin: str) -> bool:
 
 @app.middleware("http")
 async def _localhost_only_guard(request: Request, call_next):
-    if os.environ.get("DRONETHREATTRAINER_ALLOW_REMOTE") == "1":
+    if os.environ.get("VYOMKAVACH_ALLOW_REMOTE") == "1":
         return await call_next(request)
 
     host = (request.headers.get("host") or "").split(":")[0]
     if host not in _ALLOWED_HOSTS:
         return JSONResponse(status_code=403, content={
             "detail": "Rejected: this server only accepts requests addressed to localhost. "
-                      "Set DRONETHREATTRAINER_ALLOW_REMOTE=1 if you intentionally need remote/LAN "
+                      "Set VYOMKAVACH_ALLOW_REMOTE=1 if you intentionally need remote/LAN "
                       "access — but add your own authentication in front first.",
         })
 
@@ -923,7 +923,7 @@ def serve_dist_static(filename: str):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8090))
-    host = "0.0.0.0" if os.environ.get("DRONETHREATTRAINER_ALLOW_REMOTE") == "1" or os.environ.get("RENDER") else "127.0.0.1"
+    host = "0.0.0.0" if os.environ.get("VYOMKAVACH_ALLOW_REMOTE") == "1" or os.environ.get("RENDER") else "127.0.0.1"
     uvicorn.run("server:app", host=host, port=port)
 
 

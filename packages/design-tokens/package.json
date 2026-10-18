@@ -1,5 +1,5 @@
 {
-  "name": "@ps247/design-tokens",
+  "name": "@vyomkavach/design-tokens",
   "version": "1.0.0",
   "private": true,
   "main": "./tokens.ts",

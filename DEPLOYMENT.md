@@ -1,6 +1,6 @@
 # Deployment Guide: Vercel & Render
 
-DroneThreatTrainer is designed for high performance and low latency with a decoupled, modern architecture:
+Vyom Kavach is designed for high performance and low latency with a decoupled, modern architecture:
 
 | Component | Recommended Host | Role |
 | :--- | :--- | :--- |
@@ -16,11 +16,11 @@ DroneThreatTrainer is designed for high performance and low latency with a decou
 1. Push your repository to GitHub.
 2. Log into [Render Dashboard](https://dashboard.render.com/).
 3. Click **New +** -> **Blueprint**.
-4. Connect your GitHub repository `ps247-dronethreattrainer`.
+4. Connect your GitHub repository (still named `ps247-dronethreattrainer`/`DroneThreatTrainer` on GitHub — only the product's display name is Vyom Kavach now).
 5. Render detects [render.yaml](file:///c:/Users/swast/ps247-drone/render.yaml) automatically.
 6. Click **Apply**.
-   - Render provisions the Web Service `dronethreattrainer-api`.
-   - Environment variables (`DRONETHREATTRAINER_ALLOW_REMOTE=1`, `PYTHON_VERSION=3.12.8`, `PORT=10000`) are auto-configured.
+   - Render provisions the Web Service `vyomkavach-api`.
+   - Environment variables (`VYOMKAVACH_ALLOW_REMOTE=1`, `PYTHON_VERSION=3.12.8`, `PORT=10000`) are auto-configured.
 7. Once deployed, note your service URL:
    `https://<your-service-name>.onrender.com`
 
@@ -31,7 +31,7 @@ DroneThreatTrainer is designed for high performance and low latency with a decou
 3. Select **Docker** as the Runtime.
 4. Render will automatically build the multi-stage [Dockerfile](file:///c:/Users/swast/ps247-drone/Dockerfile).
 5. In **Environment Variables**, ensure:
-   - `DRONETHREATTRAINER_ALLOW_REMOTE` = `1`
+   - `VYOMKAVACH_ALLOW_REMOTE` = `1`
 6. Click **Create Web Service**.
 
 ---
@@ -42,14 +42,14 @@ DroneThreatTrainer is designed for high performance and low latency with a decou
 
 1. Log into your [Vercel Dashboard](https://vercel.com/dashboard).
 2. Click **Add New...** -> **Project**.
-3. Import your GitHub repository `ps247-dronethreattrainer`.
+3. Import your GitHub repository (still named `ps247-dronethreattrainer`/`DroneThreatTrainer` on GitHub).
 4. In the Project Configuration:
    - **Framework Preset**: *Other*
    - **Root Directory**: `./` (leave default repository root)
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
 5. *(Optional but recommended)* Update [vercel.json](file:///c:/Users/swast/ps247-drone/vercel.json) rewrites:
-   Replace the placeholder `https://dronethreattrainer-api.onrender.com` with your actual Render URL from Part 1:
+   Replace the placeholder `https://vyomkavach-api.onrender.com` with your actual Render URL from Part 1:
    ```json
    "rewrites": [
      {
@@ -65,7 +65,7 @@ DroneThreatTrainer is designed for high performance and low latency with a decou
 ## Part 3: Architecture & Security Verification
 
 - **CORS Handling**: `server.py` includes FastAPI `CORSMiddleware` configured to allow cross-origin requests from Vercel deployments.
-- **Remote Host Protection**: `DRONETHREATTRAINER_ALLOW_REMOTE=1` instructs the security middleware to allow incoming traffic from cloud routers and edge proxies.
+- **Remote Host Protection**: `VYOMKAVACH_ALLOW_REMOTE=1` instructs the security middleware to allow incoming traffic from cloud routers and edge proxies.
 - **Unified Routing**: 
   - `/` -> Landing page & 3D drone trajectory simulation
   - `/trainer` -> Tactical Trainer PPI & 3D urban canopy

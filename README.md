@@ -1,4 +1,4 @@
-# DroneThreatTrainer
+# VyomKavach
 
 A desktop- and VR-capable drone & swarm threat recognition training
 simulator: scripted and procedurally generated scenarios across
@@ -198,7 +198,7 @@ whether that hint was right. Every number is traceable back to a specific
 contact and rule, by design, so an AAR can explain exactly why a trainee
 lost points.
 
-## Tier-1 roadmap features (`DroneThreatTrainer_Roadmap_and_Training_Plan.docx`)
+## Tier-1 roadmap features (`VyomKavach_Roadmap_and_Training_Plan.docx`)
 
 A later review identified the main defense-credibility gap: the trainee's
 only action was engage/monitor/ignore, and scoring didn't consider rules of
@@ -526,7 +526,7 @@ confirmed with a direct `diff`.
    remote/LAN exposure if someone runs with `--host 0.0.0.0`) and `Origin`
    (catches the same-machine cross-origin case `Host` can't), rejecting
    anything that doesn't resolve to localhost/127.0.0.1 with 403 — opt-out
-   via `DRONETHREATTRAINER_ALLOW_REMOTE=1` for a deliberate LAN deployment,
+   via `VYOMKAVACH_ALLOW_REMOTE=1` for a deliberate LAN deployment,
    which still needs its own auth layer in front. Verified: a real
    cross-origin request (`Origin: http://evil.com`) and a spoofed-remote-host
    request were both rejected; the actual trainer UI (real browser,

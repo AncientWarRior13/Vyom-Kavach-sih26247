@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: dronethreattrainer-api
+    name: vyomkavach-api
     env: python
     plan: free
     region: oregon
@@ -9,7 +9,7 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
-      - key: DRONETHREATTRAINER_ALLOW_REMOTE
+      - key: VYOMKAVACH_ALLOW_REMOTE
         value: "1"
       - key: PORT
         value: 10000

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DroneThreatTrainer | Radar Analytics Dashboard",
+  title: "VyomKavach | Radar Analytics Dashboard",
   description: "Real-time tactical radar simulation, kinematic-to-feature-vector synthesis, client-side ONNX machine learning model inference, and SNR noise stress-testing.",
 };
 

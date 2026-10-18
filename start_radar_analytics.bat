@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0\radar_classification"
 
 echo ============================================
-echo  DroneThreatTrainer - Radar Analytics (optional)
+echo  VyomKavach - Radar Analytics (optional)
 echo ============================================
 echo.
 echo This is a separate, heavier service (qiskit/catboost/xgboost/shap).
@@ -64,9 +64,9 @@ echo Two windows will open. Close both to stop.
 echo ============================================
 echo.
 
-start "DroneThreatTrainer Radar Analytics API" cmd /k "cd /d "%~dp0radar_classification" && ".venv_radar\Scripts\python.exe" -m uvicorn api.app:app --port 8081"
+start "VyomKavach Radar Analytics API" cmd /k "cd /d "%~dp0radar_classification" && ".venv_radar\Scripts\python.exe" -m uvicorn api.app:app --port 8081"
 timeout /t 3 /nobreak >nul
-start "DroneThreatTrainer Radar Analytics Frontend" cmd /k "cd /d "%~dp0radar_classification\frontend" && npm run dev"
+start "VyomKavach Radar Analytics Frontend" cmd /k "cd /d "%~dp0radar_classification\frontend" && npm run dev"
 timeout /t 5 /nobreak >nul
 start "" "http://localhost:3000/"
 

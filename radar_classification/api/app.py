@@ -45,9 +45,9 @@ from api.explain import router as explain_router
 from api.alerting import router as alert_router
 
 app = FastAPI(
-    title="DroneThreatTrainer Radar Analytics API",
+    title="VyomKavach Radar Analytics API",
     version="2.0",
-    description="Unified radar classification API for DroneThreatTrainer: Classic, Quantum, 31-Feature, and 42-Feature models."
+    description="Unified radar classification API for VyomKavach: Classic, Quantum, 31-Feature, and 42-Feature models."
 )
 
 cors_origins = os.getenv("RADARSENSE_CORS_ORIGINS", "*").split(",")
@@ -106,7 +106,7 @@ def root_health():
         q_meta = f"Initializing or unavailable: {e}"
     return {
         "status": "ok",
-        "service": "DroneThreatTrainer Radar Analytics API",
+        "service": "VyomKavach Radar Analytics API",
         "endpoints": {
             "quantum": "/predict/quantum (or /predict)",
             "classic": "/predict/classic",

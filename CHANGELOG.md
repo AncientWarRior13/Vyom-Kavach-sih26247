@@ -1,4 +1,4 @@
-# PS-247 Drone Threat Trainer — UI/UX Redesign Changelog
+# Vyom Kavach — UI/UX Redesign Changelog
 
 ## [2.0.0] - Tactical UI/UX Redesign & React Unified Migration
 
@@ -6,7 +6,7 @@
 - **`packages/design-tokens/`**:
   - `tokens.css`: Created unified tactical token system with surface layers (`bg-void`, `bg-deep`, `bg-surface`, `bg-raised`, `bg-overlay`), border strengths, text hierarchy, semantic colors (`hostile`, `unknown`, `friendly`, `decoy`, `neutral`, `accent`), severity scale, 4px spacing, radii, motion easings, and high-contrast / color-blind safe mode media queries.
   - `tokens.ts`: Exported TypeScript tokens and helper mapping functions (`contactStyle(cls)`, `severityColor(s)`).
-  - `package.json`: Export map configuration for `@ps247/design-tokens`.
+  - `package.json`: Export map configuration for `@vyomkavach/design-tokens`.
 - **`DESIGN.md`**: Created tactical design system documentation, principles, rules of engagement, and guide for adding new screens.
 
 ### New React Application (`app/`)

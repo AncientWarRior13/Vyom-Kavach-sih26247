@@ -1,8 +1,8 @@
 {
-  "name": "dronethreattrainer",
+  "name": "vyomkavach",
   "version": "1.0.0",
   "private": true,
-  "description": "DroneThreatTrainer - Real-Time C2 & Simulation Platform",
+  "description": "VyomKavach - Real-Time C2 & Simulation Platform",
   "scripts": {
     "build": "npm run build:app && npm run build:landing && node scripts/build-unified.js",
     "build:app": "npm --prefix app install && npm --prefix app run build",

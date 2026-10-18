@@ -8,7 +8,7 @@ import urllib.request
 import websockets
 
 EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-OUT_DIR = r"C:\Users\swast\ps247-drone\screenshots"
+OUT_DIR = r"C:\Users\swast\vyomkavach-drone\screenshots"
 TEMP_PROFILE = r"C:\Users\swast\AppData\Local\Temp\edge_hero_profile"
 os.makedirs(OUT_DIR, exist_ok=True)
 os.makedirs(TEMP_PROFILE, exist_ok=True)

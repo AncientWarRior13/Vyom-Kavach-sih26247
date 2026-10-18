@@ -1,4 +1,4 @@
-/** PS-247 Design Tokens — TypeScript export */
+/** Vyom Kavach Design Tokens — TypeScript export */
 
 export const colors = {
   bg: {

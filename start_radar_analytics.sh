@@ -3,7 +3,7 @@ set -e
 cd "$(dirname "$0")/radar_classification"
 
 echo "============================================"
-echo " DroneThreatTrainer - Radar Analytics (optional)"
+echo " VyomKavach - Radar Analytics (optional)"
 echo "============================================"
 echo
 echo "This is a separate, heavier service (qiskit/catboost/xgboost/shap)."

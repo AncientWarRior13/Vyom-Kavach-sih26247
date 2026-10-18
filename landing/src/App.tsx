@@ -203,10 +203,10 @@ export default function App() {
         <div className="flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-[#3dd6c6]" />
           <span className="font-['Chakra_Petch'] font-semibold text-sm tracking-wider text-[#f8fafc]">
-            PS-247 C-UAS
+            Vyom Kavach C-UAS
           </span>
           <span className="text-xs font-mono text-[#6b7585] hidden sm:inline">
-            Tactical drone threat trainer
+            Tactical Vyom Kavach trainer
           </span>
         </div>
 

@@ -410,7 +410,7 @@ export const StyleguidePage: React.FC = () => {
                   Logo font (Chakra Petch)
                 </span>
                 <div className="font-logo text-xl font-bold text-[var(--c-text-max)]">
-                  PS-247 C-UAS OPERATIONS
+                  Vyom Kavach C-UAS OPERATIONS
                 </div>
               </div>
               <div className="border-t border-[var(--c-border-base)] pt-3">

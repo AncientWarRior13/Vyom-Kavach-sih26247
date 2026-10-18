@@ -1,6 +1,6 @@
-# PS-247 Drone Threat Trainer — Design System & Architecture
+# Vyom Kavach — Design System & Architecture
 
-This document establishes the UI/UX architecture, visual grammar, token hierarchy, and guidelines for adding new tactical screens to the DroneThreatTrainer platform.
+This document establishes the UI/UX architecture, visual grammar, token hierarchy, and guidelines for adding new tactical screens to the VyomKavach platform.
 
 ---
 
@@ -26,7 +26,7 @@ This document establishes the UI/UX architecture, visual grammar, token hierarch
    - Unselected rows display clear identification, range, bearing, altitude, and speed.
 
 4. **Zero Hardcoded Styles**
-   - Always consume tokens from `@ps247/design-tokens` (`tokens.css` or `tokens.ts`).
+   - Always consume tokens from `@vyomkavach/design-tokens` (`tokens.css` or `tokens.ts`).
 
 ---
 

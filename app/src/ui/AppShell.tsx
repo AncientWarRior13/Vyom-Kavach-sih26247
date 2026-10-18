@@ -86,7 +86,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           <NavLink to="/team" className="flex items-center gap-2 text-inherit no-underline">
             <span className="w-2 h-2 bg-[var(--c-accent)] rounded-full" />
             <span className="font-logo font-bold text-sm tracking-wide text-[var(--c-text-max)]">
-              PS-247
+              Vyom Kavach
             </span>
           </NavLink>
           <span className="text-[var(--c-text-low)] text-xs">/</span>

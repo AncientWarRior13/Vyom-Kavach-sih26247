@@ -25,7 +25,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://dronethreattrainer-api.onrender.com/api/:path*"
+      "destination": "https://vyomkavach-api.onrender.com/api/:path*"
     },
     {
       "source": "/(trainer|aar|vr|instructor|team|swarm|styleguide)",

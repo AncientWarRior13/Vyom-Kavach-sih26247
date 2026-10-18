@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 echo ============================================
-echo  DroneThreatTrainer - one-command setup/run
+echo  VyomKavach - one-command setup/run
 echo ============================================
 echo.
 

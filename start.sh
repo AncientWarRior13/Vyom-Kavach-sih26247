@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# DroneThreatTrainer - one-command setup/run (Mac/Linux)
+# VyomKavach - one-command setup/run (Mac/Linux)
 set -e
 cd "$(dirname "$0")"
 
 echo "============================================"
-echo " DroneThreatTrainer - one-command setup/run"
+echo " VyomKavach - one-command setup/run"
 echo "============================================"
 echo
 
