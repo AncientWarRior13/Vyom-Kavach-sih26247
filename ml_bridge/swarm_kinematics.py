@@ -107,12 +107,19 @@ def generate_swarm_paths(size: int, duration_s: float, spawn_t: float, seed: int
 
         sim = Simulator(scenario)
         trajectories: dict[str, list[dict]] = {uid: [] for uid in sim.state.uavs}
+        uav_ids = list(sim.state.uavs.keys())
+        pad_offsets = {}
+        for idx, uid in enumerate(uav_ids):
+            angle = (idx * 2 * math.pi) / max(1, len(uav_ids)) + (math.pi / 4)
+            pad_offsets[uid] = (35.0 * math.cos(angle), 35.0 * math.sin(angle))
+
         steps = int(duration_s / scenario.dt_seconds)
         for _ in range(steps):
             for uid, uav in sim.state.uavs.items():
+                dx, dy = pad_offsets.get(uid, (0.0, 0.0))
                 trajectories[uid].append({
                     "t": spawn_t + sim.state.time,
-                    "x": uav.position[0], "y": uav.position[1], "z": uav.position[2],
+                    "x": uav.position[0] + dx, "y": uav.position[1] + dy, "z": uav.position[2],
                     "health": uav.health.value,
                 })
             sim.step(scenario.dt_seconds)

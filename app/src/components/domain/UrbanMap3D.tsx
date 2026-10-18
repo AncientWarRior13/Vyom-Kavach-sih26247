@@ -185,11 +185,84 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
     }
   }, [originLat, originLon]);
 
-  // Sync Contacts to Glowing Radar Markers
+  const lastDeconflictedCoordsRef = useRef<Map<string, { lat: number; lon: number }>>(new Map());
+
+  // Sync Contacts to Glowing Radar Markers with Cluster De-confliction
   useEffect(() => {
     if (!mapRef.current) return;
     const map = mapRef.current;
     const seen = new Set<string>();
+
+    // 1. Calculate base projected ground coordinates for each contact
+    const DISTANCE_SCALE = 0.35;
+    const projected = contacts.map((c) => {
+      const rMeters = (c.range_km ?? (Math.hypot(c.x ?? 0, c.y ?? 0) / 1000)) * 1000 * DISTANCE_SCALE;
+      const bDeg = c.bearing_deg ?? (((Math.atan2(c.x ?? 0, -(c.y ?? 0)) * 180 / Math.PI) + 360) % 360);
+      const bRad = (bDeg * Math.PI) / 180;
+
+      const dEast = rMeters * Math.sin(bRad);
+      const dNorth = rMeters * Math.cos(bRad);
+      return { c, dEast, dNorth };
+    });
+
+    // 2. Identify spatial clusters of contacts that would interfere/overlap (within 45m of each other)
+    const CLUSTER_DIST_M = 45;
+    const clusters: Array<typeof projected> = [];
+
+    projected.forEach((item) => {
+      const foundCluster = clusters.find((cl) =>
+        cl.some((other) => Math.hypot(item.dEast - other.dEast, item.dNorth - other.dNorth) < CLUSTER_DIST_M)
+      );
+      if (foundCluster) {
+        foundCluster.push(item);
+      } else {
+        clusters.push([item]);
+      }
+    });
+
+    // 3. Compute de-conflicted positions with graceful tactical spacing
+    const coordsMap = new Map<string, { lat: number; lon: number; tagPosClass: string }>();
+
+    clusters.forEach((cl) => {
+      if (cl.length === 1) {
+        const item = cl[0];
+        const lat = originLat + item.dNorth / 111111;
+        const lon = originLon + item.dEast / (111111 * Math.cos((originLat * Math.PI) / 180));
+        coordsMap.set(item.c.id, {
+          lat,
+          lon,
+          tagPosClass: 'left-1/2 -bottom-6 -translate-x-1/2',
+        });
+      } else {
+        // Disperse clustered contacts with clean tactical spacing (32m radius: ~45px separation on map)
+        const N = cl.length;
+        const SPREAD_RADIUS_M = Math.min(36, 24 + N * 3);
+        cl.forEach((item, idx) => {
+          const angle = (idx * 2 * Math.PI) / N + Math.PI / 4;
+          const offEast = SPREAD_RADIUS_M * Math.cos(angle);
+          const offNorth = SPREAD_RADIUS_M * Math.sin(angle);
+
+          const lat = originLat + (item.dNorth + offNorth) / 111111;
+          const lon = originLon + (item.dEast + offEast) / (111111 * Math.cos((originLat * Math.PI) / 180));
+
+          // Position tags outward from cluster center so tags don't overlap either
+          let tagPosClass = 'left-1/2 -bottom-6 -translate-x-1/2';
+          if (offNorth > 6) {
+            tagPosClass = 'left-1/2 -top-6 -translate-x-1/2';
+          } else if (offNorth < -6) {
+            tagPosClass = 'left-1/2 -bottom-6 -translate-x-1/2';
+          } else if (offEast > 0) {
+            tagPosClass = 'left-8 top-1/2 -translate-y-1/2';
+          } else {
+            tagPosClass = 'right-8 top-1/2 -translate-y-1/2';
+          }
+
+          coordsMap.set(item.c.id, { lat, lon, tagPosClass });
+        });
+      }
+    });
+
+    lastDeconflictedCoordsRef.current = coordsMap;
 
     contacts.forEach((c) => {
       seen.add(c.id);
@@ -197,17 +270,13 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
       const cls = (c.assigned_classification || c.classification || 'unknown').toLowerCase();
       const color = CLASS_COLORS[cls] || CLASS_COLORS.unknown;
 
-      // Project range and bearing to ground coordinates over the urban canopy
-      const DISTANCE_SCALE = 0.35;
-      const rMeters = (c.range_km ?? (Math.hypot(c.x ?? 0, c.y ?? 0) / 1000)) * 1000 * DISTANCE_SCALE;
-      const bDeg = c.bearing_deg ?? (((Math.atan2(c.x ?? 0, -(c.y ?? 0)) * 180 / Math.PI) + 360) % 360);
-      const bRad = (bDeg * Math.PI) / 180;
-
-      const dEast = rMeters * Math.sin(bRad);
-      const dNorth = rMeters * Math.cos(bRad);
-
-      const lat = originLat + dNorth / 111111;
-      const lon = originLon + dEast / (111111 * Math.cos((originLat * Math.PI) / 180));
+      const coord = coordsMap.get(c.id) || {
+        lat: originLat,
+        lon: originLon,
+        tagPosClass: 'left-1/2 -bottom-6 -translate-x-1/2',
+      };
+      const lat = coord.lat;
+      const lon = coord.lon;
 
       let marker = markersRef.current.get(c.id);
       if (!marker) {
@@ -237,7 +306,7 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
           ">
             <span class="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_#fff]"></span>
           </div>
-          <div class="marker-tag absolute left-1/2 -bottom-6 -translate-x-1/2 whitespace-nowrap font-mono text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg pointer-events-none flex items-center gap-1 transition-all duration-150" style="
+          <div class="marker-tag absolute ${coord.tagPosClass} whitespace-nowrap font-mono text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg pointer-events-none flex items-center gap-1 transition-all duration-150" style="
             background: rgba(5, 10, 16, 0.94);
             border: 1px solid ${isSelected ? '#00e87a' : 'rgba(255,255,255,0.22)'};
             color: #ffffff;
@@ -286,6 +355,7 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
           ringEl.style.borderColor = color;
         }
         if (tagEl) {
+          tagEl.className = `marker-tag absolute ${coord.tagPosClass} whitespace-nowrap font-mono text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg pointer-events-none flex items-center gap-1 transition-all duration-150`;
           tagEl.style.borderColor = isSelected ? '#00e87a' : 'rgba(255,255,255,0.22)';
           tagEl.style.boxShadow = isSelected ? '0 0 12px rgba(0,232,122,0.4)' : '0 2px 8px rgba(0,0,0,0.8)';
           if (tagDot) tagDot.style.color = color;
@@ -316,15 +386,22 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
     const target = contacts.find((c) => c.id === selectedContactId);
     if (!target) return;
 
-    const DISTANCE_SCALE = 0.35;
-    const rMeters = (target.range_km ?? (Math.hypot(target.x ?? 0, target.y ?? 0) / 1000)) * 1000 * DISTANCE_SCALE;
-    const bDeg = target.bearing_deg ?? (((Math.atan2(target.x ?? 0, -(target.y ?? 0)) * 180 / Math.PI) + 360) % 360);
-    const bRad = (bDeg * Math.PI) / 180;
-    const dEast = rMeters * Math.sin(bRad);
-    const dNorth = rMeters * Math.cos(bRad);
+    const coord = lastDeconflictedCoordsRef.current.get(target.id);
+    let lat: number, lon: number;
 
-    const lat = originLat + dNorth / 111111;
-    const lon = originLon + dEast / (111111 * Math.cos((originLat * Math.PI) / 180));
+    if (coord) {
+      lat = coord.lat;
+      lon = coord.lon;
+    } else {
+      const DISTANCE_SCALE = 0.35;
+      const rMeters = (target.range_km ?? (Math.hypot(target.x ?? 0, target.y ?? 0) / 1000)) * 1000 * DISTANCE_SCALE;
+      const bDeg = target.bearing_deg ?? (((Math.atan2(target.x ?? 0, -(target.y ?? 0)) * 180 / Math.PI) + 360) % 360);
+      const bRad = (bDeg * Math.PI) / 180;
+      const dEast = rMeters * Math.sin(bRad);
+      const dNorth = rMeters * Math.cos(bRad);
+      lat = originLat + dNorth / 111111;
+      lon = originLon + dEast / (111111 * Math.cos((originLat * Math.PI) / 180));
+    }
 
     mapRef.current.flyTo({
       center: [lon, lat],
