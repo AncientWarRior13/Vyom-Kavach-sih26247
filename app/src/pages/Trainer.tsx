@@ -38,6 +38,14 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 
+const SECTOR_COORDINATES: Record<string, { lat: number; lon: number }> = {
+  urban: { lat: 28.6139, lon: 77.2090 },   // New Delhi Central Secretariat (dense urban vector tiles)
+  rural: { lat: 28.4595, lon: 77.0266 },   // Outskirts Sector Tactical Base
+  coastal: { lat: 18.9220, lon: 72.8347 }, // Mumbai Naval Coastal Base
+  desert: { lat: 26.9157, lon: 70.9083 },  // Thar Desert Frontier Outpost
+  mountain: { lat: 34.1526, lon: 77.5771 }, // Ladakh Mountain Defense Compound
+};
+
 export const TrainerPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -1076,6 +1084,8 @@ export const TrainerPage: React.FC = () => {
                   selectedContactId={selectedContact?.id || null}
                   onSelectContact={(id) => setSelectedContactId(id)}
                   defendedAsset={scenario.defended_asset_position}
+                  originLat={SECTOR_COORDINATES[terrain]?.lat || 28.6139}
+                  originLon={SECTOR_COORDINATES[terrain]?.lon || 77.2090}
                 />
               )}
             </div>
