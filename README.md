@@ -173,10 +173,10 @@ ps247-drone/
 
 ## 🚀 Live Deployment & Environments
 
-- **Production Web Application (Vercel)**: [https://dronethreattrainer.vercel.app](https://dronethreattrainer.vercel.app/)
-- **Production Backend API (Render)**: [https://dronethreattrainer-api.onrender.com](https://dronethreattrainer-api.onrender.com/)
-- **Interactive Swagger Documentation**: `http://localhost:8090/docs`
-- **API Health Check**: `http://localhost:8090/api/model/status`
+- **Production Web Application (Vercel)**: [https://vyom-kavach-ps247.vercel.app](https://vyom-kavach-ps247.vercel.app/)
+- **Production Backend API (Render)**: [https://vyomkavach-api-sw9g.onrender.com](https://vyomkavach-api-sw9g.onrender.com/)
+- **Interactive Swagger Documentation**: [https://vyomkavach-api-sw9g.onrender.com/docs](https://vyomkavach-api-sw9g.onrender.com/docs)
+- **API Health Check**: [https://vyomkavach-api-sw9g.onrender.com/api/model/status](https://vyomkavach-api-sw9g.onrender.com/api/model/status)
 
 ---
 
