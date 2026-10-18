@@ -100,11 +100,10 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           {/* Operational Status Dot */}
           <div className="flex items-center gap-1.5 text-xs text-[var(--c-text-mid)]">
             <span
-              className={`w-2 h-2 rounded-full ${
-                modelStatus?.status === 'error'
+              className={`w-2 h-2 rounded-full ${modelStatus?.status === 'error'
                   ? 'bg-[var(--c-critical)]'
                   : 'bg-[var(--c-advisory)]'
-              }`}
+                }`}
             />
             <span className="text-xs text-[var(--c-text-low)] hidden sm:inline">
               {modelStatus?.status === 'error' ? 'Service degraded' : 'Operational'}
@@ -138,9 +137,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Collapsible Side Rail (220px) */}
         <aside
-          className={`shrink-0 bg-[var(--c-bg-surface)] border-r border-[var(--c-border-base)] transition-all duration-150 flex flex-col justify-between min-h-0 ${
-            collapsed ? 'w-14' : 'w-[220px]'
-          }`}
+          className={`shrink-0 bg-[var(--c-bg-surface)] border-r border-[var(--c-border-base)] transition-all duration-150 flex flex-col justify-between min-h-0 ${collapsed ? 'w-14' : 'w-[220px]'
+            }`}
         >
           {/* Navigation Links Grouped */}
           <nav className="p-2 space-y-4 overflow-y-auto flex-1 min-h-0">
@@ -159,10 +157,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                       to={item.to}
                       title={collapsed ? item.label : undefined}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-md font-ui text-sm transition-colors cursor-pointer ${
-                          isActive
-                            ? 'bg-[var(--c-bg-raised)] text-[var(--c-accent)] font-medium'
-                            : 'text-[var(--c-text-mid)] hover:bg-[var(--c-bg-raised)]/60 hover:text-[var(--c-text-high)]'
+                        `flex items-center gap-3 px-3 py-2 rounded-md font-ui text-sm transition-colors cursor-pointer ${isActive
+                          ? 'bg-[var(--c-bg-raised)] text-[var(--c-accent)] font-medium'
+                          : 'text-[var(--c-text-mid)] hover:bg-[var(--c-bg-raised)]/60 hover:text-[var(--c-text-high)]'
                         } ${collapsed ? 'justify-center px-0' : ''}`
                       }
                     >
@@ -195,9 +192,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
         {/* Viewport Content */}
         <main
-          className={`flex-1 flex flex-col min-h-0 bg-[var(--c-bg-void)] min-w-0 ${
-            location.pathname === '/trainer' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'
-          }`}
+          className={`flex-1 flex flex-col min-h-0 bg-[var(--c-bg-void)] min-w-0 ${location.pathname === '/trainer' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'
+            }`}
         >
           {children}
         </main>

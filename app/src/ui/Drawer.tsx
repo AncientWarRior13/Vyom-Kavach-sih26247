@@ -38,9 +38,8 @@ export const Drawer: React.FC<DrawerProps> = ({
 
       {/* Drawer Panel */}
       <div
-        className={`fixed top-0 bottom-0 ${
-          position === 'right' ? 'right-0 border-l' : 'left-0 border-r'
-        } ${width} bg-[var(--c-bg-surface)] border-[var(--c-border-base)] shadow-xl z-10 flex flex-col`}
+        className={`fixed top-0 bottom-0 ${position === 'right' ? 'right-0 border-l' : 'left-0 border-r'
+          } ${width} bg-[var(--c-bg-surface)] border-[var(--c-border-base)] shadow-xl z-10 flex flex-col`}
       >
         {title && (
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--c-border-base)]">

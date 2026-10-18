@@ -68,9 +68,8 @@ export function Table<T extends Record<string, any>>({
                 key={col.key}
                 style={{ width: col.width }}
                 onClick={() => col.sortable && handleSort(col.key)}
-                className={`py-2.5 px-3.5 text-xs text-[var(--c-text-mid)] font-medium ${
-                  col.sortable ? 'cursor-pointer hover:text-[var(--c-text-high)]' : ''
-                } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
+                className={`py-2.5 px-3.5 text-xs text-[var(--c-text-mid)] font-medium ${col.sortable ? 'cursor-pointer hover:text-[var(--c-text-high)]' : ''
+                  } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
               >
                 <div className={`inline-flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : ''}`}>
                   <span>{col.header}</span>
@@ -102,24 +101,21 @@ export function Table<T extends Record<string, any>>({
                 <tr
                   key={k}
                   onClick={() => onRowClick && onRowClick(row)}
-                  className={`transition-colors select-none ${
-                    onRowClick ? 'cursor-pointer' : ''
-                  } ${
-                    isSelected
+                  className={`transition-colors select-none ${onRowClick ? 'cursor-pointer' : ''
+                    } ${isSelected
                       ? 'bg-[var(--c-bg-raised)] text-[var(--c-text-max)]'
                       : 'hover:bg-[var(--c-bg-raised)]/50 text-[var(--c-text-high)]'
-                  }`}
+                    }`}
                 >
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className={`py-2.5 px-3.5 whitespace-nowrap ${
-                        col.align === 'right'
+                      className={`py-2.5 px-3.5 whitespace-nowrap ${col.align === 'right'
                           ? 'text-right tabular-nums'
                           : col.align === 'center'
-                          ? 'text-center'
-                          : 'text-left'
-                      }`}
+                            ? 'text-center'
+                            : 'text-left'
+                        }`}
                     >
                       {col.render ? col.render(row, idx) : row[col.key]}
                     </td>

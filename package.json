@@ -1,0 +1,12 @@
+{
+  "name": "dronethreattrainer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DroneThreatTrainer - Real-Time C2 & Simulation Platform",
+  "scripts": {
+    "build": "npm run build:app && npm run build:landing && node scripts/build-unified.js",
+    "build:app": "npm --prefix app install && npm --prefix app run build",
+    "build:landing": "npm --prefix landing install && npm --prefix landing run build",
+    "start": "python server.py"
+  }
+}

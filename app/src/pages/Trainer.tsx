@@ -103,7 +103,7 @@ export const TrainerPage: React.FC = () => {
         setScriptedOptions(res.scenarios);
         if (res.scenarios.length > 0) setSelectedScripted(res.scenarios[0]);
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   // Launch Scenario Handler (defined before useEffect triggers it)
@@ -221,7 +221,7 @@ export const TrainerPage: React.FC = () => {
             setSensorOutage(updated.sensor_outage);
           }
         }
-      } catch {}
+      } catch { }
     }, 2500);
 
     return () => {
@@ -401,7 +401,7 @@ export const TrainerPage: React.FC = () => {
       if (res && res.result) {
         addEvent(`Engagement Result: ${res.result}`, 'success', 'ENGAGE');
       }
-    } catch {}
+    } catch { }
   };
 
   // Hard-kill hold-to-confirm logic (600ms)
@@ -549,22 +549,20 @@ export const TrainerPage: React.FC = () => {
                 key={s}
                 type="button"
                 onClick={() => setStep(s)}
-                className={`py-2 px-3 rounded-md border text-left cursor-pointer transition-all flex items-center gap-3 ${
-                  step === s
+                className={`py-2 px-3 rounded-md border text-left cursor-pointer transition-all flex items-center gap-3 ${step === s
                     ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-[0_0_12px_rgba(61,214,198,0.2)]'
                     : step > s
-                    ? 'bg-[var(--c-bg-surface)] border-[var(--c-accent)]/40 hover:border-[var(--c-accent)]'
-                    : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] opacity-70 hover:opacity-100'
-                }`}
+                      ? 'bg-[var(--c-bg-surface)] border-[var(--c-accent)]/40 hover:border-[var(--c-accent)]'
+                      : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] opacity-70 hover:opacity-100'
+                  }`}
               >
                 <div
-                  className={`w-7 h-7 rounded font-mono text-xs flex items-center justify-center font-bold shrink-0 border ${
-                    step === s
+                  className={`w-7 h-7 rounded font-mono text-xs flex items-center justify-center font-bold shrink-0 border ${step === s
                       ? 'bg-[var(--c-accent)] text-[#04080c] border-[var(--c-accent)] shadow-[0_0_8px_var(--c-accent)]'
                       : step > s
-                      ? 'bg-[var(--c-bg-raised)] text-[var(--c-accent)] border-[var(--c-accent)]/50'
-                      : 'bg-[var(--c-bg-deep)] text-[var(--c-text-low)] border-[var(--c-border-base)]'
-                  }`}
+                        ? 'bg-[var(--c-bg-raised)] text-[var(--c-accent)] border-[var(--c-accent)]/50'
+                        : 'bg-[var(--c-bg-deep)] text-[var(--c-text-low)] border-[var(--c-border-base)]'
+                    }`}
                 >
                   0{s}
                 </div>
@@ -589,19 +587,19 @@ export const TrainerPage: React.FC = () => {
                 step === 1
                   ? 'Step 01 // Trainee Identity'
                   : step === 2
-                  ? 'Step 02 // Threat Architecture'
-                  : step === 3
-                  ? 'Step 03 // Environment & EW'
-                  : 'Step 04 // Mission Confirmation'
+                    ? 'Step 02 // Threat Architecture'
+                    : step === 3
+                      ? 'Step 03 // Environment & EW'
+                      : 'Step 04 // Mission Confirmation'
               }
               subtitle={
                 step === 1
                   ? 'AUTH & CREW RECORD'
                   : step === 2
-                  ? 'THREAT DOCTRINE'
-                  : step === 3
-                  ? 'ATMOSPHERICS & EW'
-                  : 'MISSION CONFIRMATION'
+                    ? 'THREAT DOCTRINE'
+                    : step === 3
+                      ? 'ATMOSPHERICS & EW'
+                      : 'MISSION CONFIRMATION'
               }
               className="h-[440px] flex flex-col"
               bodyClassName="p-5 flex-1 flex flex-col justify-between space-y-4"
@@ -669,11 +667,10 @@ export const TrainerPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setScenarioType('procedural')}
-                      className={`p-3.5 rounded border text-left cursor-pointer transition-colors ${
-                        scenarioType === 'procedural'
+                      className={`p-3.5 rounded border text-left cursor-pointer transition-colors ${scenarioType === 'procedural'
                           ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-[0_0_10px_rgba(61,214,198,0.2)]'
                           : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)]'
-                      }`}
+                        }`}
                     >
                       <Target className="w-5 h-5 text-[var(--c-accent)] mb-1.5" />
                       <div className="font-bold text-sm font-mono text-[var(--c-text-max)]">PROCEDURAL</div>
@@ -682,11 +679,10 @@ export const TrainerPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setScenarioType('adaptive')}
-                      className={`p-3.5 rounded border text-left cursor-pointer transition-colors ${
-                        scenarioType === 'adaptive'
+                      className={`p-3.5 rounded border text-left cursor-pointer transition-colors ${scenarioType === 'adaptive'
                           ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-[0_0_10px_rgba(61,214,198,0.2)]'
                           : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)]'
-                      }`}
+                        }`}
                     >
                       <Sparkles className="w-5 h-5 text-[var(--c-accent)] mb-1.5" />
                       <div className="font-bold text-sm font-mono text-[var(--c-text-max)]">ADAPTIVE</div>
@@ -695,11 +691,10 @@ export const TrainerPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setScenarioType('scripted')}
-                      className={`p-3.5 rounded border text-left cursor-pointer transition-colors ${
-                        scenarioType === 'scripted'
+                      className={`p-3.5 rounded border text-left cursor-pointer transition-colors ${scenarioType === 'scripted'
                           ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-[0_0_10px_rgba(61,214,198,0.2)]'
                           : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)]'
-                      }`}
+                        }`}
                     >
                       <ShieldAlert className="w-5 h-5 text-[var(--c-accent)] mb-1.5" />
                       <div className="font-bold text-sm font-mono text-[var(--c-text-max)]">SCRIPTED DRILL</div>
@@ -988,11 +983,10 @@ export const TrainerPage: React.FC = () => {
                   <div
                     key={c.id}
                     onClick={() => setSelectedContactId(c.id)}
-                    className={`p-2.5 rounded-sm border cursor-pointer select-none transition-all ${
-                      c.id === selectedContact?.id
+                    className={`p-2.5 rounded-sm border cursor-pointer select-none transition-all ${c.id === selectedContact?.id
                         ? 'bg-[var(--c-bg-subtle)] border-[var(--c-accent)] shadow-[0_0_12px_rgba(0,232,122,0.15)]'
                         : 'bg-[var(--c-bg-deep)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)]'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <Badge variant={(c.assigned_classification || c.classification || 'unknown') as any} size="xs">
@@ -1019,33 +1013,30 @@ export const TrainerPage: React.FC = () => {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setScopeViewMode('2d')}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono uppercase font-bold rounded-xs transition-colors cursor-pointer ${
-                    scopeViewMode === '2d'
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono uppercase font-bold rounded-xs transition-colors cursor-pointer ${scopeViewMode === '2d'
                       ? 'bg-[var(--c-accent)] text-black shadow-[0_0_8px_rgba(0,232,122,0.4)]'
                       : 'text-[var(--c-text-mid)] hover:text-white hover:bg-white/5'
-                  }`}
+                    }`}
                 >
                   <Layers className="w-3 h-3" />
                   2D Tactical PPI
                 </button>
                 <button
                   onClick={() => setScopeViewMode('3d')}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono uppercase font-bold rounded-xs transition-colors cursor-pointer ${
-                    scopeViewMode === '3d'
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono uppercase font-bold rounded-xs transition-colors cursor-pointer ${scopeViewMode === '3d'
                       ? 'bg-[var(--c-accent)] text-black shadow-[0_0_8px_rgba(0,232,122,0.4)]'
                       : 'text-[var(--c-text-mid)] hover:text-white hover:bg-white/5'
-                  }`}
+                    }`}
                 >
                   <Box className="w-3 h-3" />
                   3D Airspace Dome
                 </button>
                 <button
                   onClick={() => setScopeViewMode('urban')}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono uppercase font-bold rounded-xs transition-colors cursor-pointer ${
-                    scopeViewMode === 'urban'
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono uppercase font-bold rounded-xs transition-colors cursor-pointer ${scopeViewMode === 'urban'
                       ? 'bg-[var(--c-accent)] text-black shadow-[0_0_8px_rgba(0,232,122,0.4)]'
                       : 'text-[var(--c-text-mid)] hover:text-white hover:bg-white/5'
-                  }`}
+                    }`}
                 >
                   <MapPin className="w-3 h-3" />
                   3D Urban Canopy
@@ -1125,11 +1116,10 @@ export const TrainerPage: React.FC = () => {
                           setActiveSensorTab(s);
                           readSensor(selectedContact.id, s);
                         }}
-                        className={`p-1.5 text-[10px] font-mono uppercase font-semibold rounded-xs border cursor-pointer ${
-                          activeSensorTab === s
+                        className={`p-1.5 text-[10px] font-mono uppercase font-semibold rounded-xs border cursor-pointer ${activeSensorTab === s
                             ? 'bg-[var(--c-bg-raised)] text-[var(--c-accent)] border-[var(--c-accent)]'
                             : 'bg-[var(--c-bg-deep)] text-[var(--c-text-mid)] border-[var(--c-border-base)]'
-                        }`}
+                          }`}
                       >
                         {s.replace('_', '/')}
                       </button>
@@ -1321,11 +1311,10 @@ export const TrainerPage: React.FC = () => {
                       onMouseLeave={cancelHardKillHold}
                       onTouchStart={startHardKillHold}
                       onTouchEnd={cancelHardKillHold}
-                      className={`w-full py-2.5 px-3 rounded font-mono font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all select-none border ${
-                        hardKillHolding
+                      className={`w-full py-2.5 px-3 rounded font-mono font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all select-none border ${hardKillHolding
                           ? 'bg-[var(--c-hostile)] text-white scale-[0.98] shadow-[0_0_20px_var(--c-hostile)]'
                           : 'bg-[var(--c-hostile-bg)] text-[var(--c-hostile)] border-[var(--c-hostile)] hover:bg-[var(--c-hostile)] hover:text-white'
-                      }`}
+                        }`}
                     >
                       <Zap className="w-4 h-4" />
                       <span>{hardKillHolding ? 'HOLDING CONFIRM (600ms)...' : 'HARD-KILL (HOLD TO FIRE)'}</span>

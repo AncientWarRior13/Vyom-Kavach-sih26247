@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -43,6 +44,13 @@ SEQUENCING_ARMS = ["blocked", "randomized"]
 BASE_DIR = Path(__file__).parent
 
 app = FastAPI(title="Drone Threat Trainer")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Security hardening (external review finding #4): this app ships bound to
 # 127.0.0.1 only by default (uvicorn's own default when --host isn't
@@ -897,6 +905,9 @@ def team_page():
 
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "trainer_frontend"), name="static")
+LANDING_DIST = BASE_DIR / "landing" / "dist"
+if LANDING_DIST.exists():
+    app.mount("/landing-static", StaticFiles(directory=LANDING_DIST, check_dir=False), name="landing-static")
 if (APP_DIST / "assets").exists():
     app.mount("/assets", StaticFiles(directory=APP_DIST / "assets", check_dir=False), name="app-assets")
 
@@ -907,4 +918,12 @@ def serve_dist_static(filename: str):
     if target.exists() and target.is_file():
         return FileResponse(target)
     raise HTTPException(404, "File not found")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8090))
+    host = "0.0.0.0" if os.environ.get("DRONETHREATTRAINER_ALLOW_REMOTE") == "1" or os.environ.get("RENDER") else "127.0.0.1"
+    uvicorn.run("server:app", host=host, port=port)
+
 

@@ -1,0 +1,76 @@
+# Deployment Guide: Vercel & Render
+
+DroneThreatTrainer is designed for high performance and low latency with a decoupled, modern architecture:
+
+| Component | Recommended Host | Role |
+| :--- | :--- | :--- |
+| **Frontend Applications** | **Vercel** | Edge CDN distribution for Landing Page (Three.js 3D), Tactical Trainer, AAR Dashboard, Instructor Console, Swarm Simulator & VR views |
+| **Backend & ML Engine** | **Render** | Persistent Python runtime hosting FastAPI, ONNX Runtime inference, scenario generators, scoring engine & SQLite audit database |
+
+---
+
+## Part 1: Deploy Backend on Render
+
+### Method A: Render Blueprint (Recommended)
+
+1. Push your repository to GitHub.
+2. Log into [Render Dashboard](https://dashboard.render.com/).
+3. Click **New +** -> **Blueprint**.
+4. Connect your GitHub repository `ps247-dronethreattrainer`.
+5. Render detects [render.yaml](file:///c:/Users/swast/ps247-drone/render.yaml) automatically.
+6. Click **Apply**.
+   - Render provisions the Web Service `dronethreattrainer-api`.
+   - Environment variables (`DRONETHREATTRAINER_ALLOW_REMOTE=1`, `PYTHON_VERSION=3.12.8`, `PORT=10000`) are auto-configured.
+7. Once deployed, note your service URL:
+   `https://<your-service-name>.onrender.com`
+
+### Method B: Docker Web Service
+
+1. On Render, click **New +** -> **Web Service**.
+2. Connect your repository.
+3. Select **Docker** as the Runtime.
+4. Render will automatically build the multi-stage [Dockerfile](file:///c:/Users/swast/ps247-drone/Dockerfile).
+5. In **Environment Variables**, ensure:
+   - `DRONETHREATTRAINER_ALLOW_REMOTE` = `1`
+6. Click **Create Web Service**.
+
+---
+
+## Part 2: Deploy Frontend on Vercel
+
+### Step-by-Step Setup
+
+1. Log into your [Vercel Dashboard](https://vercel.com/dashboard).
+2. Click **Add New...** -> **Project**.
+3. Import your GitHub repository `ps247-dronethreattrainer`.
+4. In the Project Configuration:
+   - **Framework Preset**: *Other*
+   - **Root Directory**: `./` (leave default repository root)
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+5. *(Optional but recommended)* Update [vercel.json](file:///c:/Users/swast/ps247-drone/vercel.json) rewrites:
+   Replace the placeholder `https://dronethreattrainer-api.onrender.com` with your actual Render URL from Part 1:
+   ```json
+   "rewrites": [
+     {
+       "source": "/api/:path*",
+       "destination": "https://<your-actual-render-service>.onrender.com/api/:path*"
+     }
+   ]
+   ```
+6. Click **Deploy**.
+
+---
+
+## Part 3: Architecture & Security Verification
+
+- **CORS Handling**: `server.py` includes FastAPI `CORSMiddleware` configured to allow cross-origin requests from Vercel deployments.
+- **Remote Host Protection**: `DRONETHREATTRAINER_ALLOW_REMOTE=1` instructs the security middleware to allow incoming traffic from cloud routers and edge proxies.
+- **Unified Routing**: 
+  - `/` -> Landing page & 3D drone trajectory simulation
+  - `/trainer` -> Tactical Trainer PPI & 3D urban canopy
+  - `/aar` -> Mission debrief and performance analytics
+  - `/instructor` -> Live threat injector and jammer console
+  - `/team` -> Role-based operational terminal
+  - `/swarm` -> Boids algorithm drone swarm simulation
+  - `/api/...` -> Reverse-proxied to your live Render backend

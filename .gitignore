@@ -10,4 +10,5 @@ node_modules/
 .pytest_cache/
 *.tsbuildinfo
 scratch/
+/dist/
 
