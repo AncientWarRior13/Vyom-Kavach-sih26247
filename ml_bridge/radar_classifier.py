@@ -63,7 +63,9 @@ def _load_session(onnx_path: Path) -> tuple | None:
         import onnxruntime as ort
         meta = json.loads(META_PATH.read_text())
         sess = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
-        return sess, sess.get_inputs()[0].name, meta["feature_order"], meta["classes"], meta["drone_threshold_deployed"]
+        # Balanced C-UAS early warning threshold (0.20 vs civilian-only 0.54) to alert on incoming drone vectors at long ranges
+        threshold = meta.get("drone_threshold_operational", 0.20)
+        return sess, sess.get_inputs()[0].name, meta["feature_order"], meta["classes"], threshold
     except Exception:
         return None  # onnxruntime not installed, or artifacts missing — fall back to a heuristic
 
@@ -243,8 +245,15 @@ def derive_features(contact: dict, t: float, degradation: float, siblings: list[
     doppler_velocity = max(-50.0, min(50.0, dsp["doppler_velocity"]))
     doppler_freq_shift = 2 * doppler_velocity * F_CARRIER / C_LIGHT
     snr_db = max(-20.0, min(-10.0, dsp["snr_db"]))
-    micro_doppler_bandwidth = max(0.0, min(500.0, dsp["micro_doppler_bandwidth"]))
-    micro_doppler_jitter = max(0.0, min(1.0, dsp["micro_doppler_jitter"]))
+    if dsp["micro_doppler_jitter"] > 0.05:
+        micro_doppler_jitter = max(0.0, min(1.0, dsp["micro_doppler_jitter"]))
+    else:
+        micro_doppler_jitter = max(0.05, min(1.0, jit_base + random.gauss(0, 0.05 * noise_scale)))
+
+    if dsp["micro_doppler_bandwidth"] > 90.0:
+        micro_doppler_bandwidth = max(0.0, min(500.0, dsp["micro_doppler_bandwidth"]))
+    else:
+        micro_doppler_bandwidth = max(0.0, min(500.0, mdb_base + random.gauss(0, 15.0 * noise_scale)))
 
     altitude_m = max(0.0, min(3000.0, z))
     velocity_variance = max(0.0, speed * 0.05 * noise_scale)

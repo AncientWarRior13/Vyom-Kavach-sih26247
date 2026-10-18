@@ -133,15 +133,29 @@ export const AarPage: React.FC = () => {
       key: 'session_id',
       header: 'Session ID',
       sortable: true,
-      render: (s) => <span className="font-mono text-xs text-[var(--c-text-high)]">{s.session_id?.slice(0, 12)}</span>,
+      render: (s) => (
+        <span className="font-mono text-xs text-[var(--c-text-high)] font-semibold">
+          {s.session_id || s.scenario_id || (s.id ? `sess-${s.id}` : '—')}
+        </span>
+      ),
     },
     { key: 'trainee_id', header: 'Operator', sortable: true },
+    {
+      key: 'unit_id',
+      header: 'Unit',
+      sortable: true,
+      render: (s) => (
+        <span className="font-mono text-xs text-[var(--c-text-mid)]">
+          {s.unit_id || unitId || 'unit-A'}
+        </span>
+      ),
+    },
     {
       key: 'difficulty',
       header: 'Level',
       sortable: true,
       align: 'center',
-      render: (s) => <span className="font-mono text-xs">Level {s.difficulty}</span>,
+      render: (s) => <span className="font-mono text-xs text-[var(--c-text-mid)]">Level {s.difficulty}</span>,
     },
     {
       key: 'created_at',
@@ -149,7 +163,7 @@ export const AarPage: React.FC = () => {
       sortable: true,
       render: (s) => (
         <span className="font-mono text-xs text-[var(--c-text-mid)]">
-          {s.created_at?.split('T')[0] || s.created_at || '2026-10-14'}
+          {s.created_at ? s.created_at.replace('T', ' ').slice(0, 19) : '2026-10-18'}
         </span>
       ),
     },
@@ -161,7 +175,7 @@ export const AarPage: React.FC = () => {
       render: (s) => {
         const val = s.overall_score ?? s.score ?? 84;
         const col = val >= 85 ? 'text-[var(--c-advisory)]' : val >= 70 ? 'text-[var(--c-info)]' : 'text-[var(--c-critical)]';
-        return <span className={`font-mono font-semibold tabular-nums text-xs ${col}`}>{val.toFixed(1)}%</span>;
+        return <span className={`font-mono font-bold tabular-nums text-xs ${col}`}>{Number(val).toFixed(1)}%</span>;
       },
     },
     {
@@ -175,7 +189,7 @@ export const AarPage: React.FC = () => {
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation();
-              setSelectedSessionId(s.session_id);
+              setSelectedSessionId(s.session_id || s.scenario_id || (s.id ? String(s.id) : null));
               setReplayDrawerOpen(true);
             }}
           >
@@ -186,7 +200,7 @@ export const AarPage: React.FC = () => {
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation();
-              window.open(`/aar/session/${s.session_id}/print`, '_blank');
+              window.open(`/aar/session/${s.id || s.session_id}/print`, '_blank');
             }}
           >
             <Printer className="w-3.5 h-3.5" />
@@ -201,9 +215,9 @@ export const AarPage: React.FC = () => {
   const maxErrorCount = errorEntries.reduce((max, [, count]) => Math.max(max, count), 1);
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="flex-1 min-h-full w-full p-4 md:p-6 flex flex-col gap-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--c-border-base)] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--c-border-base)] pb-4 shrink-0">
         <div>
           <h1 className="text-lg font-semibold text-[var(--c-text-high)] font-ui">
             After-action review & telemetry
@@ -238,7 +252,7 @@ export const AarPage: React.FC = () => {
       </div>
 
       {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-3 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-lg shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-3 bg-[var(--c-bg-surface)] border border-[var(--c-border-base)] rounded-lg shadow-sm shrink-0">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-xs font-ui">
             <span className="text-[var(--c-text-mid)] font-medium">Operator:</span>
@@ -269,6 +283,7 @@ export const AarPage: React.FC = () => {
       <Tabs
         activeTab={activeTab}
         onChange={setActiveTab}
+        className="shrink-0"
         tabs={[
           { id: 'overview', label: 'Performance overview' },
           { id: 'heatmap', label: 'Missed threat heatmap' },
@@ -496,13 +511,21 @@ export const AarPage: React.FC = () => {
 
       {/* ── Tab 4: Mission Archive Table ── */}
       {activeTab === 'sessions' && (
-        <Panel title="Session mission archive" subtitle={`${sessionCount} entries`}>
-          <Table
-            columns={sessionColumns}
-            data={sessions}
-            keyField="session_id"
-            emptyText="No recorded sessions found for this operator"
-          />
+        <Panel
+          title="Session mission archive"
+          subtitle={`${sessionCount} entries`}
+          className="flex-1 min-h-[420px] flex flex-col"
+          bodyClassName="p-0 flex-1 flex flex-col min-h-0 overflow-hidden"
+        >
+          <div className="flex-1 min-h-0 overflow-auto">
+            <Table
+              columns={sessionColumns}
+              data={sessions}
+              keyField={(s) => String(s.id || s.session_id || s.scenario_id || Math.random())}
+              emptyText="No recorded sessions found for this operator"
+              className="h-full border-0 rounded-none shadow-none"
+            />
+          </div>
         </Panel>
       )}
 

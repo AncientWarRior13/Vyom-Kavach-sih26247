@@ -370,7 +370,7 @@ def sensor_read(req: SensorReadRequest):
     scenario = _ACTIVE_SCENARIOS.get(req.scenario_id)
     if scenario is None:
         raise HTTPException(404, "unknown or expired scenario_id")
-    contact = next((c for c in scenario["contacts"] if c["contact_id"] == req.contact_id), None)
+    contact = next((c for c in scenario["contacts"] if c.get("contact_id") == req.contact_id or c.get("id") == req.contact_id), None)
     if contact is None:
         raise HTTPException(404, "unknown contact_id")
 
@@ -897,7 +897,14 @@ def team_page():
 
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "trainer_frontend"), name="static")
-app.mount("/landing-static", StaticFiles(directory=BASE_DIR / "landing" / "dist", check_dir=False), name="landing-static")
 if (APP_DIST / "assets").exists():
     app.mount("/assets", StaticFiles(directory=APP_DIST / "assets", check_dir=False), name="app-assets")
+
+
+@app.get("/{filename:path}")
+def serve_dist_static(filename: str):
+    target = APP_DIST / filename
+    if target.exists() and target.is_file():
+        return FileResponse(target)
+    raise HTTPException(404, "File not found")
 

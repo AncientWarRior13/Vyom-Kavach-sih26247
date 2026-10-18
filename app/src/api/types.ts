@@ -75,7 +75,8 @@ export interface ClassifyRequest {
 export interface SensorReadRequest {
   scenario_id: string;
   contact_id: string;
-  sensor_type: 'radar' | 'eo_ir' | 'rf' | 'acoustic';
+  sensor: 'radar' | 'eo_ir' | 'rf' | 'acoustic' | string;
+  t: number;
 }
 
 export interface EngageRequest {

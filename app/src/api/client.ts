@@ -59,7 +59,7 @@ export const api = {
     }),
 
   sensorRead: (req: SensorReadRequest) =>
-    fetchJson<{ readings: any }>('/api/contact/sensor_read', {
+    fetchJson<any>('/api/contact/sensor_read', {
       method: 'POST',
       body: JSON.stringify(req),
     }),

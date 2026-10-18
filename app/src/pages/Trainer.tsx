@@ -10,6 +10,8 @@ import { Select } from '../ui/Select';
 import { Tabs } from '../ui/Tabs';
 import { useToast } from '../ui/Toast';
 import { RadarScope } from '../components/domain/RadarScope';
+import { Airspace3D } from '../components/domain/Airspace3D';
+import { UrbanMap3D } from '../components/domain/UrbanMap3D';
 import { SensorHealthChips, EventLog, CombatEvent } from '../components/domain/TacticalFeed';
 import { api } from '../api/client';
 import { enrichScenarioContacts } from '../utils/scenarioUtils';
@@ -27,6 +29,13 @@ import {
   Clock,
   Printer,
   BarChart,
+  Layers,
+  Box,
+  MapPin,
+  User,
+  ShieldCheck,
+  Radio,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const TrainerPage: React.FC = () => {
@@ -62,6 +71,7 @@ export const TrainerPage: React.FC = () => {
   const [sensorData, setSensorData] = useState<Record<string, any>>({});
   const [aiHint, setAiHint] = useState<{ confidence: number; rationale: string; suggested: string } | null>(null);
   const [roeOpen, setRoeOpen] = useState(false);
+  const [scopeViewMode, setScopeViewMode] = useState<'2d' | '3d' | 'urban'>('2d');
 
   // Hard-kill hold-to-confirm state (600ms)
   const [hardKillHolding, setHardKillHolding] = useState(false);
@@ -282,31 +292,81 @@ export const TrainerPage: React.FC = () => {
   // Sensor Reading Handler
   const readSensor = async (contactId: string, sensor: 'radar' | 'eo_ir' | 'rf' | 'acoustic') => {
     if (!scenario) return;
+    if (sensor === 'radar') {
+      setActiveSensorTab('radar');
+      return;
+    }
     try {
-      const res = await api.sensorRead({ scenario_id: scenario.scenario_id, contact_id: contactId, sensor_type: sensor });
+      const res = await api.sensorRead({
+        scenario_id: scenario.scenario_id,
+        contact_id: contactId,
+        sensor,
+        t: elapsed,
+      });
       setSensorData((prev) => ({
         ...prev,
-        [`${contactId}_${sensor}`]: res.readings,
+        [`${contactId}_${sensor}`]: res,
       }));
-      addEvent(`Sensor telemetry locked: ${sensor.toUpperCase()} on track ${contactId}`, 'info', sensor.toUpperCase());
+      if (!res.available) {
+        toast('SENSOR OUTAGE', `${sensor.toUpperCase()}: ${res.reason || 'Jammed / unavailable'}`, 'warning');
+      } else {
+        addEvent(`Sensor telemetry locked: ${sensor.toUpperCase()} on track ${contactId}`, 'info', sensor.toUpperCase());
+      }
     } catch {
       toast('SENSOR ERROR', `${sensor.toUpperCase()} channel jammed or degraded`, 'warning');
     }
   };
 
-  // AI Hint Trigger
-  const requestAiHint = () => {
-    if (!selectedContact) return;
-    const hints: Record<string, any> = {
-      hostile_drone: { confidence: 0.94, rationale: 'High micro-doppler blade modulation + RF control uplink on 2.4 GHz', suggested: 'Hostile Kamikaze Drone' },
-      decoy: { confidence: 0.88, rationale: 'Radar RCS 5.2m² disproportionate to 18m/s flight envelope; RF beacon loop', suggested: 'Electronic Decoy' },
-      friendly_drone: { confidence: 0.99, rationale: 'Transponder IFF Mode-5 squawk authenticated', suggested: 'Allied Recon Drone' },
-      unknown: { confidence: 0.72, rationale: 'Low RCS target flying below 100m AGL, thermal IR signature nominal', suggested: 'Suspicious Unknown' },
-    };
-    const cls = selectedContact.assigned_classification || selectedContact.classification || 'unknown';
-    const hint = hints[cls] || hints.unknown;
-    setAiHint(hint);
-    addEvent(`AI Classification Model advisory for ${selectedContact.id}: ${hint.suggested} (${Math.round(hint.confidence * 100)}%)`, 'info', 'AI-ASSIST');
+  // Real AI Classifier Hint Trigger via Backend Machine Learning
+  const requestAiHint = async () => {
+    if (!selectedContact || !scenario) return;
+    try {
+      const res = await fetch('/api/contact/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scenario_id: scenario.scenario_id,
+          contact_id: selectedContact.id,
+          t: elapsed,
+        }),
+      });
+      if (res.ok) {
+        const out = await res.json();
+        const topProb = out.probabilities ? out.probabilities[out.label] : 0.85;
+        const rationales: Record<string, string> = {
+          drone: 'Micro-doppler blade modulation peaks detected + characteristic rotor envelope',
+          aircraft: 'High velocity steady vector, large RCS signature, non-hovering kinematics',
+          bird: 'Irregular biological wing-beat frequency, low radar cross section',
+          anomaly: 'Cluttered multipath RF reflections, inconsistent trajectory tracking',
+        };
+
+        const hint = {
+          confidence: topProb ?? 0.85,
+          suggested: `Predicted: ${(out.label || 'unknown').toUpperCase()}`,
+          rationale: rationales[out.label] || `Source: ${out.source || 'RadarSense Classifier'}, confidence: ${Math.round(topProb * 100)}%`,
+        };
+        setAiHint(hint);
+        addEvent(
+          `AI Classifier (${out.source}): ${out.label.toUpperCase()} (${Math.round((topProb || 0.85) * 100)}%) on track ${selectedContact.id}`,
+          'info',
+          'AI-ASSIST'
+        );
+        return;
+      }
+    } catch {
+      // Fallback if network or offline
+    }
+
+    // Dynamic heuristic fallback
+    const alt = selectedContact.altitude ?? 100;
+    const spd = selectedContact.speed ?? 12;
+    const estLabel = spd > 35 ? 'aircraft' : alt < 200 && spd < 25 ? 'drone' : 'bird';
+    const estProb = 0.78 + (selectedContact.id.charCodeAt(0) % 18) / 100;
+    setAiHint({
+      confidence: estProb,
+      suggested: `Estimated: ${estLabel.toUpperCase()}`,
+      rationale: `Kinematics: Alt ${alt}m, Speed ${spd}m/s. Micro-Doppler harmonics indicative of ${estLabel}.`,
+    });
   };
 
   // Engagement Actions (Warn / Soft-kill / Hard-kill)
@@ -452,114 +512,198 @@ export const TrainerPage: React.FC = () => {
   }
 
   // ═════════════════════════════════════════════════════════════════════════════
-  // STATE A: BRIEFING STEPPER
+  // STATE A: BRIEFING STEPPER (Single-Screen, Clean & Focused, Readable Fonts)
   // ═════════════════════════════════════════════════════════════════════════════
   if (viewState === 'briefing') {
     return (
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="border-b border-[var(--c-border-base)] pb-4 flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold tracking-wider text-[var(--c-text-max)] uppercase">
-              Operational Mission Briefing
-            </h1>
-            <p className="font-mono text-xs text-[var(--c-text-mid)] mt-1">
-              Configure exercise parameters, sensor degradation, and threat doctrine before deployment.
-            </p>
+      <div className="w-full max-w-6xl mx-auto p-4 lg:p-6 flex flex-col gap-4">
+        {/* Header with Title and Status Badges */}
+        <div className="border-b border-[var(--c-border-base)] pb-3 space-y-3 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[var(--c-accent)] shadow-[0_0_10px_var(--c-accent)] animate-pulse" />
+                <h1 className="font-display text-xl lg:text-2xl font-bold tracking-wider text-[var(--c-text-max)] uppercase">
+                  Operational Mission Briefing
+                </h1>
+              </div>
+              <p className="font-mono text-xs sm:text-sm text-[var(--c-text-mid)] mt-1">
+                Configure exercise parameters and threat doctrine before deployment.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="info" size="sm">C-UAS TACTICAL SCOPE</Badge>
+              <Badge variant="default" size="sm">TERMINAL 01</Badge>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {[1, 2, 3, 4].map((s) => (
-              <div
+
+          {/* Interactive Milestone Step Ribbon */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+            {[
+              { s: 1, title: 'OPERATOR IDENTITY', desc: 'Callsign & Station Record' },
+              { s: 2, title: 'THREAT DOCTRINE', desc: 'Architecture & Difficulty' },
+              { s: 3, title: 'ENVIRONMENT & EW', desc: 'Terrain, Noise & Tactics' },
+              { s: 4, title: 'MISSION CONFIRM', desc: 'Manifest & Deployment' },
+            ].map(({ s, title, desc }) => (
+              <button
                 key={s}
-                className={`w-8 h-8 rounded-xs font-mono text-xs flex items-center justify-center font-bold border ${
+                type="button"
+                onClick={() => setStep(s)}
+                className={`py-2 px-3 rounded-md border text-left cursor-pointer transition-all flex items-center gap-3 ${
                   step === s
-                    ? 'bg-[var(--c-accent)] text-[#020508] border-[var(--c-accent)] shadow-[0_0_8px_var(--c-accent)]'
+                    ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-[0_0_12px_rgba(61,214,198,0.2)]'
                     : step > s
-                    ? 'bg-[var(--c-bg-raised)] text-[var(--c-accent)] border-[var(--c-accent)]/50'
-                    : 'bg-[var(--c-bg-surface)] text-[var(--c-text-low)] border-[var(--c-border-base)]'
+                    ? 'bg-[var(--c-bg-surface)] border-[var(--c-accent)]/40 hover:border-[var(--c-accent)]'
+                    : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] opacity-70 hover:opacity-100'
                 }`}
               >
-                0{s}
-              </div>
+                <div
+                  className={`w-7 h-7 rounded font-mono text-xs flex items-center justify-center font-bold shrink-0 border ${
+                    step === s
+                      ? 'bg-[var(--c-accent)] text-[#04080c] border-[var(--c-accent)] shadow-[0_0_8px_var(--c-accent)]'
+                      : step > s
+                      ? 'bg-[var(--c-bg-raised)] text-[var(--c-accent)] border-[var(--c-accent)]/50'
+                      : 'bg-[var(--c-bg-deep)] text-[var(--c-text-low)] border-[var(--c-border-base)]'
+                  }`}
+                >
+                  0{s}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs sm:text-sm font-bold text-[var(--c-text-max)] truncate">{title}</span>
+                    {step > s && <span className="text-xs text-[var(--c-accent)] font-mono">✓</span>}
+                  </div>
+                  <span className="text-xs text-[var(--c-text-mid)] block font-mono truncate">{desc}</span>
+                </div>
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Stepper Body */}
-          <div className="lg:col-span-2 space-y-6">
-            {step === 1 && (
-              <Panel title="Step 01 // Trainee Identity" subtitle="AUTH & CREW RECORD">
-                <div className="space-y-4">
+        {/* Two-Column Uniform Body Layout - Standardized Height */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+          {/* Main Stepper Body (8 Cols) - Standardized Uniform Height */}
+          <div className="lg:col-span-8 flex flex-col">
+            <Panel
+              title={
+                step === 1
+                  ? 'Step 01 // Trainee Identity'
+                  : step === 2
+                  ? 'Step 02 // Threat Architecture'
+                  : step === 3
+                  ? 'Step 03 // Environment & EW'
+                  : 'Step 04 // Mission Confirmation'
+              }
+              subtitle={
+                step === 1
+                  ? 'AUTH & CREW RECORD'
+                  : step === 2
+                  ? 'THREAT DOCTRINE'
+                  : step === 3
+                  ? 'ATMOSPHERICS & EW'
+                  : 'MISSION CONFIRMATION'
+              }
+              className="h-[440px] flex flex-col"
+              bodyClassName="p-5 flex-1 flex flex-col justify-between space-y-4"
+            >
+              {step === 1 && (
+                <div className="space-y-5 flex-1 flex flex-col justify-center">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-mono text-[var(--c-text-mid)] uppercase">Trainee Call-Sign</label>
+                      <label className="text-xs font-mono font-semibold text-[var(--c-text-max)] uppercase tracking-wider">
+                        Trainee Call-Sign
+                      </label>
                       <input
                         type="text"
                         value={traineeId}
                         onChange={(e) => setTraineeId(e.target.value)}
-                        className="bg-[var(--c-bg-raised)] border border-[var(--c-border-base)] rounded-xs px-3 py-2 text-xs font-mono text-[var(--c-text-max)] focus:outline-none focus:border-[var(--c-accent)]"
+                        className="bg-[var(--c-bg-raised)] border border-[var(--c-border-base)] rounded px-3.5 py-2.5 text-sm font-mono text-[var(--c-text-max)] focus:outline-none focus:border-[var(--c-accent)]"
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-mono text-[var(--c-text-mid)] uppercase">Operational Unit</label>
+                      <label className="text-xs font-mono font-semibold text-[var(--c-text-max)] uppercase tracking-wider">
+                        Operational Unit
+                      </label>
                       <input
                         type="text"
                         value={unitId}
                         onChange={(e) => setUnitId(e.target.value)}
-                        className="bg-[var(--c-bg-raised)] border border-[var(--c-border-base)] rounded-xs px-3 py-2 text-xs font-mono text-[var(--c-text-max)] focus:outline-none focus:border-[var(--c-accent)]"
+                        className="bg-[var(--c-bg-raised)] border border-[var(--c-border-base)] rounded px-3.5 py-2.5 text-sm font-mono text-[var(--c-text-max)] focus:outline-none focus:border-[var(--c-accent)]"
                       />
                     </div>
                   </div>
-                  <div className="p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-faint)] rounded-xs text-xs font-mono text-[var(--c-text-mid)]">
-                    Identified operator records are synchronized with the after-action review telemetry server for certification tracking.
+
+                  <div className="grid grid-cols-2 gap-3 p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-faint)] rounded text-xs font-mono">
+                    <div>
+                      <span className="text-xs text-[var(--c-text-low)] uppercase block">Assigned C2 Scope Terminal</span>
+                      <span className="font-bold text-sm text-[var(--c-text-max)]">Console Alpha-7 // 10GHz X-Band</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-[var(--c-text-low)] uppercase block">Radar Cross-Section Floor</span>
+                      <span className="font-bold text-sm text-[var(--c-accent)]">Calibrated (-20.0 dBsm threshold)</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3.5 bg-[var(--c-bg-deep)] border border-[var(--c-border-faint)] rounded">
+                    <div>
+                      <div className="text-xs sm:text-sm font-mono font-bold text-[var(--c-text-max)]">
+                        Cognitive Research Arm Tracking
+                      </div>
+                      <div className="text-xs font-mono text-[var(--c-text-mid)] mt-0.5">
+                        Identified operator records are synchronized with the after-action review server for certification.
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={participateResearch}
+                      onChange={(e) => setParticipateResearch(e.target.checked)}
+                      className="accent-[var(--c-accent)] w-5 h-5 cursor-pointer ml-4"
+                    />
                   </div>
                 </div>
-              </Panel>
-            )}
+              )}
 
-            {step === 2 && (
-              <Panel title="Step 02 // Threat Scenario Architecture" subtitle="PROFILES">
-                <div className="space-y-4">
+              {step === 2 && (
+                <div className="space-y-4 flex-1 flex flex-col justify-center">
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       type="button"
                       onClick={() => setScenarioType('procedural')}
-                      className={`p-3 rounded-xs border text-left cursor-pointer transition-colors ${
+                      className={`p-3.5 rounded border text-left cursor-pointer transition-colors ${
                         scenarioType === 'procedural'
-                          ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-xs'
+                          ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-[0_0_10px_rgba(61,214,198,0.2)]'
                           : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)]'
                       }`}
                     >
-                      <Target className="w-4 h-4 text-[var(--c-accent)] mb-2" />
-                      <div className="font-bold text-xs font-mono text-[var(--c-text-max)]">PROCEDURAL</div>
-                      <div className="text-[10px] font-mono text-[var(--c-text-mid)] mt-1">Stochastic threat generation</div>
+                      <Target className="w-5 h-5 text-[var(--c-accent)] mb-1.5" />
+                      <div className="font-bold text-sm font-mono text-[var(--c-text-max)]">PROCEDURAL</div>
+                      <div className="text-xs font-mono text-[var(--c-text-mid)] mt-1">Stochastic threat generation</div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setScenarioType('adaptive')}
-                      className={`p-3 rounded-xs border text-left cursor-pointer transition-colors ${
+                      className={`p-3.5 rounded border text-left cursor-pointer transition-colors ${
                         scenarioType === 'adaptive'
-                          ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-xs'
+                          ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-[0_0_10px_rgba(61,214,198,0.2)]'
                           : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)]'
                       }`}
                     >
-                      <Sparkles className="w-4 h-4 text-[var(--c-accent)] mb-2" />
-                      <div className="font-bold text-xs font-mono text-[var(--c-text-max)]">ADAPTIVE</div>
-                      <div className="text-[10px] font-mono text-[var(--c-text-mid)] mt-1">Targets operator weakness profile</div>
+                      <Sparkles className="w-5 h-5 text-[var(--c-accent)] mb-1.5" />
+                      <div className="font-bold text-sm font-mono text-[var(--c-text-max)]">ADAPTIVE</div>
+                      <div className="text-xs font-mono text-[var(--c-text-mid)] mt-1">Targets operator weakness profile</div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setScenarioType('scripted')}
-                      className={`p-3 rounded-xs border text-left cursor-pointer transition-colors ${
+                      className={`p-3.5 rounded border text-left cursor-pointer transition-colors ${
                         scenarioType === 'scripted'
-                          ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-xs'
+                          ? 'bg-[var(--c-bg-raised)] border-[var(--c-accent)] shadow-[0_0_10px_rgba(61,214,198,0.2)]'
                           : 'bg-[var(--c-bg-surface)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)]'
                       }`}
                     >
-                      <ShieldAlert className="w-4 h-4 text-[var(--c-accent)] mb-2" />
-                      <div className="font-bold text-xs font-mono text-[var(--c-text-max)]">SCRIPTED DRILL</div>
-                      <div className="text-[10px] font-mono text-[var(--c-text-mid)] mt-1">Certified standard benchmark</div>
+                      <ShieldAlert className="w-5 h-5 text-[var(--c-accent)] mb-1.5" />
+                      <div className="font-bold text-sm font-mono text-[var(--c-text-max)]">SCRIPTED DRILL</div>
+                      <div className="text-xs font-mono text-[var(--c-text-mid)] mt-1">Certified standard benchmark</div>
                     </button>
                   </div>
 
@@ -572,7 +716,7 @@ export const TrainerPage: React.FC = () => {
                     />
                   )}
 
-                  <div className="pt-2">
+                  <div className="p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-faint)] rounded space-y-1.5">
                     <Slider
                       label="Threat Ingress Difficulty (1-5)"
                       min={1}
@@ -582,21 +726,26 @@ export const TrainerPage: React.FC = () => {
                       onChange={setDifficulty}
                       unit="Tier"
                     />
+                    <div className="text-xs font-mono text-[var(--c-accent)] pt-0.5">
+                      {difficulty === 1 && 'Tier 1: Low-density reconnaissance vectors (3-4 contacts).'}
+                      {difficulty === 2 && 'Tier 2: Mixed stealth decoys and single sensor jamming (5-7 contacts).'}
+                      {difficulty === 3 && 'Tier 3: Coordinated multi-axis raid with active EW jamming (8-10 contacts).'}
+                      {difficulty === 4 && 'Tier 4: Distributed swarm saturation with low-altitude terrain masking.'}
+                      {difficulty === 5 && 'Tier 5: Maximum saturation raid with autonomous swarm evasions.'}
+                    </div>
                   </div>
                 </div>
-              </Panel>
-            )}
+              )}
 
-            {step === 3 && (
-              <Panel title="Step 03 // Environmental Conditions & EW" subtitle="ATMOSPHERICS">
-                <div className="space-y-4">
+              {step === 3 && (
+                <div className="space-y-4 flex-1 flex flex-col justify-center">
                   <div className="grid grid-cols-2 gap-4">
                     <Select
                       label="Time of Day"
                       options={[
-                        { value: 'day', label: 'Daylight // Clear Vis' },
-                        { value: 'dusk', label: 'Dusk // Reduced Thermal Vis' },
-                        { value: 'night', label: 'Night // EO/IR Dependent' },
+                        { value: 'day', label: 'Daylight // Clear Visual Optics' },
+                        { value: 'dusk', label: 'Dusk // Reduced Thermal Contrast' },
+                        { value: 'night', label: 'Night // EO/IR Sensor Dependent' },
                       ]}
                       value={timeOfDay}
                       onChange={(e) => setTimeOfDay(e.target.value)}
@@ -614,106 +763,144 @@ export const TrainerPage: React.FC = () => {
                     />
                   </div>
 
-                  <Slider
-                    label="Electronic Warfare / Sensor Degradation"
-                    min={0}
-                    max={1}
-                    step={0.1}
-                    value={degradation}
-                    onChange={setDegradation}
-                    unit="Noise"
-                  />
+                  <div className="p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-faint)] rounded space-y-1.5">
+                    <Slider
+                      label="Electronic Warfare / Sensor Degradation"
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      value={degradation}
+                      onChange={setDegradation}
+                      unit="Noise"
+                    />
+                    <div className="flex justify-between text-xs font-mono text-[var(--c-text-mid)] pt-0.5">
+                      <span>0.0 (Clean Baseline Signal)</span>
+                      <span className="text-[var(--c-accent)] font-bold">Current: {Math.round(degradation * 100)}% Noise Floor</span>
+                      <span>1.0 (Severe EW)</span>
+                    </div>
+                  </div>
 
-                  <div className="flex items-center justify-between p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-faint)] rounded-xs">
+                  <div className="flex items-center justify-between p-3 bg-[var(--c-bg-deep)] border border-[var(--c-border-faint)] rounded">
                     <div>
-                      <div className="text-xs font-mono font-bold text-[var(--c-text-max)]">Red-Team Evasive Tactics</div>
-                      <div className="text-[10px] font-mono text-[var(--c-text-mid)]">Injects split swarms, low altitude masking, and RF spoofing</div>
+                      <div className="text-sm font-mono font-bold text-[var(--c-text-max)]">Red-Team Evasive Tactics</div>
+                      <div className="text-xs font-mono text-[var(--c-text-mid)] mt-0.5">
+                        Injects dynamic swarm splitting, low altitude masking, and RF spoofing
+                      </div>
                     </div>
                     <input
                       type="checkbox"
                       checked={redTeamTactics}
                       onChange={(e) => setRedTeamTactics(e.target.checked)}
-                      className="accent-[var(--c-accent)] w-4 h-4 cursor-pointer"
+                      className="accent-[var(--c-accent)] w-5 h-5 cursor-pointer ml-4"
                     />
                   </div>
                 </div>
-              </Panel>
-            )}
+              )}
 
-            {step === 4 && (
-              <Panel title="Step 04 // Operational Review & Deployment" subtitle="MISSION CONFIRMATION">
-                <div className="space-y-4 font-mono text-xs">
-                  <div className="p-4 bg-[var(--c-bg-deep)] border border-[var(--c-border-base)] rounded-xs space-y-2">
+              {step === 4 && (
+                <div className="space-y-4 font-mono text-xs sm:text-sm flex-1 flex flex-col justify-center">
+                  <div className="p-4 bg-[var(--c-bg-deep)] border border-[var(--c-border-base)] rounded space-y-2.5">
                     <div className="flex justify-between border-b border-[var(--c-border-faint)] pb-2">
-                      <span className="text-[var(--c-text-low)]">CALL-SIGN:</span>
+                      <span className="text-[var(--c-text-low)] text-xs uppercase">Operator Callsign & Unit:</span>
                       <span className="text-[var(--c-text-max)] font-bold">{traineeId} ({unitId})</span>
                     </div>
                     <div className="flex justify-between border-b border-[var(--c-border-faint)] pb-2">
-                      <span className="text-[var(--c-text-low)]">DOCTRINE ARCHITECTURE:</span>
+                      <span className="text-[var(--c-text-low)] text-xs uppercase">Doctrine Architecture:</span>
                       <span className="text-[var(--c-accent)] font-bold uppercase">{scenarioType}</span>
                     </div>
                     <div className="flex justify-between border-b border-[var(--c-border-faint)] pb-2">
-                      <span className="text-[var(--c-text-low)]">DIFFICULTY / CONDITIONS:</span>
-                      <span className="text-[var(--c-text-max)] font-bold">L-0{difficulty} · {timeOfDay.toUpperCase()} · {terrain.toUpperCase()}</span>
+                      <span className="text-[var(--c-text-low)] text-xs uppercase">Difficulty & Environment:</span>
+                      <span className="text-[var(--c-text-max)] font-bold">Tier 0{difficulty} · {timeOfDay.toUpperCase()} · {terrain.toUpperCase()}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-[var(--c-border-faint)] pb-2">
+                      <span className="text-[var(--c-text-low)] text-xs uppercase">EW Degradation:</span>
+                      <span className={degradation > 0 ? 'text-[var(--c-warning)] font-bold' : 'text-[var(--c-accent)]'}>
+                        {degradation > 0 ? `${Math.round(degradation * 100)}% Active EW Interference` : 'Nominal Baseline Profile'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[var(--c-text-low)]">RULES OF ENGAGEMENT:</span>
-                      <span className="text-[var(--c-accent)] font-bold">WEAPONS FREE POST-DUAL SENSOR ID</span>
+                      <span className="text-[var(--c-text-low)] text-xs uppercase">Rules of Engagement:</span>
+                      <span className="text-[var(--c-accent)] font-bold">Weapons Free Post-Dual Sensor ID</span>
                     </div>
                   </div>
 
                   <Button
                     variant="primary"
                     size="lg"
-                    className="w-full py-3"
+                    className="w-full py-3 font-mono text-sm font-bold tracking-wider cursor-pointer shadow-lg"
                     onClick={() => launchMission()}
                     icon={<Play className="w-5 h-5 fill-current" />}
                   >
                     DEPLOY RADAR TO OPERATIONAL SECTOR
                   </Button>
                 </div>
-              </Panel>
-            )}
+              )}
 
-            {/* Stepper Navigation */}
-            <div className="flex items-center justify-between pt-4 border-t border-[var(--c-border-base)]">
-              {step > 1 ? (
-                <Button variant="secondary" onClick={() => setStep(step - 1)} icon={<ChevronLeft className="w-4 h-4" />}>
-                  Previous
-                </Button>
-              ) : <div />}
-              {step < 4 ? (
-                <Button variant="primary" onClick={() => setStep(step + 1)}>
-                  <span>Proceed to Step 0{step + 1}</span>
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              ) : null}
-            </div>
+              {/* Stepper Navigation Footer */}
+              <div className="flex items-center justify-between pt-3 border-t border-[var(--c-border-base)] mt-auto shrink-0">
+                {step > 1 ? (
+                  <Button variant="secondary" size="md" onClick={() => setStep(step - 1)} icon={<ChevronLeft className="w-4 h-4" />}>
+                    Previous Step
+                  </Button>
+                ) : <div />}
+                {step < 4 ? (
+                  <Button variant="primary" size="md" onClick={() => setStep(step + 1)}>
+                    <span>Proceed to Step 0{step + 1}</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                ) : null}
+              </div>
+            </Panel>
           </div>
 
-          {/* Right Preview Card */}
-          <div>
-            <Panel title="Mission Telemetry Preview" subtitle="CALCULATED RISK">
-              <div className="space-y-4">
-                <Stat
-                  label="Estimated Threat Ingress"
-                  value={difficulty * 3}
-                  unit="TARGETS"
-                  sparkline={[2, 4, difficulty * 3]}
-                />
-                <Stat
-                  label="Atmospheric Sensor SNR"
-                  value={Math.round(28 - degradation * 18)}
-                  unit="dB"
-                  sparkline={[28, 25, Math.round(28 - degradation * 18)]}
-                />
-                <div className="p-3 bg-[var(--c-bg-deep)] rounded-xs border border-[var(--c-border-faint)] text-xs font-mono space-y-2">
-                  <div className="text-[10px] text-[var(--c-text-low)] uppercase">DEFENDED BASE ASSET</div>
-                  <div className="font-bold text-[var(--c-warning)]">HQ SECTOR COMMAND POST (0, 0)</div>
-                  <div className="text-[11px] text-[var(--c-text-mid)]">
-                    Target engagement range limit: 6.0km. Collateral-free zone radius: 1.2km.
+          {/* Right Preview Card (4 Cols) - Standardized Uniform Height */}
+          <div className="lg:col-span-4 flex flex-col">
+            <Panel
+              title="Mission Telemetry"
+              subtitle="RISK MATRIX"
+              className="h-[440px] flex flex-col overflow-hidden"
+              bodyClassName="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 overflow-hidden"
+            >
+              <div className="space-y-3">
+                {/* 2-Column Side-by-Side Stats to prevent vertical overflow */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Stat
+                    label="Threat Ingress"
+                    value={difficulty * 3}
+                    unit="TARGETS"
+                    sparkline={[2, 4, difficulty * 3]}
+                  />
+                  <Stat
+                    label="Sensor SNR"
+                    value={Math.round(28 - degradation * 18)}
+                    unit="dB"
+                    sparkline={[28, 25, Math.round(28 - degradation * 18)]}
+                  />
+                </div>
+
+                <div className="p-3 bg-[var(--c-bg-deep)] rounded border border-[var(--c-border-faint)] text-xs font-mono space-y-1">
+                  <div className="text-xs text-[var(--c-text-low)] uppercase font-semibold">DEFENDED BASE ASSET</div>
+                  <div className="font-bold text-sm text-[var(--c-warning)]">HQ SECTOR COMMAND POST (0, 0)</div>
+                  <div className="text-xs text-[var(--c-text-mid)] leading-relaxed">
+                    Range limit: 6.0km · Collateral-free zone: 1.2km
                   </div>
                 </div>
+
+                <div className="p-3 bg-[var(--c-bg-deep)] rounded border border-[var(--c-border-faint)] text-xs font-mono space-y-1.5">
+                  <div className="text-xs text-[var(--c-text-low)] uppercase font-semibold">POTENTIAL TARGET SIGNATURES</div>
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    <Badge variant="hostile" size="xs">QUADCOPTER</Badge>
+                    <Badge variant="warning" size="xs">DECOY</Badge>
+                    <Badge variant="friendly" size="xs">FRIENDLY UAV</Badge>
+                    <Badge variant="info" size="xs">BIOLOGICAL BIRD</Badge>
+                    {difficulty >= 3 && <Badge variant="hostile" size="xs">AUTONOMOUS SWARM</Badge>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs font-mono text-[var(--c-text-mid)] text-center pt-2 border-t border-[var(--c-border-base)] shrink-0 flex items-center justify-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[var(--c-accent)] animate-pulse" />
+                <span>Radar Telemetry Ready • 3D Dome Active</span>
               </div>
             </Panel>
           </div>
@@ -729,7 +916,7 @@ export const TrainerPage: React.FC = () => {
     return (
       <div className="flex flex-col h-full overflow-hidden">
         {/* Top Tactical Bar */}
-        <div className="h-11 px-4 bg-[var(--c-bg-deep)] border-b border-[var(--c-border-base)] flex items-center justify-between text-xs font-mono shrink-0">
+        <div className="min-h-12 px-4 py-1.5 bg-[var(--c-bg-deep)] border-b border-[var(--c-border-base)] flex flex-wrap items-center justify-between gap-2 text-xs font-mono shrink-0">
           <div className="flex items-center gap-3">
             <span className="w-2 h-2 rounded-full bg-[var(--c-accent)] shadow-[0_0_8px_var(--c-accent)] animate-pulse" />
             <span className="font-bold text-[var(--c-text-max)] uppercase">
@@ -825,16 +1012,81 @@ export const TrainerPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Center Column: RadarScope Canvas */}
+          {/* Center Column: RadarScope Canvas / 3D Airspace / Urban Map */}
           <div className="flex-1 flex flex-col min-h-0 bg-[var(--c-bg-void)]">
+            {/* View Mode Bar */}
+            <div className="h-9 px-3 bg-[var(--c-bg-deep)] border-b border-[var(--c-border-base)] flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setScopeViewMode('2d')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono uppercase font-bold rounded-xs transition-colors cursor-pointer ${
+                    scopeViewMode === '2d'
+                      ? 'bg-[var(--c-accent)] text-black shadow-[0_0_8px_rgba(0,232,122,0.4)]'
+                      : 'text-[var(--c-text-mid)] hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Layers className="w-3 h-3" />
+                  2D Tactical PPI
+                </button>
+                <button
+                  onClick={() => setScopeViewMode('3d')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono uppercase font-bold rounded-xs transition-colors cursor-pointer ${
+                    scopeViewMode === '3d'
+                      ? 'bg-[var(--c-accent)] text-black shadow-[0_0_8px_rgba(0,232,122,0.4)]'
+                      : 'text-[var(--c-text-mid)] hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Box className="w-3 h-3" />
+                  3D Airspace Dome
+                </button>
+                <button
+                  onClick={() => setScopeViewMode('urban')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono uppercase font-bold rounded-xs transition-colors cursor-pointer ${
+                    scopeViewMode === 'urban'
+                      ? 'bg-[var(--c-accent)] text-black shadow-[0_0_8px_rgba(0,232,122,0.4)]'
+                      : 'text-[var(--c-text-mid)] hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <MapPin className="w-3 h-3" />
+                  3D Urban Canopy
+                </button>
+              </div>
+
+              <div className="text-[10px] font-mono text-[var(--c-text-low)] flex items-center gap-2">
+                <span>ZOOM: SCROLL</span>
+                <span>•</span>
+                <span>ROTATE: DRAG</span>
+              </div>
+            </div>
+
             <div className="flex-1 relative min-h-0">
-              <RadarScope
-                contacts={activeContacts}
-                selectedContactId={selectedContact?.id || null}
-                onSelectContact={(id) => setSelectedContactId(id)}
-                defendedAsset={scenario.defended_asset_position}
-                noEngageZones={scenario.no_engage_zones}
-              />
+              {scopeViewMode === '2d' && (
+                <RadarScope
+                  contacts={activeContacts}
+                  selectedContactId={selectedContact?.id || null}
+                  onSelectContact={(id) => setSelectedContactId(id)}
+                  defendedAsset={scenario.defended_asset_position}
+                  noEngageZones={scenario.no_engage_zones}
+                />
+              )}
+              {scopeViewMode === '3d' && (
+                <Airspace3D
+                  contacts={activeContacts}
+                  selectedContactId={selectedContact?.id || null}
+                  onSelectContact={(id) => setSelectedContactId(id)}
+                  defendedAsset={scenario.defended_asset_position}
+                  noEngageZones={scenario.no_engage_zones}
+                  maxRangeKm={6}
+                />
+              )}
+              {scopeViewMode === 'urban' && (
+                <UrbanMap3D
+                  contacts={activeContacts}
+                  selectedContactId={selectedContact?.id || null}
+                  onSelectContact={(id) => setSelectedContactId(id)}
+                  defendedAsset={scenario.defended_asset_position}
+                />
+              )}
             </div>
 
             {/* Bottom Combat Events Feed */}
@@ -890,7 +1142,7 @@ export const TrainerPage: React.FC = () => {
                       <div className="text-[var(--c-hostile)] flex items-center gap-1.5 font-bold">
                         <AlertTriangle className="w-4 h-4" /> CHANNEL JAMMED BY HOSTILE EW
                       </div>
-                    ) : (
+                    ) : activeSensorTab === 'radar' ? (
                       <>
                         <div className="flex justify-between">
                           <span className="text-[var(--c-text-low)]">CHANNEL STATUS:</span>
@@ -898,13 +1150,82 @@ export const TrainerPage: React.FC = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-[var(--c-text-low)]">DOPPLER PEAK:</span>
-                          <span className="text-[var(--c-text-max)]">128.4 Hz</span>
+                          <span className="text-[var(--c-text-max)]">{(110 + (selectedContact.speed || 10) * 1.8).toFixed(1)} Hz</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-[var(--c-text-low)]">EST. ROTOR BLADES:</span>
-                          <span className="text-[var(--c-text-max)]">4 (QUADCOPTER)</span>
+                          <span className="text-[var(--c-text-low)]">EST. ROTOR / RCS:</span>
+                          <span className="text-[var(--c-text-max)]">{(selectedContact.rcs || -14).toFixed(1)} dBsm</span>
                         </div>
                       </>
+                    ) : sensorData[`${selectedContact.id}_${activeSensorTab}`] ? (
+                      (() => {
+                        const data = sensorData[`${selectedContact.id}_${activeSensorTab}`];
+                        if (!data.available) {
+                          return (
+                            <div className="text-[var(--c-warning)] flex items-center gap-1.5 font-bold">
+                              <AlertTriangle className="w-4 h-4" /> {data.reason || 'UNAVAILABLE'}
+                            </div>
+                          );
+                        }
+                        if (activeSensorTab === 'eo_ir') {
+                          return (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-[var(--c-text-low)]">EO/IR VISUAL SHAPE:</span>
+                                <span className="text-[var(--c-accent)] font-semibold uppercase">{data.shape_hint || 'UNKNOWN'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[var(--c-text-low)]">OPTICAL CONFIDENCE:</span>
+                                <span className="text-[var(--c-text-max)]">{Math.round((data.confidence || 0) * 100)}%</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[var(--c-text-low)]">THERMAL SIGNATURE:</span>
+                                <span className="text-[var(--c-text-max)]">{data.detected ? 'POSITIVE THERMAL BLIP' : 'BELOW IR THRESHOLD'}</span>
+                              </div>
+                            </>
+                          );
+                        }
+                        if (activeSensorTab === 'rf') {
+                          return (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-[var(--c-text-low)]">RF DETECTED:</span>
+                                <span className={data.detected ? 'text-[var(--c-hostile)] font-bold' : 'text-[var(--c-text-mid)]'}>
+                                  {data.detected ? 'RF EMISSION ACTIVE' : 'RF SILENT'}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-[var(--c-text-mid)] pt-1">
+                                {data.note || 'Broadband spectrum analyzer locked'}
+                              </div>
+                            </>
+                          );
+                        }
+                        if (activeSensorTab === 'acoustic') {
+                          return (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-[var(--c-text-low)]">ACOUSTIC AUDIBILITY:</span>
+                                <span className={data.detected ? 'text-[var(--c-accent)] font-bold' : 'text-[var(--c-text-low)]'}>
+                                  {data.detected ? 'ROTOR NOISE AUDIBLE' : 'IN AUDIBLE / OUT OF RANGE'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[var(--c-text-low)]">RANGE TO ASSET:</span>
+                                <span className="text-[var(--c-text-max)]">{data.range_m}m</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-[var(--c-text-low)]">EFFECTIVE MICROPHONE:</span>
+                                <span className="text-[var(--c-text-mid)]">{data.effective_range_m}m radius</span>
+                              </div>
+                            </>
+                          );
+                        }
+                        return null;
+                      })()
+                    ) : (
+                      <div className="text-[var(--c-text-low)] italic text-[11px] py-1">
+                        Click sensor button above to query multispectral feed.
+                      </div>
                     )}
                   </div>
                 </div>

@@ -9,4 +9,5 @@ node_modules/
 *.log
 .pytest_cache/
 *.tsbuildinfo
+scratch/
 

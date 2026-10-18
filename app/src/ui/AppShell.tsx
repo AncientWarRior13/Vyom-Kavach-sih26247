@@ -78,9 +78,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const currentTitle = routeTitles[location.pathname] || 'Operations';
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[var(--c-bg-void)] text-[var(--c-text-high)] font-ui select-none">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[var(--c-bg-void)] text-[var(--c-text-high)] font-ui select-none">
       {/* ── Top Bar (48px) ── */}
-      <header className="fixed top-0 left-0 right-0 h-[var(--topbar-h)] z-40 bg-[var(--c-bg-deep)] border-b border-[var(--c-border-base)] flex items-center justify-between px-4">
+      <header className="h-[48px] shrink-0 z-40 bg-[var(--c-bg-deep)] border-b border-[var(--c-border-base)] flex items-center justify-between px-4">
         {/* Left: Branding & Breadcrumb */}
         <div className="flex items-center gap-3">
           <NavLink to="/team" className="flex items-center gap-2 text-inherit no-underline">
@@ -135,7 +135,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
       </header>
 
       {/* ── Main Layout (Side Nav + Content) ── */}
-      <div className="flex flex-1 pt-[var(--topbar-h)] overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Collapsible Side Rail (220px) */}
         <aside
           className={`shrink-0 bg-[var(--c-bg-surface)] border-r border-[var(--c-border-base)] transition-all duration-150 flex flex-col justify-between min-h-0 ${
@@ -194,7 +194,11 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         </aside>
 
         {/* Viewport Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-[var(--c-bg-void)] min-w-0">
+        <main
+          className={`flex-1 flex flex-col min-h-0 bg-[var(--c-bg-void)] min-w-0 ${
+            location.pathname === '/trainer' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'
+          }`}
+        >
           {children}
         </main>
       </div>
