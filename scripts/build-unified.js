@@ -56,6 +56,17 @@ if (fs.existsSync(appDist)) {
       }
     }
   }
+
+  // Ensure worker files are also accessible in assets/ directory where Vite modules run
+  const assetsDir = path.join(distDir, 'assets');
+  if (fs.existsSync(assetsDir)) {
+    for (const wFile of ['maplibre-gl-worker.mjs', 'maplibre-gl-shared.mjs']) {
+      const wSrc = path.join(appDist, wFile);
+      if (fs.existsSync(wSrc)) {
+        fs.copyFileSync(wSrc, path.join(assetsDir, wFile));
+      }
+    }
+  }
 } else {
   console.warn('Warning: app/dist does not exist yet.');
 }
