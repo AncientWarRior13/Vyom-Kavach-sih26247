@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="vkShield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3DD6C6"/>
+      <stop offset="100%" stop-color="#1C8A7D"/>
+    </linearGradient>
+    <radialGradient id="vkGlow" cx="50%" cy="38%" r="60%">
+      <stop offset="0%" stop-color="#3DD6C6" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#3DD6C6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="#0B0E13"/>
+  <circle cx="32" cy="27" r="22" fill="url(#vkGlow)"/>
+
+  <!-- Kavach (shield) -->
+  <path d="M32 9 L47 14.5 L47 30 C47 41 40.5 49 32 53.5 C23.5 49 17 41 17 30 L17 14.5 Z"
+        fill="#0F1620" stroke="url(#vkShield)" stroke-width="2.4" stroke-linejoin="round"/>
+
+  <!-- Radar rings (Vyom / sky tracking) -->
+  <circle cx="32" cy="30" r="9.5" fill="none" stroke="#3DD6C6" stroke-opacity="0.45" stroke-width="1.3"/>
+  <circle cx="32" cy="30" r="5.5" fill="none" stroke="#3DD6C6" stroke-opacity="0.7" stroke-width="1.3"/>
+
+  <!-- Radar sweep wedge -->
+  <path d="M32 30 L32 20.5 A9.5 9.5 0 0 1 40.2 25 Z" fill="#3DD6C6" fill-opacity="0.22"/>
+
+  <!-- Tracked hostile contact -->
+  <circle cx="32" cy="30" r="2.1" fill="#EF4444"/>
+
+  <!-- Drone glyph (small triangular silhouette above shield point) -->
+  <path d="M32 15.5 L35.4 21 L32 19.6 L28.6 21 Z" fill="#E6EAF0"/>
+</svg>
