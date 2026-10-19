@@ -169,6 +169,7 @@ export const VrCanvas: React.FC<VrCanvasProps> = ({
     if (action === 'hard_kill') {
       // 1. Visual & Audio Effect
       sceneRef.current?.triggerHardKillEffect(cid);
+      setSelectedContactId(null);
 
       // 2. Synchronize local traineeLog in store
       setStoreTraineeLog((prev) => ({
@@ -177,6 +178,7 @@ export const VrCanvas: React.FC<VrCanvasProps> = ({
           ...(prev[cid] || { contact_id: cid, detected_at: t }),
           engagement_action: 'hard_kill',
           engagement_at: t,
+          state: 'neutralized',
         },
       }));
 

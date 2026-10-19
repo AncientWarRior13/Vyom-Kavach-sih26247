@@ -122,15 +122,25 @@ export function enrichContact(
   const range_km = Number((range_m / 1000).toFixed(2));
   const bearing_deg = Number((((Math.atan2(pos.x, -pos.y) * 180 / Math.PI) + 360) % 360).toFixed(1));
   const heading = calculateHeading(raw, t);
-  const speed = calculateSpeed(raw, t);
-  const altitude = Math.round(pos.z ?? 120);
-
   const entry = traineeLog[id];
+  const isNeutralized =
+    entry?.state === 'neutralized' ||
+    entry?.state === 'destroyed' ||
+    entry?.engagement_action === 'hard_kill' ||
+    raw.state === 'neutralized' ||
+    raw.state === 'destroyed' ||
+    raw.engagement_action === 'hard_kill' ||
+    (raw.despawn_t !== undefined && raw.despawn_t > 0 && t >= raw.despawn_t);
+
+  const speed = isNeutralized ? 0 : calculateSpeed(raw, t);
+  const altitude = isNeutralized ? 0 : Math.round(pos.z ?? 120);
+
   const assigned_classification = (entry?.classification || raw.assigned_classification || 'unknown') as Classification;
   const classification = (raw.classification || 'unknown') as Classification;
 
   let state: ContactState = 'undetected';
-  if (entry?.engagement_action) state = 'engaged';
+  if (isNeutralized) state = 'neutralized';
+  else if (entry?.engagement_action) state = 'engaged';
   else if (entry?.classification) state = 'classified';
   else if (entry?.detected_at !== undefined) state = 'detected';
   else if (raw.state) state = raw.state;
@@ -158,6 +168,8 @@ export function enrichContact(
     classification,
     assigned_classification,
     state,
+    engagement_action: isNeutralized ? 'hard_kill' : (entry?.engagement_action || raw.engagement_action),
+    despawn_t: raw.despawn_t,
     history,
     rcs: raw.rcs,
     threat_level: raw.threat_level,

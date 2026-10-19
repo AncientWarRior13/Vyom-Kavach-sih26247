@@ -604,26 +604,49 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
       const tagAlt = markerEl.querySelector('.tag-alt') as HTMLElement;
 
       if (coreEl) {
-        coreEl.style.backgroundColor = color;
-        coreEl.style.boxShadow = isSelected
-          ? `0 0 0 3px #00e87a, 0 0 16px ${color}, 0 0 30px ${color}`
-          : `0 0 10px ${color}, 0 0 20px ${color}, inset 0 0 3px #ffffff`;
-        coreEl.style.transform = isSelected ? 'scale(1.4)' : 'scale(1)';
+        if (c.state === 'neutralized') {
+          coreEl.style.backgroundColor = '#ef4444';
+          coreEl.style.boxShadow = isSelected
+            ? '0 0 0 3px #ef4444, 0 0 16px #ef4444'
+            : '0 0 10px #ef4444, inset 0 0 3px #ffffff';
+          coreEl.style.transform = isSelected ? 'scale(1.3)' : 'scale(1)';
+          coreEl.innerHTML = '<span style="font-size:12px;color:white;font-weight:bold;display:flex;align-items:center;justify-content:center;height:100%;">✕</span>';
 
-        if (auraEl) {
-          auraEl.style.background = `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 70%)`;
-          auraEl.style.inset = isSelected ? '-14px' : '-8px';
-          auraEl.style.opacity = isSelected ? '1' : '0.85';
-        }
-        if (ringEl) {
-          ringEl.style.borderColor = color;
-        }
-        if (tagEl) {
-          tagEl.className = `marker-tag absolute ${coord.tagPosClass} whitespace-nowrap font-mono text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg pointer-events-none flex items-center gap-1 transition-all duration-150`;
-          tagEl.style.borderColor = isSelected ? '#00e87a' : 'rgba(255,255,255,0.22)';
-          tagEl.style.boxShadow = isSelected ? '0 0 12px rgba(0,232,122,0.4)' : '0 2px 8px rgba(0,0,0,0.8)';
-          if (tagDot) tagDot.style.color = color;
-          if (tagAlt) tagAlt.textContent = `${c.altitude ?? 120}m`;
+          if (auraEl) {
+            auraEl.style.background = 'radial-gradient(circle, rgba(239,68,68,0.65) 0%, rgba(0,0,0,0) 70%)';
+            auraEl.style.inset = '-6px';
+            auraEl.style.opacity = '0.75';
+          }
+          if (ringEl) {
+            ringEl.style.borderColor = '#ef4444';
+          }
+          if (tagEl) {
+            tagEl.className = `marker-tag absolute ${coord.tagPosClass} whitespace-nowrap font-mono text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg pointer-events-none flex items-center gap-1 bg-red-950/80 border border-red-500/60`;
+            tagEl.innerHTML = `<span class="tag-id line-through text-red-300">${c.id.slice(0, 8).toUpperCase()}</span><span class="tag-alt text-red-400 font-bold"> [DESTROYED]</span>`;
+          }
+        } else {
+          coreEl.style.backgroundColor = color;
+          coreEl.style.boxShadow = isSelected
+            ? `0 0 0 3px #00e87a, 0 0 16px ${color}, 0 0 30px ${color}`
+            : `0 0 10px ${color}, 0 0 20px ${color}, inset 0 0 3px #ffffff`;
+          coreEl.style.transform = isSelected ? 'scale(1.4)' : 'scale(1)';
+          coreEl.innerHTML = '';
+
+          if (auraEl) {
+            auraEl.style.background = `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 70%)`;
+            auraEl.style.inset = isSelected ? '-14px' : '-8px';
+            auraEl.style.opacity = isSelected ? '1' : '0.85';
+          }
+          if (ringEl) {
+            ringEl.style.borderColor = color;
+          }
+          if (tagEl) {
+            tagEl.className = `marker-tag absolute ${coord.tagPosClass} whitespace-nowrap font-mono text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg pointer-events-none flex items-center gap-1 transition-all duration-150`;
+            tagEl.style.borderColor = isSelected ? '#00e87a' : 'rgba(255,255,255,0.22)';
+            tagEl.style.boxShadow = isSelected ? '0 0 12px rgba(0,232,122,0.4)' : '0 2px 8px rgba(0,0,0,0.8)';
+            if (tagDot) tagDot.style.color = color;
+            if (tagAlt) tagAlt.textContent = `${c.altitude ?? 120}m`;
+          }
         }
         markerEl.style.zIndex = isSelected ? '50' : '10';
       }

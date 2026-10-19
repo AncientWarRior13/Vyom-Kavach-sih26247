@@ -75,10 +75,10 @@ export class VrScene {
   private floatingInfoSprite: THREE.Sprite | null = null;
   private snapTurnCooloff: number = 0;
 
-  // Scenario & Target Visuals
   private scenario: any = null;
   private selectedContactId: string | null = null;
   private targets: Map<string, TargetMeshEntry> = new Map();
+  private destroyedIds: Set<string> = new Set();
   private noEngageGroup: THREE.Group;
   private roeGroup: THREE.Group;
   private skyMesh: THREE.Mesh | null = null;
@@ -88,8 +88,10 @@ export class VrScene {
 
   // Engagement Visual Effects
   private fxGroup: THREE.Group;
-  private activeHardKillEffects: Array<{ line: THREE.Line; burst: THREE.Mesh; life: number }> = [];
+  private activeHardKillEffects: any[] = [];
   private activeSoftKillEffects: Array<{ cone: THREE.Mesh; life: number }> = [];
+  private turretGroup: THREE.Group | null = null;
+  private turretHead: THREE.Group | null = null;
 
   // Callbacks
   private onSelectContact?: (id: string | null) => void;
@@ -321,6 +323,73 @@ export class VrScene {
       sprite.position.set(...c.pos);
       this.groundGroup.add(sprite);
     }
+
+    // High Energy Laser Counter-Drone Battery on Ground
+    this.initLaserDefenseTurret();
+  }
+
+  // --- Counter-UAS High Energy Laser (HEL) Defense Battery ---
+  private initLaserDefenseTurret() {
+    this.turretGroup = new THREE.Group();
+    this.turretGroup.position.set(2.4, 0, 1.8);
+
+    // 1. Armored Hexagonal Pedestal
+    const baseGeo = new THREE.CylinderGeometry(0.7, 0.9, 0.35, 8);
+    const baseMat = new THREE.MeshBasicMaterial({ color: 0x1a2634 });
+    const base = new THREE.Mesh(baseGeo, baseMat);
+    base.position.y = 0.175;
+    this.turretGroup.add(base);
+
+    // Neon Accent Ring
+    const ringGeo = new THREE.RingGeometry(0.72, 0.78, 16);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.02;
+    this.turretGroup.add(ring);
+
+    // 2. Swivel Head
+    this.turretHead = new THREE.Group();
+    this.turretHead.position.set(0, 0.45, 0);
+
+    // Turret Body Box
+    const bodyGeo = new THREE.BoxGeometry(0.45, 0.35, 0.65);
+    const bodyMat = new THREE.MeshBasicMaterial({ color: 0x243b53 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    this.turretHead.add(body);
+
+    // Twin High-Energy Laser Emitter Barrels
+    const barrelGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.5, 12);
+    barrelGeo.rotateX(Math.PI / 2);
+    const barrelMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+
+    const barrelL = new THREE.Mesh(barrelGeo, barrelMat);
+    barrelL.position.set(-0.14, 0, 0.35);
+    this.turretHead.add(barrelL);
+
+    const barrelR = new THREE.Mesh(barrelGeo, barrelMat);
+    barrelR.position.set(0.14, 0, 0.35);
+    this.turretHead.add(barrelR);
+
+    // Optics Apertures (Glowing Cyan Lenses)
+    const lensGeo = new THREE.CircleGeometry(0.05, 12);
+    const lensMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide });
+    const lensL = new THREE.Mesh(lensGeo, lensMat);
+    lensL.position.set(-0.14, 0, 0.61);
+    this.turretHead.add(lensL);
+
+    const lensR = new THREE.Mesh(lensGeo, lensMat);
+    lensR.position.set(0.14, 0, 0.61);
+    this.turretHead.add(lensR);
+
+    this.turretGroup.add(this.turretHead);
+
+    // Turret HUD Tag
+    const tag = this.createLabelSprite('HEL AIR DEFENSE BATTERY [AUTO-AIM]', '#00e87a', 11);
+    tag.position.set(0, 1.1, 0);
+    this.turretGroup.add(tag);
+
+    this.groundGroup.add(this.turretGroup);
   }
 
   // --- WebXR Controllers, Hands & Wrist HUD ---
@@ -519,6 +588,14 @@ export class VrScene {
 
   // --- External Data Ingestion ---
   public setData(data: { contacts: Contact[]; scenario: any; selectedContactId?: string | null }) {
+    if (this.scenario?.scenario_id !== data.scenario?.scenario_id) {
+      this.destroyedIds.clear();
+    }
+    if (data.scenario?.destroyed_contact_ids && Array.isArray(data.scenario.destroyed_contact_ids)) {
+      for (const id of data.scenario.destroyed_contact_ids) {
+        this.destroyedIds.add(id);
+      }
+    }
     this.scenario = data.scenario;
     if (data.selectedContactId !== undefined) {
       this.selectedContactId = data.selectedContactId;
@@ -534,8 +611,8 @@ export class VrScene {
     // Update ROE boundary rings
     this.roeGroup.clear();
     const roe = this.scenario.roe_card || {};
-    const maxHard = roe.max_hard_kill_range_m || 2500;
-    const maxSoft = roe.max_soft_kill_range_m || 3500;
+    const maxHard = Math.max(2500, roe.max_hard_kill_range_m || 2500);
+    const maxSoft = Math.max(3500, roe.max_soft_kill_range_m || 3500);
 
     // Hard-kill ring (Hostile Red)
     const hardR = maxHard * WORLD_SCALE;
@@ -593,6 +670,20 @@ export class VrScene {
     const activeIds = new Set<string>();
 
     for (const c of contacts) {
+      if (
+        this.destroyedIds.has(c.id) ||
+        c.state === 'neutralized' ||
+        c.state === 'destroyed' ||
+        (c as any).engagement_action === 'hard_kill'
+      ) {
+        // Destroyed target — if lingering in targets map, immediately mark fading
+        const existing = this.targets.get(c.id);
+        if (existing && !existing.fading) {
+          existing.fading = true;
+        }
+        continue;
+      }
+
       activeIds.add(c.id);
       const assigned = (c as any).assigned || c.assigned_classification || 'unknown';
 
@@ -779,7 +870,7 @@ export class VrScene {
     const toDelete: string[] = [];
 
     this.targets.forEach((entry, id) => {
-      if (entry.fading) {
+      if (entry.fading || this.destroyedIds.has(id)) {
         entry.opacity -= dt * 2.5;
         entry.group.scale.setScalar(Math.max(0.01, entry.opacity));
         if (entry.opacity <= 0) {
@@ -842,17 +933,82 @@ export class VrScene {
       this.targets.delete(id);
     }
 
-    // 4. Update FX Beams and Bursts
+    // 3b. Aim HEL Battery Turret at Selected Target
+    if (this.turretHead && this.selectedContactId) {
+      const selectedEntry = this.targets.get(this.selectedContactId);
+      if (selectedEntry) {
+        this.turretHead.lookAt(selectedEntry.group.position);
+      }
+    }
+
+    // 4. Update FX Volumetric Beams, Tracers, and Explosions
     for (let i = this.activeHardKillEffects.length - 1; i >= 0; i--) {
       const fx = this.activeHardKillEffects[i];
-      fx.life -= dt * 2.2;
-      const s = 1.0 + (1.0 - fx.life) * 3.5;
-      fx.burst.scale.setScalar(s);
-      (fx.burst.material as THREE.Material).opacity = Math.max(0, fx.life);
-      (fx.line.material as THREE.Material).opacity = Math.max(0, fx.life);
+      fx.life -= dt;
+      const progress = 1.0 - Math.max(0, fx.life / fx.maxLife); // 0.0 -> 1.0
+
+      // High-velocity tracer moves from emitter to target in first 0.25s
+      const tracerProg = Math.min(1.0, progress * 4.0);
+      fx.tracer.position.lerpVectors(fx.emitterPos, fx.targetPos, tracerProg);
+      if (tracerProg >= 1.0) {
+        fx.tracer.visible = false;
+      }
+
+      // Beam sustains with high-energy laser flicker for the first 0.6s, then fades
+      if (fx.life > 0.8) {
+        const jitter = 0.85 + Math.random() * 0.15;
+        (fx.coreBeam.material as THREE.Material).opacity = jitter;
+        (fx.glowBeam.material as THREE.Material).opacity = 0.85 * jitter;
+      } else {
+        const fade = Math.max(0, fx.life / 0.8);
+        (fx.coreBeam.material as THREE.Material).opacity = fade;
+        (fx.glowBeam.material as THREE.Material).opacity = fade * 0.85;
+      }
+
+      // Muzzle flash dissipates quickly
+      const muzzleFade = Math.max(0, 1.0 - progress * 4.0);
+      (fx.muzzleFlash.material as THREE.Material).opacity = muzzleFade;
+      fx.muzzleFlash.scale.setScalar(1.0 + progress * 2.0);
+
+      // Impact explosion blast expands and fades
+      const blastScale = 1.0 + progress * 3.5;
+      fx.blastCore.scale.setScalar(blastScale);
+      fx.blastWire.scale.setScalar(blastScale * 1.25);
+      fx.shockwaveRing.scale.setScalar(1.0 + progress * 5.0);
+
+      const blastFade = Math.max(0, fx.life / fx.maxLife);
+      (fx.blastCore.material as THREE.Material).opacity = blastFade;
+      (fx.blastWire.material as THREE.Material).opacity = blastFade * 0.75;
+      (fx.shockwaveRing.material as THREE.Material).opacity = blastFade * 0.85;
+
+      // Sparks fly outwards with radial velocity and gravity
+      if (fx.sparks && fx.sparkVelocities) {
+        const positions = fx.sparks.geometry.attributes.position.array as Float32Array;
+        for (let j = 0; j < fx.sparkVelocities.length; j++) {
+          positions[j * 3] += fx.sparkVelocities[j].x * dt;
+          positions[j * 3 + 1] += (fx.sparkVelocities[j].y - 2.5 * progress) * dt;
+          positions[j * 3 + 2] += fx.sparkVelocities[j].z * dt;
+        }
+        fx.sparks.geometry.attributes.position.needsUpdate = true;
+        (fx.sparks.material as THREE.PointsMaterial).opacity = blastFade;
+      }
+
       if (fx.life <= 0) {
-        this.fxGroup.remove(fx.line);
-        this.fxGroup.remove(fx.burst);
+        this.fxGroup.remove(fx.group);
+        fx.coreBeam.geometry.dispose();
+        fx.coreBeam.material.dispose();
+        fx.glowBeam.geometry.dispose();
+        fx.glowBeam.material.dispose();
+        fx.blastCore.geometry.dispose();
+        fx.blastCore.material.dispose();
+        fx.blastWire.geometry.dispose();
+        fx.blastWire.material.dispose();
+        fx.shockwaveRing.geometry.dispose();
+        fx.shockwaveRing.material.dispose();
+        if (fx.sparks) {
+          fx.sparks.geometry.dispose();
+          fx.sparks.material.dispose();
+        }
         this.activeHardKillEffects.splice(i, 1);
       }
     }
@@ -870,28 +1026,191 @@ export class VrScene {
 
   // --- Tactical FX Deployment ---
   public triggerHardKillEffect(targetId: string) {
+    this.destroyedIds.add(targetId);
+    if (this.selectedContactId === targetId) {
+      this.selectContact(null);
+    }
+
     const entry = this.targets.get(targetId);
     if (!entry) return;
 
+    entry.fading = true;
     vrAudio.playHardKill();
 
-    const targetPos = entry.group.position.clone();
-    const groundPos = new THREE.Vector3(0, EYE_HEIGHT, 0);
+    let targetPos = entry.group.position.clone();
+    if (targetPos.lengthSq() < 0.1 && entry.rawContact) {
+      const now = performance.now();
+      const epoch = this.scenario?.server_start_epoch_ms || now;
+      const duration = this.scenario?.duration_s || 300;
+      const rawElapsed = Math.max(0, (Date.now() - epoch) / 1000);
+      const t = rawElapsed > duration ? (rawElapsed % duration) : rawElapsed;
+      const pos = posAt(entry.rawContact, t);
+      targetPos = new THREE.Vector3(
+        pos.x * WORLD_SCALE,
+        EYE_HEIGHT + (pos.z * ALT_EXAG) * WORLD_SCALE,
+        -pos.y * WORLD_SCALE
+      );
+    }
 
-    // Laser line beam
-    const lineGeo = new THREE.BufferGeometry().setFromPoints([groundPos, targetPos]);
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x00e87a, linewidth: 3, transparent: true, opacity: 1 });
-    const line = new THREE.Line(lineGeo, lineMat);
-    this.fxGroup.add(line);
+    // Emitter: Ground Counter-UAS Laser Battery at (2.4, 0.45, 1.8)
+    const emitterPos = this.turretHead
+      ? this.turretHead.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.2, 0))
+      : new THREE.Vector3(2.4, 0.65, 1.8);
 
-    // Explosion burst sphere
-    const burstGeo = new THREE.SphereGeometry(0.8, 16, 16);
-    const burstMat = new THREE.MeshBasicMaterial({ color: 0xff3b3b, transparent: true, opacity: 1, wireframe: true });
-    const burst = new THREE.Mesh(burstGeo, burstMat);
-    burst.position.copy(targetPos);
-    this.fxGroup.add(burst);
+    // Aim turret at target immediately
+    if (this.turretHead) {
+      this.turretHead.lookAt(targetPos);
+    }
 
-    this.activeHardKillEffects.push({ line, burst, life: 1.0 });
+    const dir = new THREE.Vector3().subVectors(targetPos, emitterPos);
+    const dist = dir.length();
+    const mid = emitterPos.clone().add(targetPos).multiplyScalar(0.5);
+
+    const fxGrp = new THREE.Group();
+
+    // 1. Core White Laser Beam (Volumetric 3D Cylinder)
+    const coreGeo = new THREE.CylinderGeometry(0.12, 0.12, dist, 8, 1, true);
+    coreGeo.rotateX(Math.PI / 2);
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 1.0,
+      depthWrite: false,
+    });
+    const coreBeam = new THREE.Mesh(coreGeo, coreMat);
+    coreBeam.position.copy(mid);
+    coreBeam.lookAt(targetPos);
+    fxGrp.add(coreBeam);
+
+    // 2. High-Energy Cyan / Azure Laser Glow Sheath (Volumetric Additive)
+    const glowGeo = new THREE.CylinderGeometry(0.42, 0.42, dist, 8, 1, true);
+    glowGeo.rotateX(Math.PI / 2);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const glowBeam = new THREE.Mesh(glowGeo, glowMat);
+    glowBeam.position.copy(mid);
+    glowBeam.lookAt(targetPos);
+    fxGrp.add(glowBeam);
+
+    // 3. High-Velocity Laser Tracer Pulse
+    const tracerGeo = new THREE.SphereGeometry(0.45, 12, 12);
+    const tracerMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 1.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const tracer = new THREE.Mesh(tracerGeo, tracerMat);
+    tracer.position.copy(emitterPos);
+    fxGrp.add(tracer);
+
+    // 4. Muzzle Flash at Turret
+    const muzzleGeo = new THREE.SphereGeometry(0.7, 12, 12);
+    const muzzleMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 1.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const muzzleFlash = new THREE.Mesh(muzzleGeo, muzzleMat);
+    muzzleFlash.position.copy(emitterPos);
+    fxGrp.add(muzzleFlash);
+
+    // 5. Target Impact Detonation
+    // 5a. Fiery Core Blast Sphere
+    const blastGeo = new THREE.SphereGeometry(1.4, 16, 16);
+    const blastMat = new THREE.MeshBasicMaterial({
+      color: 0xff3b3b,
+      transparent: true,
+      opacity: 1.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const blastCore = new THREE.Mesh(blastGeo, blastMat);
+    blastCore.position.copy(targetPos);
+    fxGrp.add(blastCore);
+
+    // 5b. Wireframe Blast Cage
+    const wireGeo = new THREE.SphereGeometry(1.9, 12, 12);
+    const wireMat = new THREE.MeshBasicMaterial({
+      color: 0xffaa00,
+      transparent: true,
+      opacity: 0.9,
+      wireframe: true,
+      depthWrite: false,
+    });
+    const blastWire = new THREE.Mesh(wireGeo, wireMat);
+    blastWire.position.copy(targetPos);
+    fxGrp.add(blastWire);
+
+    // 5c. Expanding Shockwave Ring
+    const ringGeo = new THREE.RingGeometry(0.3, 1.2, 24);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xff4422,
+      transparent: true,
+      opacity: 0.95,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const shockwaveRing = new THREE.Mesh(ringGeo, ringMat);
+    shockwaveRing.position.copy(targetPos);
+    shockwaveRing.rotation.x = Math.PI / 2;
+    fxGrp.add(shockwaveRing);
+
+    // 5d. Kinetic Spark Fragments
+    const sparkCount = 20;
+    const sparkPositions = new Float32Array(sparkCount * 3);
+    const sparkVelocities: THREE.Vector3[] = [];
+    for (let i = 0; i < sparkCount; i++) {
+      sparkPositions[i * 3] = targetPos.x;
+      sparkPositions[i * 3 + 1] = targetPos.y;
+      sparkPositions[i * 3 + 2] = targetPos.z;
+      const v = new THREE.Vector3(
+        (Math.random() - 0.5) * 8,
+        (Math.random() - 0.5) * 8 + 1.0,
+        (Math.random() - 0.5) * 8
+      );
+      sparkVelocities.push(v);
+    }
+    const sparkGeo = new THREE.BufferGeometry();
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
+    const sparkMat = new THREE.PointsMaterial({
+      color: 0xffcc00,
+      size: 0.35,
+      transparent: true,
+      opacity: 1.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const sparks = new THREE.Points(sparkGeo, sparkMat);
+    fxGrp.add(sparks);
+
+    this.fxGroup.add(fxGrp);
+
+    this.activeHardKillEffects.push({
+      group: fxGrp,
+      coreBeam,
+      glowBeam,
+      muzzleFlash,
+      blastCore,
+      blastWire,
+      shockwaveRing,
+      tracer,
+      sparks,
+      sparkVelocities,
+      emitterPos,
+      targetPos,
+      life: 1.4,
+      maxLife: 1.4,
+    });
   }
 
   public triggerSoftKillEffect(targetId: string) {
@@ -900,22 +1219,43 @@ export class VrScene {
 
     vrAudio.playSoftKill();
 
-    const targetPos = entry.group.position.clone();
-    const groundPos = new THREE.Vector3(0, EYE_HEIGHT, 0);
-    const dir = new THREE.Vector3().subVectors(targetPos, groundPos);
+    let targetPos = entry.group.position.clone();
+    if (targetPos.lengthSq() < 0.1 && entry.rawContact) {
+      const now = performance.now();
+      const epoch = this.scenario?.server_start_epoch_ms || now;
+      const duration = this.scenario?.duration_s || 300;
+      const rawElapsed = Math.max(0, (Date.now() - epoch) / 1000);
+      const t = rawElapsed > duration ? (rawElapsed % duration) : rawElapsed;
+      const pos = posAt(entry.rawContact, t);
+      targetPos = new THREE.Vector3(
+        pos.x * WORLD_SCALE,
+        EYE_HEIGHT + (pos.z * ALT_EXAG) * WORLD_SCALE,
+        -pos.y * WORLD_SCALE
+      );
+    }
+
+    const emitterPos = this.turretHead
+      ? this.turretHead.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.2, 0))
+      : new THREE.Vector3(2.4, 0.65, 1.8);
+
+    if (this.turretHead) {
+      this.turretHead.lookAt(targetPos);
+    }
+
+    const dir = new THREE.Vector3().subVectors(targetPos, emitterPos);
     const dist = dir.length();
 
     // Jamming cone from emitter to target
-    const coneGeo = new THREE.ConeGeometry(dist * 0.15, dist, 16, 1, true);
+    const coneGeo = new THREE.ConeGeometry(dist * 0.18, dist, 16, 1, true);
     coneGeo.translate(0, -dist / 2, 0);
     coneGeo.rotateX(-Math.PI / 2);
 
     const cone = new THREE.Mesh(coneGeo, this.sharedMaterials.jamCone.clone());
-    cone.position.copy(groundPos);
+    cone.position.copy(emitterPos);
     cone.lookAt(targetPos);
     this.fxGroup.add(cone);
 
-    this.activeSoftKillEffects.push({ cone, life: 1.0 });
+    this.activeSoftKillEffects.push({ cone, life: 1.4 });
   }
 
   // --- Render & Animation Loop ---

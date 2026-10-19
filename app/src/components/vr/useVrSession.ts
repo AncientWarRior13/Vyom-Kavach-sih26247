@@ -239,13 +239,21 @@ export function useVrSession(): UseVrSessionReturn {
         const enriched = enrichScenarioContacts(scenario.contacts, t, traineeLog);
 
         // Keep all scenario tracks matching Trainer.tsx scopes (do not drop tracks before spawn_t)
-        // Only exclude targets marked destroyed or hard-killed
+        // Strictly exclude targets marked neutralized, destroyed, or hard-killed
         const visible = enriched.filter((c) => {
           const entry = traineeLog[c.id];
-          if (entry?.state === 'destroyed' || (c as any).engagement_action === 'hard_kill') {
-            return false;
-          }
-          return true;
+          const isNeutralized =
+            c.state === 'neutralized' ||
+            c.state === 'destroyed' ||
+            entry?.state === 'neutralized' ||
+            entry?.state === 'destroyed' ||
+            entry?.engagement_action === 'hard_kill' ||
+            c.engagement_action === 'hard_kill' ||
+            (c as any).engagement_action === 'hard_kill' ||
+            (c.despawn_t !== undefined && c.despawn_t > 0 && t >= c.despawn_t) ||
+            scenario?.destroyed_contact_ids?.includes(c.id);
+
+          return !isNeutralized;
         });
 
         // Overlay classification:

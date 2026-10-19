@@ -95,8 +95,8 @@ def _generate_roe_card(difficulty: int) -> dict:
     return {
         "warn_before_hard_kill_required": True,
         "time_critical_override_s": 15.0,  # inside this ETA, hard_kill w/o prior warn is self-defense, not penalized
-        "max_hard_kill_range_m": 800.0,
-        "max_soft_kill_range_m": 1500.0,
+        "max_hard_kill_range_m": 2500.0,
+        "max_soft_kill_range_m": 3500.0,
         "no_engage_zones_block_hard_kill": True,
     }
 
@@ -520,12 +520,20 @@ def sanitize_for_client(scenario: dict) -> dict:
             wp_rng = _deterministic_rng(scenario_id, c["contact_id"], "noise", i)
             noise = degradation * wp_rng.uniform(-40, 40)
             noisy_path.append({"t": w["t"], "x": w["x"] + noise, "y": w["y"] + noise, "z": w["z"]})
-        out_contacts.append({
+        contact_entry = {
             "contact_id": c["contact_id"],
             "spawn_t": c["spawn_t"],
             "despawn_t": c["despawn_t"],
             "path": noisy_path,
-        })
+        }
+        if c.get("state"):
+            contact_entry["state"] = c["state"]
+        if c.get("engagement_action"):
+            contact_entry["engagement_action"] = c["engagement_action"]
+        if c["contact_id"] in scenario.get("destroyed_contact_ids", []):
+            contact_entry["state"] = "neutralized"
+            contact_entry["engagement_action"] = "hard_kill"
+        out_contacts.append(contact_entry)
     return {
         "scenario_id": scenario["scenario_id"],
         "params": {k: v for k, v in scenario["params"].items() if k != "seed"},
@@ -542,5 +550,6 @@ def sanitize_for_client(scenario: dict) -> dict:
         "sensor_outage": scenario.get("sensor_outage"),
         "server_start_epoch_ms": scenario.get("server_start_epoch_ms"),
         "team_comms_delay_s": scenario.get("team_comms_delay_s"),
+        "destroyed_contact_ids": scenario.get("destroyed_contact_ids", []),
         "contacts": out_contacts,
     }

@@ -13,6 +13,7 @@ export type ContactState =
   | 'classified'
   | 'engaged'
   | 'neutralized'
+  | 'destroyed'
   | 'escaped';
 
 export interface Contact {
@@ -29,6 +30,8 @@ export interface Contact {
   classification?: Classification;
   assigned_classification?: Classification;
   state: ContactState;
+  engagement_action?: string;
+  despawn_t?: number;
   history?: Array<{ x: number; y: number; t: number }>;
   sensor_readings?: {
     radar?: { rcs: number; doppler_hz: number; snr_db: number };

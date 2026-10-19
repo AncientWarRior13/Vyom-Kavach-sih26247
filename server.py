@@ -399,6 +399,10 @@ def _apply_hard_kill(scenario: dict, contact_id: str, t: float) -> dict:
     UAV_FAILURE at that instant, and lets ares's actual recovery/relay logic
     react from there. Returns {"reactive": bool, "contacts": [...]}.
     """
+    scenario.setdefault("destroyed_contact_ids", [])
+    if contact_id not in scenario["destroyed_contact_ids"]:
+        scenario["destroyed_contact_ids"].append(contact_id)
+
     # a split-swarm scenario (red-team tactic 7) has two independent swarm
     # groups, each with its own replay metadata — find whichever one owns
     # this contact.
@@ -409,6 +413,12 @@ def _apply_hard_kill(scenario: dict, contact_id: str, t: float) -> dict:
             meta = candidate
             break
     if meta is None:
+        target_c = next((c for c in scenario["contacts"] if c.get("contact_id") == contact_id or c.get("id") == contact_id), None)
+        if target_c is not None:
+            target_c["state"] = "neutralized"
+            target_c["engagement_action"] = "hard_kill"
+            target_c["engagement_at"] = t
+            target_c["despawn_t"] = min(target_c.get("despawn_t", float("inf")), t)
         return {"reactive": False, "contacts": []}
 
     uav_id = meta["contact_to_uav"][contact_id]
@@ -432,7 +442,13 @@ def _apply_hard_kill(scenario: dict, contact_id: str, t: float) -> dict:
         c["path"] = [{"t": p["t"], "x": p["x"], "y": p["y"], "z": p["z"]} for p in pts]
         failed_at = next((p["t"] for p in pts if p.get("health") == "FAILED"), None)
         c["spawn_t"] = c["path"][0]["t"]
-        c["despawn_t"] = failed_at if failed_at is not None else c["path"][-1]["t"]
+        if cid == contact_id or failed_at is not None:
+            c["despawn_t"] = failed_at if failed_at is not None else min(c.get("despawn_t", float("inf")), t)
+            c["state"] = "neutralized"
+            c["engagement_action"] = "hard_kill"
+            c["engagement_at"] = t
+        else:
+            c["despawn_t"] = c["path"][-1]["t"]
 
     updated_ids = set(meta["uav_to_contact"].values())
     sanitized = sanitize_for_client(scenario)
@@ -463,6 +479,12 @@ def engage_contact(req: EngageRequest):
 
     if req.action not in ("hard_kill", "engage"):
         return {"reactive": False, "contacts": []}
+
+    contact["state"] = "neutralized"
+    contact["engagement_action"] = "hard_kill"
+    contact["engagement_at"] = req.t
+    contact["despawn_t"] = min(contact.get("despawn_t", float("inf")), req.t)
+
     return _apply_hard_kill(scenario, req.contact_id, req.t)
 
 
@@ -549,7 +571,14 @@ def team_action(req: TeamActionRequest):
         raise HTTPException(400, "engagement_authority's actions are warn/monitor/ignore/soft_kill/hard_kill")
     entry["engagement_action"] = req.field
     entry["engagement_at"] = req.t
-    reactive = _apply_hard_kill(scenario, req.contact_id, req.t) if req.field == "hard_kill" else {"reactive": False, "contacts": []}
+    if req.field == "hard_kill":
+        contact["state"] = "neutralized"
+        contact["engagement_action"] = "hard_kill"
+        contact["engagement_at"] = req.t
+        contact["despawn_t"] = min(contact.get("despawn_t", float("inf")), req.t)
+        reactive = _apply_hard_kill(scenario, req.contact_id, req.t)
+    else:
+        reactive = {"reactive": False, "contacts": []}
     return {"ok": True, "entry": entry, **reactive}
 
 

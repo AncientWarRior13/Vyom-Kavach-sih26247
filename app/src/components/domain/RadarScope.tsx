@@ -229,6 +229,40 @@ export const RadarScope: React.FC<RadarScopeProps> = ({
         ctx.setLineDash([]);
       }
 
+      // Neutralized Target: Render red destruction marker and strike cross
+      if (contact.state === 'neutralized') {
+        ctx.beginPath();
+        ctx.arc(px, py, 8 * zoom, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(px - 5, py - 5);
+        ctx.lineTo(px + 5, py + 5);
+        ctx.moveTo(px + 5, py - 5);
+        ctx.lineTo(px - 5, py + 5);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.font = 'bold 8px "Geist Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('KILL', px, py + 14);
+
+        if (isSelected) {
+          ctx.beginPath();
+          ctx.arc(px, py, 14 * zoom, 0, Math.PI * 2);
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([2, 2]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        return;
+      }
+
       // Velocity Vector Line
       const speed = contact.speed ?? 20;
       if (speed > 0) {

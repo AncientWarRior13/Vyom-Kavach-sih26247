@@ -15,6 +15,7 @@ import { UrbanMap3D } from '../components/domain/UrbanMap3D';
 import { SensorHealthChips, EventLog, CombatEvent } from '../components/domain/TacticalFeed';
 import { useSessionStore } from '../state/session';
 import { api } from '../api/client';
+import { vrAudio } from '../components/vr/VrAudio';
 import { enrichScenarioContacts } from '../utils/scenarioUtils';
 import type { Contact, Scenario, Classification } from '../api/types';
 import {
@@ -387,6 +388,8 @@ export const TrainerPage: React.FC = () => {
   const executeEngagement = async (action: 'warn' | 'soft_kill' | 'hard_kill') => {
     if (!scenario || !selectedContact) return;
     const cid = selectedContact.id;
+    const isHardKill = action === 'hard_kill';
+    const isSoftKill = action === 'soft_kill';
 
     setTraineeLog((prev) => {
       const next = {
@@ -395,6 +398,7 @@ export const TrainerPage: React.FC = () => {
           ...(prev[cid] || { contact_id: cid, detected_at: elapsed }),
           engagement_action: action,
           engagement_at: elapsed,
+          state: isHardKill ? 'neutralized' : 'engaged',
         },
       };
       useSessionStore.getState().setTraineeLog(next);
@@ -402,24 +406,47 @@ export const TrainerPage: React.FC = () => {
     });
 
     // Check ROE violation
-    if (scenario.roe?.weapons_hold && action === 'hard_kill') {
+    if (scenario.roe?.weapons_hold && isHardKill) {
       addEvent(`ROE VIOLATION: Hard-kill executed during WEAPONS HOLD!`, 'critical', 'ROE');
       toast('ROE BREACH', 'Weapons Hold was in effect!', 'error');
     } else {
-      addEvent(`Order executed: ${action.toUpperCase()} against ${cid.toUpperCase()}`, action === 'hard_kill' ? 'critical' : 'warning', 'WEAPONS');
-      toast('ACTION DEPLOYED', `${action.toUpperCase()} ordered on track ${cid}`, 'success');
+      if (isHardKill) {
+        addEvent(`KINETIC INTERCEPTOR: Direct impact confirmed — track ${cid.toUpperCase()} NEUTRALIZED`, 'critical', 'WEAPONS');
+        toast('TARGET DESTROYED', `Direct kinetic kill on track ${cid}`, 'success');
+        try { vrAudio.playHardKill(); } catch { }
+      } else if (isSoftKill) {
+        addEvent(`RF EW INTERFERENCE: High-power jamming directed at track ${cid.toUpperCase()}`, 'warning', 'WEAPONS');
+        toast('RF JAMMER ACTIVE', `Disruption beam locked on track ${cid}`, 'info');
+        try { vrAudio.playSoftKill(); } catch { }
+      } else {
+        addEvent(`WARN ORDER: Standard airspace challenge transmitted to ${cid.toUpperCase()}`, 'info', 'WEAPONS');
+        toast('WARNING ISSUED', `Challenge signal sent to track ${cid}`, 'info');
+      }
     }
 
     try {
-      const res = await api.engageContact({
+      const res = await api.engageContactV2({
         scenario_id: scenario.scenario_id,
         contact_id: cid,
-        weapon_type: action === 'soft_kill' ? 'rf_jam' : 'kinetic_net',
+        t: elapsed,
+        action,
       });
-      if (res && res.result) {
-        addEvent(`Engagement Result: ${res.result}`, 'success', 'ENGAGE');
+      if (res && res.reactive && Array.isArray(res.contacts) && res.contacts.length > 0) {
+        addEvent(`Swarm re-planned: ${res.contacts.length} surviving tracks adapting flight path`, 'info', 'SWARM');
+        // Update scenario contacts with reactive trajectories from server
+        setScenario((prev: any) => {
+          if (!prev) return prev;
+          const map = new Map(res.contacts.map((c: any) => [c.contact_id || c.id, c]));
+          const nextContacts = (prev.contacts || []).map((c: any) => {
+            const updated = map.get(c.contact_id || c.id);
+            return updated ? { ...c, ...updated } : c;
+          });
+          return { ...prev, contacts: nextContacts };
+        });
       }
-    } catch { }
+    } catch (err: any) {
+      console.warn('Engagement error:', err);
+    }
   };
 
   // Hard-kill hold-to-confirm logic (600ms)
@@ -998,29 +1025,37 @@ export const TrainerPage: React.FC = () => {
                   <div className="text-[10px] text-[var(--c-text-faint)]">Awaiting airborne target ingress</div>
                 </div>
               ) : (
-                activeContacts.map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => setSelectedContactId(c.id)}
-                    className={`p-2.5 rounded-sm border cursor-pointer select-none transition-all ${c.id === selectedContact?.id
-                        ? 'bg-[var(--c-bg-subtle)] border-[var(--c-accent)] shadow-[0_0_12px_rgba(0,232,122,0.15)]'
-                        : 'bg-[var(--c-bg-deep)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)]'
+                activeContacts.map((c) => {
+                  const isNeutralized = c.state === 'neutralized';
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => setSelectedContactId(c.id)}
+                      className={`p-2.5 rounded-sm border cursor-pointer select-none transition-all ${
+                        isNeutralized
+                          ? 'bg-black/40 border-zinc-800 opacity-60'
+                          : c.id === selectedContact?.id
+                          ? 'bg-[var(--c-bg-subtle)] border-[var(--c-accent)] shadow-[0_0_12px_rgba(0,232,122,0.15)]'
+                          : 'bg-[var(--c-bg-deep)] border-[var(--c-border-base)] hover:border-[var(--c-border-strong)]'
                       }`}
-                  >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <Badge variant={(c.assigned_classification || c.classification || 'unknown') as any} size="xs">
-                        {(c.assigned_classification || c.classification || 'unknown').replace('_', ' ')}
-                      </Badge>
-                      <span className="font-mono font-bold text-xs text-[var(--c-text-max)]">{(c.id || 'TRACK').toUpperCase()}</span>
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <Badge variant={isNeutralized ? 'friendly' : ((c.assigned_classification || c.classification || 'unknown') as any)} size="xs">
+                          {isNeutralized ? 'NEUTRALIZED' : (c.assigned_classification || c.classification || 'unknown').replace('_', ' ')}
+                        </Badge>
+                        <span className={`font-mono font-bold text-xs ${isNeutralized ? 'line-through text-zinc-500' : 'text-[var(--c-text-max)]'}`}>
+                          {(c.id || 'TRACK').toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1 text-[10px] font-mono text-[var(--c-text-mid)]">
+                        <div><span className="text-[var(--c-text-low)] block">RNG</span>{(c.range_km ?? 0).toFixed(1)}k</div>
+                        <div><span className="text-[var(--c-text-low)] block">BRG</span>{Math.round(c.bearing_deg ?? 0)}°</div>
+                        <div><span className="text-[var(--c-text-low)] block">ALT</span>{isNeutralized ? '0m' : `${c.altitude ?? 120}m`}</div>
+                        <div><span className="text-[var(--c-text-low)] block">SPD</span>{isNeutralized ? '0m/s' : `${c.speed ?? 0}m/s`}</div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-1 text-[10px] font-mono text-[var(--c-text-mid)]">
-                      <div><span className="text-[var(--c-text-low)] block">RNG</span>{(c.range_km ?? 0).toFixed(1)}k</div>
-                      <div><span className="text-[var(--c-text-low)] block">BRG</span>{Math.round(c.bearing_deg ?? 0)}°</div>
-                      <div><span className="text-[var(--c-text-low)] block">ALT</span>{c.altitude ?? 120}m</div>
-                      <div><span className="text-[var(--c-text-low)] block">SPD</span>{c.speed ?? 0}m/s</div>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -1115,11 +1150,17 @@ export const TrainerPage: React.FC = () => {
                 <div className="border-b border-[var(--c-border-base)] pb-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-[var(--c-text-low)] uppercase">LOCK TARGET TRACK</span>
-                    <Badge variant={(selectedContact.assigned_classification || selectedContact.classification || 'unknown') as any} size="xs">
-                      {(selectedContact.state || 'TRACKING').toUpperCase()}
-                    </Badge>
+                    {selectedContact.state === 'neutralized' ? (
+                      <Badge variant="friendly" size="xs">
+                        ✓ NEUTRALIZED
+                      </Badge>
+                    ) : (
+                      <Badge variant={(selectedContact.assigned_classification || selectedContact.classification || 'unknown') as any} size="xs">
+                        {(selectedContact.state || 'TRACKING').toUpperCase()}
+                      </Badge>
+                    )}
                   </div>
-                  <h3 className="text-xl font-bold font-display text-[var(--c-text-max)] mt-1">
+                  <h3 className={`text-xl font-bold font-display mt-1 ${selectedContact.state === 'neutralized' ? 'line-through text-zinc-500' : 'text-[var(--c-text-max)]'}`}>
                     {(selectedContact.id || 'TRACK').toUpperCase()}
                   </h3>
                 </div>
@@ -1311,34 +1352,49 @@ export const TrainerPage: React.FC = () => {
                       <Button
                         size="xs"
                         variant="secondary"
+                        disabled={selectedContact.state === 'neutralized'}
                         onClick={() => executeEngagement('warn')}
                       >
                         Warn / Hail
                       </Button>
                       <Button
                         size="xs"
-                        variant="secondary"
+                        variant={traineeLog[selectedContact.id]?.engagement_action === 'soft_kill' ? 'primary' : 'secondary'}
+                        disabled={selectedContact.state === 'neutralized'}
                         onClick={() => executeEngagement('soft_kill')}
                       >
-                        Soft-Kill (RF Jam)
+                        {traineeLog[selectedContact.id]?.engagement_action === 'soft_kill' ? '✓ RF Jammed' : 'Soft-Kill (RF Jam)'}
                       </Button>
                     </div>
 
                     {/* Hard-kill with 600ms Hold-to-confirm */}
                     <button
                       type="button"
-                      onMouseDown={startHardKillHold}
+                      disabled={selectedContact.state === 'neutralized'}
+                      onMouseDown={selectedContact.state !== 'neutralized' ? startHardKillHold : undefined}
                       onMouseUp={cancelHardKillHold}
                       onMouseLeave={cancelHardKillHold}
-                      onTouchStart={startHardKillHold}
+                      onTouchStart={selectedContact.state !== 'neutralized' ? startHardKillHold : undefined}
                       onTouchEnd={cancelHardKillHold}
-                      className={`w-full py-2.5 px-3 rounded font-mono font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all select-none border ${hardKillHolding
-                          ? 'bg-[var(--c-hostile)] text-white scale-[0.98] shadow-[0_0_20px_var(--c-hostile)]'
-                          : 'bg-[var(--c-hostile-bg)] text-[var(--c-hostile)] border-[var(--c-hostile)] hover:bg-[var(--c-hostile)] hover:text-white'
-                        }`}
+                      className={`w-full py-2.5 px-3 rounded font-mono font-bold text-xs flex items-center justify-center gap-2 select-none border transition-all ${
+                        selectedContact.state === 'neutralized'
+                          ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-400 cursor-not-allowed shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                          : hardKillHolding
+                          ? 'bg-[var(--c-hostile)] text-white scale-[0.98] shadow-[0_0_20px_var(--c-hostile)] cursor-pointer'
+                          : 'bg-[var(--c-hostile-bg)] text-[var(--c-hostile)] border-[var(--c-hostile)] hover:bg-[var(--c-hostile)] hover:text-white cursor-pointer'
+                      }`}
                     >
-                      <Zap className="w-4 h-4" />
-                      <span>{hardKillHolding ? 'HOLDING CONFIRM (600ms)...' : 'HARD-KILL (HOLD TO FIRE)'}</span>
+                      {selectedContact.state === 'neutralized' ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <span>TARGET NEUTRALIZED (KINETIC KILL)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4" />
+                          <span>{hardKillHolding ? 'HOLDING CONFIRM (600ms)...' : 'HARD-KILL (HOLD TO FIRE)'}</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

@@ -106,8 +106,8 @@ export const VrHud: React.FC<VrHudProps> = ({
 
   // Check if selected target violates No-Engage Zone or Max Range
   const roe = scenario?.roe_card || {};
-  const maxHardKillRangeM = roe.max_hard_kill_range_m || 2500;
-  const maxSoftKillRangeM = roe.max_soft_kill_range_m || 3500;
+  const maxHardKillRangeM = Math.max(2500, roe.max_hard_kill_range_m || 2500);
+  const maxSoftKillRangeM = Math.max(3500, roe.max_soft_kill_range_m || 3500);
   const isWeaponsHold = Boolean(roe.weapons_hold);
 
   let targetRangeM = 0;
@@ -132,7 +132,8 @@ export const VrHud: React.FC<VrHudProps> = ({
 
   const isHardKillBeyondRange = targetRangeM > maxHardKillRangeM;
   const isSoftKillBeyondRange = targetRangeM > maxSoftKillRangeM;
-  const isHardKillBlocked = isWeaponsHold || isInsideNoEngageZone || isHardKillBeyondRange;
+  // Weapons Hold and civilian No-Engage Zones strictly block weapons. Long-range shows an advisory but allows firing.
+  const isHardKillBlocked = isWeaponsHold || isInsideNoEngageZone;
 
   return (
     <div className="absolute inset-0 pointer-events-none font-mono flex flex-col justify-between p-4 z-20">
@@ -370,7 +371,7 @@ export const VrHud: React.FC<VrHudProps> = ({
             {!isInsideNoEngageZone && isHardKillBeyondRange && (
               <div className="p-2 bg-amber-950/80 border border-amber-500/60 rounded text-[10px] font-bold text-amber-200 flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>OUT OF RANGE: BEYOND HARD-KILL LIMIT ({maxHardKillRangeM}m)</span>
+                <span>LONG-RANGE INTERCEPTION: Target at {targetRangeM}m (nominal limit: {maxHardKillRangeM}m)</span>
               </div>
             )}
 
