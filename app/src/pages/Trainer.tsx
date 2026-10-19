@@ -13,6 +13,7 @@ import { RadarScope } from '../components/domain/RadarScope';
 import { Airspace3D } from '../components/domain/Airspace3D';
 import { UrbanMap3D } from '../components/domain/UrbanMap3D';
 import { SensorHealthChips, EventLog, CombatEvent } from '../components/domain/TacticalFeed';
+import { useSessionStore } from '../state/session';
 import { api } from '../api/client';
 import { enrichScenarioContacts } from '../utils/scenarioUtils';
 import type { Contact, Scenario, Classification } from '../api/types';
@@ -37,6 +38,14 @@ import {
   Radio,
   CheckCircle2,
 } from 'lucide-react';
+
+const SECTOR_COORDINATES: Record<string, { lat: number; lon: number }> = {
+  urban: { lat: 28.6139, lon: 77.2090 },   // New Delhi Central Secretariat (dense urban vector tiles)
+  rural: { lat: 28.4595, lon: 77.0266 },   // Outskirts Sector Tactical Base
+  coastal: { lat: 18.9220, lon: 72.8347 }, // Mumbai Naval Coastal Base
+  desert: { lat: 26.9157, lon: 70.9083 },  // Thar Desert Frontier Outpost
+  mountain: { lat: 34.1526, lon: 77.5771 }, // Ladakh Mountain Defense Compound
+};
 
 export const TrainerPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -157,6 +166,7 @@ export const TrainerPage: React.FC = () => {
       }
 
       setScenario(sc);
+      useSessionStore.getState().setSession(sc.scenario_id, {});
       setElapsed(0);
       setTraineeLog({});
       setEvents([]);
@@ -244,14 +254,18 @@ export const TrainerPage: React.FC = () => {
 
   // Classify Contact Handler
   const classifyContact = (contactId: string, classification: string) => {
-    setTraineeLog((prev) => ({
-      ...prev,
-      [contactId]: {
-        ...(prev[contactId] || { contact_id: contactId, detected_at: elapsed }),
-        classification,
-        classified_at: elapsed,
-      },
-    }));
+    setTraineeLog((prev) => {
+      const next = {
+        ...prev,
+        [contactId]: {
+          ...(prev[contactId] || { contact_id: contactId, detected_at: elapsed }),
+          classification,
+          classified_at: elapsed,
+        },
+      };
+      useSessionStore.getState().setTraineeLog(next);
+      return next;
+    });
 
     addEvent(`Track ${contactId.toUpperCase()} classified as ${classification.toUpperCase()}`, 'info', 'INTEL');
     toast('CLASSIFIED', `Track ${contactId} tagged as ${classification}`, 'info');
@@ -374,14 +388,18 @@ export const TrainerPage: React.FC = () => {
     if (!scenario || !selectedContact) return;
     const cid = selectedContact.id;
 
-    setTraineeLog((prev) => ({
-      ...prev,
-      [cid]: {
-        ...(prev[cid] || { contact_id: cid, detected_at: elapsed }),
-        engagement_action: action,
-        engagement_at: elapsed,
-      },
-    }));
+    setTraineeLog((prev) => {
+      const next = {
+        ...prev,
+        [cid]: {
+          ...(prev[cid] || { contact_id: cid, detected_at: elapsed }),
+          engagement_action: action,
+          engagement_at: elapsed,
+        },
+      };
+      useSessionStore.getState().setTraineeLog(next);
+      return next;
+    });
 
     // Check ROE violation
     if (scenario.roe?.weapons_hold && action === 'hard_kill') {
@@ -425,6 +443,7 @@ export const TrainerPage: React.FC = () => {
   const finishExercise = async () => {
     if (!scenario) return;
     try {
+      useSessionStore.getState().clear();
       const res = await fetch('/api/session/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1076,6 +1095,8 @@ export const TrainerPage: React.FC = () => {
                   selectedContactId={selectedContact?.id || null}
                   onSelectContact={(id) => setSelectedContactId(id)}
                   defendedAsset={scenario.defended_asset_position}
+                  originLat={SECTOR_COORDINATES[terrain]?.lat || 28.6139}
+                  originLon={SECTOR_COORDINATES[terrain]?.lon || 77.2090}
                 />
               )}
             </div>

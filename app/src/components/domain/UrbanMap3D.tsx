@@ -13,9 +13,10 @@ export interface UrbanMap3DProps {
   className?: string;
 }
 
-const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
-const BUILDING_LAYER_ID = 'building-3d';
-const FALLBACK_BUILDING_LAYER_ID = 'drone-3d-buildings';
+const DARK_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark';
+const COMPOUND_SOURCE_ID = 'tactical-compound';
+const COMPOUND_LAYER_ID = 'tactical-compound-extrusions';
+const OSM_3D_BUILDING_LAYER_ID = 'drone-3d-buildings';
 
 const CLASS_COLORS: Record<string, string> = {
   hostile_drone: '#FF3B3B',
@@ -33,14 +34,262 @@ const CLASS_COLORS: Record<string, string> = {
 
 // Set local worker script URL for MapLibre GL
 if (typeof window !== 'undefined') {
-  maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs');
+  try {
+    maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs');
+  } catch (err) {
+    console.warn('MapLibre worker registration notice:', err);
+  }
+}
+
+// Helper to create rectangular polygon in geo coordinates
+function makeRectPolygon(
+  centerLat: number,
+  centerLon: number,
+  offsetEastM: number,
+  offsetNorthM: number,
+  widthEastM: number,
+  depthNorthM: number
+): [number, number][] {
+  const mToLat = 1 / 111111;
+  const mToLon = 1 / (111111 * Math.cos((centerLat * Math.PI) / 180));
+  const cLat = centerLat + offsetNorthM * mToLat;
+  const cLon = centerLon + offsetEastM * mToLon;
+  const halfW = (widthEastM / 2) * mToLon;
+  const halfD = (depthNorthM / 2) * mToLat;
+
+  return [
+    [cLon - halfW, cLat - halfD],
+    [cLon + halfW, cLat - halfD],
+    [cLon + halfW, cLat + halfD],
+    [cLon - halfW, cLat + halfD],
+    [cLon - halfW, cLat - halfD],
+  ];
+}
+
+// Helper to create regular polygon (e.g. octagonal tower)
+function makeCirclePolygon(
+  centerLat: number,
+  centerLon: number,
+  offsetEastM: number,
+  offsetNorthM: number,
+  radiusM: number,
+  sides = 8
+): [number, number][] {
+  const mToLat = 1 / 111111;
+  const mToLon = 1 / (111111 * Math.cos((centerLat * Math.PI) / 180));
+  const cLat = centerLat + offsetNorthM * mToLat;
+  const cLon = centerLon + offsetEastM * mToLon;
+
+  const points: [number, number][] = [];
+  for (let i = 0; i <= sides; i++) {
+    const angle = (i * 2 * Math.PI) / sides;
+    points.push([
+      cLon + radiusM * Math.cos(angle) * mToLon,
+      cLat + radiusM * Math.sin(angle) * mToLat,
+    ]);
+  }
+  return points;
+}
+
+interface CompoundFeature {
+  type: 'Feature';
+  properties: {
+    name: string;
+    height: number;
+    min_height: number;
+    color: string;
+  };
+  geometry: {
+    type: 'Polygon';
+    coordinates: [number, number][][];
+  };
+}
+
+interface CompoundFeatureCollection {
+  type: 'FeatureCollection';
+  features: CompoundFeature[];
+}
+
+// Generates tactical military installation compound structures around the defense origin
+function generateTacticalCompoundGeoJSON(centerLat: number, centerLon: number): CompoundFeatureCollection {
+  const features: CompoundFeature[] = [];
+
+  // 1. C2 Tactical Command Bunker
+  features.push({
+    type: 'Feature',
+    properties: {
+      name: 'C2 TACTICAL OPERATIONS BUNKER',
+      height: 24,
+      min_height: 0,
+      color: '#1e3a5f',
+    },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [makeRectPolygon(centerLat, centerLon, 0, 0, 44, 34)],
+    },
+  });
+
+  // 2. Primary 3D Air Surveillance Radar Mast (Octagonal Tower)
+  features.push({
+    type: 'Feature',
+    properties: {
+      name: '3D RADAR MAST [TOWER-01]',
+      height: 68,
+      min_height: 0,
+      color: '#0f766e',
+    },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [makeCirclePolygon(centerLat, centerLon, -65, 45, 9, 8)],
+    },
+  });
+
+  // 3. Electronic Warfare & RF Intercept Tower
+  features.push({
+    type: 'Feature',
+    properties: {
+      name: 'EW / RF INTERCEPT TOWER [MAST-02]',
+      height: 52,
+      min_height: 0,
+      color: '#4338ca',
+    },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [makeCirclePolygon(centerLat, centerLon, 65, 40, 8, 8)],
+    },
+  });
+
+  // 4. Drone Interceptor Hangars (Alpha, Bravo, Charlie, Delta)
+  const hangars = [
+    { east: -65, north: -55, name: 'INTERCEPTOR HANGAR-A' },
+    { east: -22, north: -60, name: 'INTERCEPTOR HANGAR-B' },
+    { east: 22, north: -60, name: 'INTERCEPTOR HANGAR-C' },
+    { east: 65, north: -55, name: 'INTERCEPTOR HANGAR-D' },
+  ];
+  hangars.forEach((h) => {
+    features.push({
+      type: 'Feature',
+      properties: {
+        name: h.name,
+        height: 16,
+        min_height: 0,
+        color: '#1e293b',
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [makeRectPolygon(centerLat, centerLon, h.east, h.north, 34, 22)],
+      },
+    });
+  });
+
+  // 5. CWIS & Directed Energy Emplacements (4 perimeter corners)
+  const emplacements = [
+    { east: -110, north: 85, name: 'CWIS TURRET NW' },
+    { east: 110, north: 85, name: 'LASER EFFECTOR NE' },
+    { east: -110, north: -85, name: 'CWIS TURRET SW' },
+    { east: 110, north: -85, name: 'DEW EFFECTOR SE' },
+  ];
+  emplacements.forEach((e) => {
+    features.push({
+      type: 'Feature',
+      properties: {
+        name: e.name,
+        height: 14,
+        min_height: 0,
+        color: '#334155',
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [makeRectPolygon(centerLat, centerLon, e.east, e.north, 18, 18)],
+      },
+    });
+  });
+
+  // 6. Perimeter Sentry Towers (4 cardinal posts)
+  const sentryPosts = [
+    { east: 0, north: 130, name: 'PERIMETER SENTRY POST NORTH' },
+    { east: 0, north: -125, name: 'PERIMETER SENTRY POST SOUTH' },
+    { east: -145, north: 0, name: 'PERIMETER SENTRY POST WEST' },
+    { east: 145, north: 0, name: 'PERIMETER SENTRY POST EAST' },
+  ];
+  sentryPosts.forEach((p) => {
+    features.push({
+      type: 'Feature',
+      properties: {
+        name: p.name,
+        height: 28,
+        min_height: 0,
+        color: '#475569',
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [makeCirclePolygon(centerLat, centerLon, p.east, p.north, 7, 8)],
+      },
+    });
+  });
+
+  // 7. Tactical Satcom & Power Sub-station
+  features.push({
+    type: 'Feature',
+    properties: {
+      name: 'SATCOM DISH PLATFORM',
+      height: 12,
+      min_height: 0,
+      color: '#0284c7',
+    },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [makeRectPolygon(centerLat, centerLon, 70, 0, 22, 22)],
+    },
+  });
+  features.push({
+    type: 'Feature',
+    properties: {
+      name: 'POWER & GENERATOR BANK',
+      height: 9,
+      min_height: 0,
+      color: '#1f2937',
+    },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [makeRectPolygon(centerLat, centerLon, -75, 0, 26, 18)],
+    },
+  });
+
+  // 8. Perimeter Blast Defenses (Berms / Barriers)
+  const blastWalls = [
+    { east: 0, north: 105, w: 180, d: 5 },
+    { east: 0, north: -105, w: 180, d: 5 },
+    { east: -125, north: 0, w: 5, d: 160 },
+    { east: 125, north: 0, w: 5, d: 160 },
+  ];
+  blastWalls.forEach((bw, i) => {
+    features.push({
+      type: 'Feature',
+      properties: {
+        name: `DEFENSIVE BLAST PERIMETER 0${i + 1}`,
+        height: 7,
+        min_height: 0,
+        color: '#18202f',
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [makeRectPolygon(centerLat, centerLon, bw.east, bw.north, bw.w, bw.d)],
+      },
+    });
+  });
+
+  return {
+    type: 'FeatureCollection',
+    features,
+  };
 }
 
 export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
   contacts,
   selectedContactId,
   onSelectContact,
-  originLat = 28.6139, // Default tactical coordinates (e.g. urban base)
+  originLat = 28.6139, // Default tactical coordinates
   originLon = 77.2090,
   defendedAsset,
   className = '',
@@ -49,7 +298,7 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const originMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const [buildingStats, setBuildingStats] = useState({ count: 0, avgHeight: 18, maxHeight: 52 });
+  const [buildingStats, setBuildingStats] = useState({ count: 21, avgHeight: 24, maxHeight: 68 });
   const [mapError, setMapError] = useState<string | null>(null);
 
   // Reset view to overview of all contacts
@@ -73,7 +322,7 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
     try {
       const map = new maplibregl.Map({
         container: containerRef.current,
-        style: STYLE_URL,
+        style: DARK_STYLE_URL,
         center: [originLon, originLat],
         zoom: 14.8, // 14.8 shows full 3-4km tactical airspace while retaining 3D building extrusions
         pitch: 58,  // Tactical 58-degree tilt for depth
@@ -99,64 +348,79 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
       map.on('load', () => {
         map.resize();
 
-        // 3D Building Extrusion Layer from OpenMapTiles vector data
-        const heightExpr: maplibregl.ExpressionSpecification = ['coalesce', ['get', 'render_height'], 18];
-        const minHeightExpr: maplibregl.ExpressionSpecification = ['coalesce', ['get', 'render_min_height'], 0];
-        const colorExpr: maplibregl.ExpressionSpecification = [
-          'interpolate',
-          ['linear'],
-          heightExpr,
-          0,
-          '#1e293b',
-          25,
-          '#334155',
-          60,
-          '#475569',
-          120,
-          '#64748b',
-        ];
+        // 1. Procedural Tactical Compound Extrusion Layer (guaranteed in rural, desert, or urban sectors)
+        try {
+          const compoundGeo = generateTacticalCompoundGeoJSON(originLat, originLon);
+          map.addSource(COMPOUND_SOURCE_ID, {
+            type: 'geojson',
+            data: compoundGeo,
+          });
 
-        if (map.getLayer(BUILDING_LAYER_ID)) {
-          map.setPaintProperty(BUILDING_LAYER_ID, 'fill-extrusion-height', heightExpr);
-          map.setPaintProperty(BUILDING_LAYER_ID, 'fill-extrusion-base', minHeightExpr);
-          map.setPaintProperty(BUILDING_LAYER_ID, 'fill-extrusion-color', colorExpr);
-          map.setPaintProperty(BUILDING_LAYER_ID, 'fill-extrusion-opacity', 0.92);
-        } else if (map.getSource('openmaptiles')) {
           map.addLayer({
-            id: FALLBACK_BUILDING_LAYER_ID,
-            source: 'openmaptiles',
-            'source-layer': 'building',
+            id: COMPOUND_LAYER_ID,
             type: 'fill-extrusion',
-            minzoom: 13,
+            source: COMPOUND_SOURCE_ID,
             paint: {
-              'fill-extrusion-color': colorExpr,
-              'fill-extrusion-height': heightExpr,
-              'fill-extrusion-base': minHeightExpr,
-              'fill-extrusion-opacity': 0.92,
+              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'min_height'],
+              'fill-extrusion-opacity': 0.95,
             },
           });
+        } catch (err) {
+          console.warn('Could not add compound layer:', err);
+        }
+
+        // 2. OpenStreetMap 3D Building Extrusions (for urban sectors)
+        try {
+          if (map.getSource('openmaptiles')) {
+            if (map.getLayer('building')) {
+              map.setLayoutProperty('building', 'visibility', 'none');
+            }
+            map.addLayer({
+              id: OSM_3D_BUILDING_LAYER_ID,
+              source: 'openmaptiles',
+              'source-layer': 'building',
+              type: 'fill-extrusion',
+              minzoom: 13,
+              paint: {
+                'fill-extrusion-color': [
+                  'interpolate',
+                  ['linear'],
+                  ['coalesce', ['get', 'render_height'], 18],
+                  0, '#0f172a',
+                  25, '#1e293b',
+                  60, '#334155',
+                  120, '#475569',
+                ],
+                'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 18],
+                'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
+                'fill-extrusion-opacity': 0.88,
+              },
+            });
+          }
+        } catch (err) {
+          console.warn('Could not add OSM building extrusions:', err);
         }
       });
 
       map.on('idle', () => {
-        // Query visible extruded buildings
-        const features = map.queryRenderedFeatures(undefined, {
-          layers: [BUILDING_LAYER_ID, FALLBACK_BUILDING_LAYER_ID].filter((l) => map.getLayer(l)),
+        const osmFeatures = map.queryRenderedFeatures(undefined, {
+          layers: [OSM_3D_BUILDING_LAYER_ID].filter((l) => map.getLayer(l)),
         });
-        if (features.length > 0) {
-          const heights: number[] = [];
-          features.forEach((f) => {
-            const h = Number(f.properties?.render_height);
-            if (Number.isFinite(h) && h > 0) heights.push(h);
-          });
-          if (heights.length > 0) {
-            setBuildingStats({
-              count: features.length,
-              avgHeight: Math.round(heights.reduce((a, b) => a + b, 0) / heights.length),
-              maxHeight: Math.round(Math.max(...heights)),
-            });
-          }
-        }
+
+        const compoundCount = 21;
+        const heights: number[] = [68, 52, 28, 24, 16, 14, 12, 9, 7];
+        osmFeatures.forEach((f) => {
+          const h = Number(f.properties?.render_height);
+          if (Number.isFinite(h) && h > 0) heights.push(h);
+        });
+
+        setBuildingStats({
+          count: compoundCount + osmFeatures.length,
+          avgHeight: Math.round(heights.reduce((a, b) => a + b, 0) / heights.length),
+          maxHeight: Math.round(Math.max(...heights)),
+        });
       });
 
       mapRef.current = map;
@@ -415,8 +679,8 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
   }, [selectedContactId, contacts, originLat, originLon]);
 
   return (
-    <div className={`relative w-full h-full overflow-hidden ${className}`}>
-      <div ref={containerRef} className="w-full h-full" />
+    <div className={`relative w-full h-full overflow-hidden ${className} bg-[#070B12]`}>
+      <div ref={containerRef} className="w-full h-full bg-[#070B12]" />
 
       {/* Urban Canopy Telemetry & Controls Box */}
       <div className="absolute top-3 left-3 pointer-events-auto font-mono text-[10px] space-y-1.5 bg-black/85 backdrop-blur-md p-2.5 rounded border border-white/10 text-[var(--c-text-mid)] z-10 shadow-xl">
@@ -438,7 +702,7 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
           <span>AVG ROOF: <strong>{buildingStats.avgHeight}m</strong></span>
           <span>ACTIVE CONTACTS: <strong className="text-[var(--c-accent)]">{contacts.length}</strong></span>
         </div>
-        <div className="text-[var(--c-text-faint)]">OSM Vector Extrusions · Tilt: 58° · Real-time 3D Radar Blips</div>
+        <div className="text-[var(--c-text-faint)]">Compound & OSM 3D Extrusions · Tilt: 58° · Real-time 3D Radar Blips</div>
       </div>
 
       {mapError && (

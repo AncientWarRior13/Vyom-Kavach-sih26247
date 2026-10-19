@@ -22,7 +22,7 @@ Vyom Kavach is designed for high performance and low latency with a decoupled, m
    - Render provisions the Web Service `vyomkavach-api`.
    - Environment variables (`VYOMKAVACH_ALLOW_REMOTE=1`, `PYTHON_VERSION=3.12.8`, `PORT=10000`) are auto-configured.
 7. Once deployed, note your service URL:
-   `https://<your-service-name>.onrender.com`
+   `https://vyomkavach-api-sw9g.onrender.com`
 
 ### Method B: Docker Web Service
 
@@ -48,13 +48,12 @@ Vyom Kavach is designed for high performance and low latency with a decoupled, m
    - **Root Directory**: `./` (leave default repository root)
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
-5. *(Optional but recommended)* Update [vercel.json](file:///c:/Users/swast/ps247-drone/vercel.json) rewrites:
-   Replace the placeholder `https://vyomkavach-api.onrender.com` with your actual Render URL from Part 1:
+5. [vercel.json](file:///c:/Users/swast/ps247-drone/vercel.json) rewrites are already configured to proxy `/api/*`:
    ```json
    "rewrites": [
      {
        "source": "/api/:path*",
-       "destination": "https://<your-actual-render-service>.onrender.com/api/:path*"
+       "destination": "https://vyomkavach-api-sw9g.onrender.com/api/:path*"
      }
    ]
    ```

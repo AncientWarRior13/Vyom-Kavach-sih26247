@@ -85,6 +85,18 @@ export interface EngageRequest {
   weapon_type: 'rf_jam' | 'kinetic_net' | 'high_power_laser' | 'emp';
 }
 
+export interface EngageRequestV2 {
+  scenario_id: string;
+  contact_id: string;
+  t: number;
+  action?: 'hard_kill' | 'warn' | 'soft_kill';
+}
+
+export interface EngageResponseV2 {
+  reactive: boolean;
+  contacts: any[];
+}
+
 export interface SubmitSessionRequest {
   scenario_id: string;
   trainee_id: string;
