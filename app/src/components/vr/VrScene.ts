@@ -729,7 +729,9 @@ export class VrScene {
   public update(dt: number) {
     const now = performance.now();
     const epoch = this.scenario?.server_start_epoch_ms || now;
-    const t = Math.max(0, (Date.now() - epoch) / 1000);
+    const duration = this.scenario?.duration_s || 300;
+    const rawElapsed = Math.max(0, (Date.now() - epoch) / 1000);
+    const t = rawElapsed > duration ? (rawElapsed % duration) : rawElapsed;
 
     // 1. Smooth Desktop Pan / Orbit Damping
     this.yaw += (this.targetYaw - this.yaw) * Math.min(1, dt * 14);

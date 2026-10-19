@@ -54,7 +54,9 @@ export function useVrSession(): UseVrSessionReturn {
   const getElapsed = useCallback((): number => {
     const epoch = scenarioRef.current?.server_start_epoch_ms ?? localStartEpochRef.current;
     if (!epoch) return 0;
-    return Math.max(0, (Date.now() - epoch) / 1000);
+    const duration = scenarioRef.current?.duration_s || 300;
+    const raw = Math.max(0, (Date.now() - epoch) / 1000);
+    return raw > duration ? (raw % duration) : raw;
   }, []);
 
   // Update scenarioId with storage mirror and state update
@@ -236,12 +238,13 @@ export function useVrSession(): UseVrSessionReturn {
       if (scenario.contacts && Array.isArray(scenario.contacts)) {
         const enriched = enrichScenarioContacts(scenario.contacts, t, traineeLog);
 
-        // Drop contacts outside spawn_t..despawn_t
+        // Keep all scenario tracks matching Trainer.tsx scopes (do not drop tracks before spawn_t)
+        // Only exclude targets marked destroyed or hard-killed
         const visible = enriched.filter((c) => {
-          const raw = scenario.contacts.find((r: any) => (r.contact_id || r.id) === c.id);
-          if (!raw) return true;
-          if (raw.spawn_t !== undefined && t < raw.spawn_t) return false;
-          if (raw.despawn_t !== undefined && t > raw.despawn_t) return false;
+          const entry = traineeLog[c.id];
+          if (entry?.state === 'destroyed' || (c as any).engagement_action === 'hard_kill') {
+            return false;
+          }
           return true;
         });
 
