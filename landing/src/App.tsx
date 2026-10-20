@@ -397,19 +397,66 @@ export default function App() {
               )}
 
               {sec.id === 'modes' && (
-                <div className="grid grid-cols-3 gap-3 pt-2">
-                  <a href="/trainer" className="p-3 bg-[#11151c] border border-white/[0.08] rounded-md hover:border-[#3dd6c6] transition-colors block text-center pointer-events-auto">
-                    <div className="font-mono text-xs font-semibold text-[#f8fafc]">2D scope</div>
-                    <div className="text-[11px] text-[#9aa4b2] mt-0.5">Desktop C-UAS</div>
-                  </a>
-                  <a href="/vr" className="p-3 bg-[#11151c] border border-white/[0.08] rounded-md hover:border-[#3dd6c6] transition-colors block text-center pointer-events-auto">
-                    <div className="font-mono text-xs font-semibold text-[#f8fafc]">VR dome</div>
-                    <div className="text-[11px] text-[#9aa4b2] mt-0.5">Spatial WebXR</div>
-                  </a>
-                  <a href="/instructor" className="p-3 bg-[#11151c] border border-white/[0.08] rounded-md hover:border-[#3dd6c6] transition-colors block text-center pointer-events-auto">
-                    <div className="font-mono text-xs font-semibold text-[#f8fafc]">Command</div>
-                    <div className="text-[11px] text-[#9aa4b2] mt-0.5">Threat control</div>
-                  </a>
+                <div className="space-y-2.5 pt-2">
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <a
+                      href="/trainer"
+                      className="p-3 bg-[#11151c] border border-white/[0.08] rounded-md hover:border-[#3dd6c6] hover:bg-[#151a23] transition-all block text-center pointer-events-auto group"
+                    >
+                      <div className="font-mono text-xs font-semibold text-[#f8fafc] group-hover:text-[#3dd6c6] transition-colors">
+                        2D scope
+                      </div>
+                      <div className="text-[11px] text-[#9aa4b2] mt-0.5">Desktop C-UAS</div>
+                    </a>
+                    <a
+                      href="/vr"
+                      className="p-3 bg-[#11151c] border border-white/[0.08] rounded-md hover:border-[#3dd6c6] hover:bg-[#151a23] transition-all block text-center pointer-events-auto group"
+                    >
+                      <div className="font-mono text-xs font-semibold text-[#f8fafc] group-hover:text-[#3dd6c6] transition-colors">
+                        VR dome
+                      </div>
+                      <div className="text-[11px] text-[#9aa4b2] mt-0.5">Spatial WebXR</div>
+                    </a>
+                    <a
+                      href="/instructor"
+                      className="p-3 bg-[#11151c] border border-white/[0.08] rounded-md hover:border-[#3dd6c6] hover:bg-[#151a23] transition-all block text-center pointer-events-auto group"
+                    >
+                      <div className="font-mono text-xs font-semibold text-[#f8fafc] group-hover:text-[#3dd6c6] transition-colors">
+                        Command
+                      </div>
+                      <div className="text-[11px] text-[#9aa4b2] mt-0.5">Threat control</div>
+                    </a>
+                  </div>
+
+                  <div className="flex items-center justify-between px-0.5 text-xs font-mono border-t border-white/[0.06] pt-2">
+                    <span className="text-[#3dd6c6] font-semibold text-[11px] flex items-center gap-1.5 shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#3dd6c6] animate-pulse" />
+                      +3 more:
+                    </span>
+                    <div className="flex items-center gap-1.5 text-[11px]">
+                      <a
+                        href="/team"
+                        title="Multi-operator distributed crew C2"
+                        className="px-2 py-0.5 bg-[#11151c] border border-white/[0.08] hover:border-[#3dd6c6] hover:text-[#3dd6c6] text-[#9aa4b2] rounded transition-all pointer-events-auto whitespace-nowrap"
+                      >
+                        Team C2
+                      </a>
+                      <a
+                        href="/swarm"
+                        title="Swarm behavior & saturation tactics sandbox"
+                        className="px-2 py-0.5 bg-[#11151c] border border-white/[0.08] hover:border-[#3dd6c6] hover:text-[#3dd6c6] text-[#9aa4b2] rounded transition-all pointer-events-auto whitespace-nowrap"
+                      >
+                        Swarm Lab
+                      </a>
+                      <a
+                        href="/aar"
+                        title="After-action review & forensic playback"
+                        className="px-2 py-0.5 bg-[#11151c] border border-white/[0.08] hover:border-[#3dd6c6] hover:text-[#3dd6c6] text-[#9aa4b2] rounded transition-all pointer-events-auto whitespace-nowrap"
+                      >
+                        AAR Replay
+                      </a>
+                    </div>
+                  </div>
                 </div>
               )}
 

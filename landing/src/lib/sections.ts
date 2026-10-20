@@ -47,7 +47,7 @@ export const SECTIONS: Section[] = [
   {
     id: 'modes',
     eyebrow: '06 · MODES',
-    title: 'One exercise, three ways in.',
+    title: 'One exercise, 3+ ways in.',
     side: 'left',
   },
   {
