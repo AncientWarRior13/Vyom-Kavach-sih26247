@@ -600,7 +600,7 @@ def team_state(scenario_id: str, role: str, t: float):
 
     visible = []
     for c in sanitized["contacts"]:
-        entry = log.get(c["contact_id"], {})
+        entry = _team_entry(scenario, c["contact_id"])
         if role == "detector":
             visible.append({**c, "team": entry})
         elif role == "classifier":
@@ -641,6 +641,28 @@ def submit_team_session(req: SubmitTeamSessionRequest):
 
     trainee_log = [{"contact_id": cid, **entry} for cid, entry in _team_log(scenario).items()]
     result = score_session(scenario, trainee_log)
+
+    # Populate explicit score fields and operational bottleneck analysis
+    det_s = result.get("detection_score", 0.0)
+    cls_s = result.get("classification_score", 0.0)
+    eng_s = result.get("engagement_score", 0.0)
+    tml_s = result.get("timeliness_score", 0.0)
+
+    lowest = min(det_s, cls_s, eng_s)
+    if lowest == det_s and det_s < 70:
+        bottleneck = f"Detection bottleneck: Operator missed or delayed radar acquisition on {result.get('contacts_missed', 0)} contact(s)."
+    elif lowest == cls_s and cls_s < 70:
+        bottleneck = f"Classification bottleneck: Multispectral signature recognition accuracy was low ({cls_s}%)."
+    elif lowest == eng_s and eng_s < 70:
+        bottleneck = f"Engagement bottleneck: Kinetic/soft-kill assignment delayed or conflicted with ROE."
+    elif tml_s < 70:
+        bottleneck = f"Latency bottleneck: Comms latency (+{scenario.get('team_comms_delay_s', 5.0)}s) degraded engagement timeliness."
+    else:
+        bottleneck = "Synchronized C2 performance: Coordinated detection, classification, and engagement across all stations."
+
+    result["bottleneck"] = bottleneck
+    result["score"] = result["overall_score"]
+    result["team_score"] = result["overall_score"]
 
     aar_arm = seq_arm = None
     if req.participate_in_research:
@@ -684,6 +706,7 @@ def submit_session(req: SubmitSessionRequest):
         raise HTTPException(404, "unknown or expired scenario_id. Please start a new scenario.")
 
     result = score_session(scenario, req.trainee_log)
+    result["score"] = result["overall_score"]
 
     aar_arm = seq_arm = None
     if req.participate_in_research:

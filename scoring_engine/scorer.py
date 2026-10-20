@@ -316,11 +316,13 @@ def score_session(scenario: dict, trainee_log: list[dict]) -> dict:
     return {
         "scenario_id": scenario["scenario_id"],
         "overall_score": round(overall, 1),
+        "score": round(overall, 1),
         "detection_score": round(detection_avg * 100, 1),
         "classification_score": round(classification_avg * 100, 1),
         "engagement_score": round(engagement_avg * 100, 1),
         "timeliness_score": round(timeliness_avg * 100, 1),
         "contacts_total": len(per_contact),
+        "contacts_neutralized": sum(1 for c in per_contact if (log_by_contact.get(c["contact_id"]) or {}).get("engagement_action") in ("hard_kill", "soft_kill", "engage")),
         "contacts_missed": sum(1 for c in per_contact if not c["detected"]),
         "critical_flags": [f for f in flags if "threat_not_engaged" in f or "threat_reached_asset" in f
                             or "roe_violation" in f],

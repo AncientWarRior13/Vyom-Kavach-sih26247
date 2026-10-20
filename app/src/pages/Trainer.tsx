@@ -487,7 +487,8 @@ export const TrainerPage: React.FC = () => {
       const data = await res.json();
       setDebriefResult(data);
       setViewState('debrief');
-      toast('EXERCISE CONCLUDED', `Mission score calculated: ${data.score?.toFixed(1) || 85}%`, 'success');
+      const scoreVal = Number(data.overall_score ?? data.score ?? 0);
+      toast('EXERCISE CONCLUDED', `Mission score calculated: ${scoreVal.toFixed(1)}%`, 'success');
     } catch {
       // Fallback debrief scorecard
       setDebriefResult({
@@ -1414,8 +1415,15 @@ export const TrainerPage: React.FC = () => {
   // STATE C: DEBRIEF & SCORECARD
   // ═════════════════════════════════════════════════════════════════════════════
   if (viewState === 'debrief' && debriefResult) {
-    const score = debriefResult.score || 85;
+    const score = Number(debriefResult.overall_score ?? debriefResult.score ?? 0);
     const gradeColor = score >= 85 ? '#00e87a' : score >= 70 ? '#0a84ff' : score >= 50 ? '#ffb800' : '#ef4444';
+
+    const contactsTotal = debriefResult.contacts_total || (scenario?.contacts?.length ?? 4);
+    const neutralizedCount = debriefResult.contacts_neutralized ?? (
+      Array.isArray(debriefResult.per_contact)
+        ? debriefResult.per_contact.filter((c: any) => (c.engagement_score ?? 0) > 0 && !String(c.flag || '').includes('threat_not_engaged')).length
+        : Math.max(0, contactsTotal - (debriefResult.contacts_missed ?? 0))
+    );
 
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -1431,13 +1439,13 @@ export const TrainerPage: React.FC = () => {
                   {score.toFixed(1)}%
                 </div>
                 <div className="text-xs font-mono text-[var(--c-text-mid)] mt-1">
-                  Engagement Efficiency: {(debriefResult.contacts_total || 4) - (debriefResult.contacts_missed || 0)}/{debriefResult.contacts_total || 4} Neutralized
+                  Engagement Efficiency: {neutralizedCount}/{contactsTotal} Neutralized
                 </div>
               </div>
 
               <div className="px-6 py-3 border-2 rounded-sm text-center" style={{ borderColor: gradeColor, color: gradeColor }}>
                 <span className="font-display font-bold text-xl uppercase tracking-widest block">
-                  {score >= 85 ? 'TIER 1 · CERTIFIED' : score >= 70 ? 'TIER 2 · QUALIFIED' : 'FAILED ROE'}
+                  {score >= 85 ? 'TIER 1 · CERTIFIED' : score >= 70 ? 'TIER 2 · QUALIFIED' : score >= 50 ? 'TIER 3 · PROVISIONAL' : 'FAILED ROE'}
                 </span>
                 <span className="text-[10px] font-mono text-[var(--c-text-low)]">DEFENSE STANDARD 05-UAS</span>
               </div>
@@ -1445,10 +1453,10 @@ export const TrainerPage: React.FC = () => {
 
             {/* Metrics Breakdown */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Stat label="Detection Speed" value={debriefResult.detection_score || 90} unit="%" />
-              <Stat label="Classification" value={debriefResult.classification_score || 85} unit="%" />
-              <Stat label="ROE Compliance" value={debriefResult.engagement_score || 95} unit="%" />
-              <Stat label="Decision Timeliness" value={debriefResult.timeliness_score || 80} unit="%" />
+              <Stat label="Detection Speed" value={Math.round(debriefResult.detection_score ?? 0)} unit="%" />
+              <Stat label="Classification" value={Math.round(debriefResult.classification_score ?? 0)} unit="%" />
+              <Stat label="ROE Compliance" value={Math.round(debriefResult.engagement_score ?? 0)} unit="%" />
+              <Stat label="Decision Timeliness" value={Math.round(debriefResult.timeliness_score ?? 0)} unit="%" />
             </div>
 
             {/* Critical Flags / Attention */}

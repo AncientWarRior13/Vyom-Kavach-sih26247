@@ -426,6 +426,12 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
       mapRef.current = map;
       return () => {
         ro.disconnect();
+        markersRef.current.forEach((m) => m.remove());
+        markersRef.current.clear();
+        if (originMarkerRef.current) {
+          originMarkerRef.current.remove();
+          originMarkerRef.current = null;
+        }
         map.remove();
         mapRef.current = null;
       };
@@ -437,13 +443,17 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
   // Defended Base Asset Pin (Central Command Post)
   useEffect(() => {
     if (!mapRef.current) return;
-    if (!originMarkerRef.current) {
+    const map = mapRef.current;
+    if (!originMarkerRef.current || !originMarkerRef.current.getElement().parentElement) {
+      if (originMarkerRef.current) {
+        originMarkerRef.current.remove();
+      }
       const el = document.createElement('div');
       el.className = 'w-6 h-6 rounded-xs border-2 border-white bg-emerald-500 rotate-45 shadow-[0_0_16px_#10b981] flex items-center justify-center pointer-events-none select-none';
       el.innerHTML = '<div class="w-2 h-2 rounded-full bg-white"></div>';
       originMarkerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat([originLon, originLat])
-        .addTo(mapRef.current);
+        .addTo(map);
     } else {
       originMarkerRef.current.setLngLat([originLon, originLat]);
     }
@@ -543,9 +553,13 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
       const lon = coord.lon;
 
       let marker = markersRef.current.get(c.id);
-      if (!marker) {
+      if (!marker || !marker.getElement().parentElement) {
+        if (marker) {
+          marker.remove();
+        }
         const el = document.createElement('div');
-        el.className = 'tactical-drone-marker group relative cursor-pointer select-none';
+        el.className = 'tactical-drone-marker group cursor-pointer select-none';
+        el.style.position = 'absolute';
         el.style.width = '28px';
         el.style.height = '28px';
         el.style.display = 'flex';
@@ -630,7 +644,7 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
             ? `0 0 0 3px #00e87a, 0 0 16px ${color}, 0 0 30px ${color}`
             : `0 0 10px ${color}, 0 0 20px ${color}, inset 0 0 3px #ffffff`;
           coreEl.style.transform = isSelected ? 'scale(1.4)' : 'scale(1)';
-          coreEl.innerHTML = '';
+          coreEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_#fff]"></span>';
 
           if (auraEl) {
             auraEl.style.background = `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 70%)`;
@@ -690,15 +704,24 @@ export const UrbanMap3D: React.FC<UrbanMap3DProps> = ({
       lon = originLon + dEast / (111111 * Math.cos((originLat * Math.PI) / 180));
     }
 
-    mapRef.current.flyTo({
-      center: [lon, lat],
-      zoom: 15.5, // gentle tactical zoom, keeps full urban context & nearby contacts visible
-      pitch: 60,
-      bearing: target.bearing_deg ?? -17,
-      speed: 1.2,
-      curve: 1.1,
-      essential: true,
-    });
+    const flyToTarget = () => {
+      if (!mapRef.current) return;
+      mapRef.current.flyTo({
+        center: [lon, lat],
+        zoom: 15.2, // gentle tactical zoom, keeps full urban context & nearby contacts visible
+        pitch: 58,
+        bearing: -17,
+        speed: 1.2,
+        curve: 1.1,
+        essential: true,
+      });
+    };
+
+    if (mapRef.current.isStyleLoaded()) {
+      flyToTarget();
+    } else {
+      mapRef.current.once('load', flyToTarget);
+    }
   }, [selectedContactId, contacts, originLat, originLon]);
 
   return (
